@@ -8,10 +8,10 @@ app.use(express.static("public"));
 app.use(express.json());
 
 const waldo = {
-    x: 0,
-    y: 0,
-    width: 5,
-    height: 5,
+    x: 48.31,
+    y: 45.18,
+    width: 1.25,
+    height: 6.38,
 };
 
 app.get("/", (req, res) => {
