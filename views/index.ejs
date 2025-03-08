@@ -7,9 +7,15 @@
 </head>
 <body>
   <h1>Find the Characters!</h1>
+  <div id="timer" data-time-left="<%= initialTime %>">
+   Time Left: 5:00 
+  </div>
   <div id="photo-container">
     <img src="<%= photo %>" draggable="false" id="photo" alt="Tagging Photo">
   </div>
+  <script>
+    const characters = <%- JSON.stringify(characters) %>;
+  </script>
   <script src="/js/script.js"></script>
 </body>
 </html>
