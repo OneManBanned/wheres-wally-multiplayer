@@ -1,41 +1,21 @@
-import express from "express";
+import { puzzles, gameState, GAME_DURATION } from "../models/puzzles.js";
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.set("view engine", "ejs");
-app.use(express.static("public"));
-app.use(express.json());
-
-const characters = {
-    waldo1: {
-        x: 48.31,
-        y: 45.18,
-        width: 1.25,
-        height: 6.38,
-    },
+export const startGame = (req, res) => {
+    const sessionId = req.headers["x-session-id"] || "default";
+    gameState.set(sessionId, { startTime: Date.now(), found: new Set()});
+    res.render("index", {
+        photos:  Object.values(puzzles).map(char => char.img),
+        initialTime: GAME_DURATION / 1000,
+    });
 };
 
-const GAME_DURATION = 300000;
-const gameState = new Map();
-
-app.get("/", (req, res) => {
-    const sessionId = req.headers["x-session-id"] || "default";
-    gameState.set(sessionId, { startTime: Date.now(), found: new Set() });
-    res.render("index", {
-        photo: "/images/waldo.jpg",
-        initialTime: GAME_DURATION / 1000,
-        characters: characters
-    });
-});
-
-app.post("/check", (req, res) => {
-    const { char, x, y } = req.body;
+export const checkGuess = (req, res) => {
+    const { index, x, y } = req.body;
     const sessionId = req.headers["x-session-id"] || "default";
     const state = gameState.get(sessionId);
     const elapsed = Date.now() - state.startTime;
     const timeLeft = Math.max(0, (GAME_DURATION - elapsed) / 1000);
-    const charData = characters[char];
+    const charData = puzzles[index];
 
     if (timeLeft <= 0) {
         return res.json({
@@ -53,22 +33,18 @@ app.post("/check", (req, res) => {
         y >= charData.y &&
         y <= charData.y + charData.height;
 
-    if (inRange) state.found.add(char);
+    if (inRange) state.found.add(index);
 
-    const allFound = state.found.size === Object.keys(characters).length;
+    const allFound = state.found.size === Object.keys(puzzles).length;
     const gameOver = allFound || timeLeft <= 0;
     const timeTaken = allFound ? elapsed / 1000 : null;
 
     res.json({
         success: inRange,
-        message: inRange ? "You found Waldo" : "Try again!",
+        message: inRange ? "found" : null,
         position: inRange ? { x: charData.x, y: charData.y } : null,
         gameOver,
         timeTaken,
-        timeLeft
+        timeLeft,
     });
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+};

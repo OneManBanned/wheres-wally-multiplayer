@@ -11,11 +11,17 @@
    Time Left: 5:00 
   </div>
   <div id="photo-container">
-    <img src="<%= photo %>" draggable="false" id="photo" alt="Tagging Photo">
+    <img src="<%= photos[0] %>" draggable="false" id="inPlayPhoto" alt="Tagging Photo">
+  </div>
+  <div id="photo-selection">
+      <% photos.forEach(photo => { %> 
+      <img src="<%= photo %>" alt="" id="photo">
+      <% }) %>
   </div>
   <script>
-    const characters = <%- JSON.stringify(characters) %>;
+    const images = <%- JSON.stringify(photos) %>;
+    console.log(images)
   </script>
-  <script src="/js/script.js"></script>
+  <script type="module" src="/js/main.js"></script>
 </body>
 </html>

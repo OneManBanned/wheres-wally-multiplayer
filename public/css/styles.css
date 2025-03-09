@@ -17,7 +17,7 @@ body {
   width: 85%;
 }
 
-#photo {
+#inPlayPhoto {
     max-width: 100%;
     height: auto;
 }
@@ -28,4 +28,13 @@ body {
   border-radius: 50%;
   background: blue;
   pointer-events: none; 
+}
+
+#photo-selection {
+    background: red;
+}
+
+#photo-selection > img {
+    width: 10%;
+    height: auto;
 }
