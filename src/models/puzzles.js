@@ -2,8 +2,8 @@ export const puzzles = [
     {
         x: 48.31,
         y: 45.18,
-        width: 1.25,
-        height: 6.38,
+        width: 1.32,
+        height: 7.02,
         img: '/images/waldo1.jpg'
     },
     {

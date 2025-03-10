@@ -4,4 +4,12 @@ export function getPathFromURL(url) {
     const parsedURL = new URL(url)
     return parsedURL.pathname;
 }
+export function positionInPercent(position, rect) {
+  const { x, y } = position;
+
+  const xPercent = (x / rect.width) * 100;
+  const yPercent = (y / rect.height) * 100;
+
+  return { xPercent, yPercent };
+}
 

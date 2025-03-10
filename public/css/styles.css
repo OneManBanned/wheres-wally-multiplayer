@@ -12,12 +12,12 @@ body {
     width: 100%;
 }
 
-#photo-container {
+#puzzle-container {
   position: relative;
   width: 85%;
 }
 
-#inPlayPhoto {
+#currentPuzzle {
     max-width: 100%;
     height: auto;
 }
@@ -30,11 +30,19 @@ body {
   pointer-events: none; 
 }
 
-#photo-selection {
+#puzzle-selection {
     background: red;
 }
 
-#photo-selection > img {
+#puzzle-selection > img {
     width: 10%;
     height: auto;
+}
+
+#marker {
+  position: absolute;
+  border: 1px solid green;
+  border-radius: 50%;
+  background: green;
+  pointer-events: none; 
 }

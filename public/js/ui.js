@@ -1,60 +1,53 @@
-import { findMarkerSize, getPhotoRect, getPathFromURL } from "./utils.js";
+import { findMarkerSize, getPhotoRect, getPathFromURL, positionInPercent } from "./utils.js";
 
 export function switchInPlayPhoto() {
-    const images = document.querySelectorAll("#photo")
-    console.log(images)
-    images.forEach(img => {
-        img.addEventListener("click", (e) => {
-            document.querySelector("#inPlayPhoto").src = img.src;
-        })
-    })
+  const puzzles = document.querySelectorAll("#puzzle");
+  puzzles.forEach((puzzle) => {
+    puzzle.addEventListener("click", (e) => {
+      document.querySelector("#currentPuzzle").src = puzzle.src;
+    });
+  });
 }
 
-export function createTargetingBox(x, y, checkCharacter, rect) {
-    const box = document.createElement("div");
-    box.id = "target-box";
 
-    const markerSize = findMarkerSize(rect);
+export function createTargetingBox(position, checkCharacter, rect, img) {
+  const box = document.createElement("div");
+  box.id = "target-box";
+  const { x, y } = position;
 
-    box.style.left = `${x - markerSize / 2}px`;
-    box.style.top = `${y - markerSize / 2}px`;
-    box.style.width = `${markerSize}px`;
-    box.style.height = `${markerSize}px`;
+  const markerSize = findMarkerSize(rect);
 
-    document.getElementById("photo-container").appendChild(box);
-    const img = document.querySelector("#inPlayPhoto")
+  box.style.left = `${x - markerSize / 2}px`;
+  box.style.top = `${y - markerSize / 2}px`;
+  box.style.width = `${markerSize}px`;
+  box.style.height = `${markerSize}px`;
 
-    const xPercent = (x / rect.width) * 100;
-    const yPercent = (y / rect.height) * 100;
+  document.getElementById("puzzle-container").appendChild(box);
 
-    const pathname = getPathFromURL(img.src)
+  const { xPercent, yPercent } = positionInPercent(position, rect);
+  const pathname = getPathFromURL(img.src);
 
-    for (let i = 0; i < images.length; ++i) {
-        if (pathname === images[i]) {
-            checkCharacter(i, xPercent, yPercent, rect);
-        }
+  for (let index = 0; index < puzzles.length; ++index) {
+    if (pathname === puzzles[index]) {
+      checkCharacter(index, xPercent, yPercent);
     }
-
+  }
 }
 
 export function setupPhoto(checkCharacter) {
 
-    const image = document.getElementById("inPlayPhoto");
-    image.addEventListener("click", (e) => {
-        const rect = getPhotoRect(image);
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+  const image = document.getElementById("currentPuzzle");
+  image.addEventListener("click", (e) => {
+    const rect = getPhotoRect(image);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-        const oldBox = document.querySelector('#target-box')
-        if (oldBox) oldBox.remove();
+    const oldBox = document.querySelector("#target-box");
+    if (oldBox) oldBox.remove();
 
-        createTargetingBox(x, y, checkCharacter, rect)
-    });
-    // Magnifying glass placeholder
-    image.addEventListener("mouseOver", (e) => {
-
-    })
+    createTargetingBox({ x, y }, checkCharacter, rect, image);
+  });
+  // Magnifying glass placeholder
+  image.addEventListener("mouseOver", (e) => {});
 }
 
-export function createMarker(position, size) {
-}

@@ -10,17 +10,16 @@
   <div id="timer" data-time-left="<%= initialTime %>">
    Time Left: 5:00 
   </div>
-  <div id="photo-container">
-    <img src="<%= photos[0] %>" draggable="false" id="inPlayPhoto" alt="Tagging Photo">
+  <div id="puzzle-container">
+    <img src="<%= puzzles[0] %>" draggable="false" id="currentPuzzle" alt="Tagging Photo">
   </div>
-  <div id="photo-selection">
-      <% photos.forEach(photo => { %> 
-      <img src="<%= photo %>" alt="" id="photo">
+  <div id="puzzle-selection">
+      <% puzzles.forEach(puzzle => { %> 
+      <img src="<%= puzzle %>" alt="" id="puzzle">
       <% }) %>
   </div>
   <script>
-    const images = <%- JSON.stringify(photos) %>;
-    console.log(images)
+    let puzzles = <%- JSON.stringify(puzzles) %>;
   </script>
   <script type="module" src="/js/main.js"></script>
 </body>
