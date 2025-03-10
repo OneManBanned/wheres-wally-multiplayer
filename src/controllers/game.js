@@ -41,8 +41,6 @@ export const checkGuess = (req, res) => {
 
     res.json({
         success: inRange,
-        message: inRange ? "found" : null,
-        position: inRange ? { x: charData.x, y: charData.y } : null,
         gameOver,
         timeTaken,
         timeLeft,
