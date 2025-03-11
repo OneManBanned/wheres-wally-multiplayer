@@ -1,14 +1,24 @@
-import { findMarkerSize, getPhotoRect, getPathFromURL, positionInPercent } from "./utils.js";
+import { foundArr } from "./game.js";
+import {
+  findMarkerSize,
+  getPhotoRect,
+  getPathFromURL,
+  positionInPercent,
+} from "./utils.js";
 
 export function switchInPlayPhoto() {
-  const puzzles = document.querySelectorAll("#puzzle");
-  puzzles.forEach((puzzle) => {
-    puzzle.addEventListener("click", (e) => {
-      document.querySelector("#currentPuzzle").src = puzzle.src;
-    });
+  const puzzlesAll = document.querySelectorAll(".puzzle");
+  puzzlesAll.forEach((puzzle, index) => {
+    if (!foundArr[index]) {
+      puzzle.addEventListener("click", () => {
+        document.querySelector("#currentPuzzle").src = puzzle.src;
+      });
+    } else {
+      puzzle.style.opacity = 0.5;
+      puzzle.style.pointerEvents = "none";
+    }
   });
 }
-
 
 export function createTargetingBox(position, checkCharacter, rect, img) {
   const box = document.createElement("div");
@@ -27,27 +37,24 @@ export function createTargetingBox(position, checkCharacter, rect, img) {
   const { xPercent, yPercent } = positionInPercent(position, rect);
   const pathname = getPathFromURL(img.src);
 
-  for (let index = 0; index < puzzles.length; ++index) {
-    if (pathname === puzzles[index]) {
-      checkCharacter(index, xPercent, yPercent);
-    }
-  }
+  const index = puzzles.indexOf(pathname);
+  checkCharacter(index, xPercent, yPercent, switchInPlayPhoto);
 }
 
 export function setupPhoto(checkCharacter) {
 
+  switchInPlayPhoto();
   const image = document.getElementById("currentPuzzle");
   image.addEventListener("click", (e) => {
     const rect = getPhotoRect(image);
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const oldBox = document.querySelector("#target-box");
+    let oldBox = document.querySelector("#target-box");
     if (oldBox) oldBox.remove();
 
     createTargetingBox({ x, y }, checkCharacter, rect, image);
   });
   // Magnifying glass placeholder
-  image.addEventListener("mouseOver", (e) => {});
+  image.addEventListener("mouseover", (e) => {});
 }
-
