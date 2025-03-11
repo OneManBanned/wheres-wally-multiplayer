@@ -22,6 +22,10 @@ body {
     height: auto;
 }
 
+#currentPuzzle:hover {
+  cursor: none; /* Hide default cursor on hover */
+}
+
 #target-box {
   position: absolute;
   border: 1px solid blue;
@@ -45,4 +49,68 @@ body {
   border-radius: 50%;
   background: green;
   pointer-events: none; 
+}
+
+#magnifier {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 3px solid #000;
+  background-repeat: no-repeat;
+  pointer-events: none; /* Clicks pass through to image */
+  display: none; /* Hidden until hover */
+  z-index: 10;
+  /* Center Reticle */
+  justify-content: center;
+  align-items: center;
+}
+
+#magnifier.targeting::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 20px; /* Vertical line */
+  background: #f00;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Default: Small black dot */
+#magnifier::before {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #000; 
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Sniper scope reticle */
+#magnifier.targeting::before {
+  width: 30px; 
+  height: 2px;
+  border-radius: 0;
+  background: #000;
+}
+
+#magnifier.targeting::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 30px;
+  background: #000;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Optional: Thin scope lines */
+#magnifier.targeting {
+  border-color: #333; 
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.1) 50%, transparent 70%); 
 }
