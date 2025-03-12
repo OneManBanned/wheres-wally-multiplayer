@@ -15,7 +15,7 @@ export const checkGuess = (req, res) => {
     const state = gameState.get(sessionId);
     const elapsed = Date.now() - state.startTime;
     const timeLeft = Math.max(0, (GAME_DURATION - elapsed) / 1000);
-    const charData = puzzles[index];
+    const characters = puzzles[index].characters;
 
     if (timeLeft <= 0) {
         return res.json({
@@ -27,20 +27,29 @@ export const checkGuess = (req, res) => {
         });
     }
 
-    const inRange =
-        x >= charData.x &&
-        x <= charData.x + charData.width &&
-        y >= charData.y &&
-        y <= charData.y + charData.height;
+    let solved = false;
 
-    if (inRange) state.found.add(index);
+
+    for (let character in characters) {
+        const inRange =
+            x >= characters[character].x &&
+            x <= characters[character].x + characters[character].width &&
+            y >= characters[character].y &&
+            y <= characters[character].y + characters[character].height;
+
+        if (inRange && character === 'waldo') {
+            state.found.add(index);
+            solved = true;
+        }
+
+    }
 
     const allFound = state.found.size === Object.keys(puzzles).length;
     const gameOver = allFound || timeLeft <= 0;
     const timeTaken = allFound ? elapsed / 1000 : null;
 
     res.json({
-        success: inRange,
+        success: solved,
         gameOver,
         timeTaken,
         timeLeft,
