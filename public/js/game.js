@@ -39,7 +39,6 @@ export function checkCharacter(index, x, y, switchInPlayPhoto) {
         for (let i = 0; i < foundArr.length; i++) {
           if (foundArr[i] === false) {
             document.querySelector("#currentPuzzle").src = puzzles[i];
-            document.querySelector("#target-box").remove();
             switchInPlayPhoto();
             break;
           }

@@ -1,10 +1,5 @@
 import { foundArr } from "./game.js";
-import {
-    findMarkerSize,
-    getPhotoRect,
-    getPathFromURL,
-    positionInPercent,
-} from "./utils.js";
+import { getPhotoRect, getPathFromURL, positionInPercent, } from "./utils.js";
 
 export function switchInPlayPhoto() {
     const puzzlesAll = document.querySelectorAll(".puzzle");
@@ -20,19 +15,7 @@ export function switchInPlayPhoto() {
     });
 }
 
-export function createTargetingBox(position, checkCharacter, rect, img) {
-    const box = document.createElement("div");
-    box.id = "target-box";
-    const { x, y } = position;
-
-    const markerSize = findMarkerSize(rect);
-
-    box.style.left = `${x - markerSize / 2}px`;
-    box.style.top = `${y - markerSize / 2}px`;
-    box.style.width = `${markerSize}px`;
-    box.style.height = `${markerSize}px`;
-
-    document.getElementById("puzzle-container").appendChild(box);
+export function targetingCoordinates(position, checkCharacter, rect, img) {
 
     const { xPercent, yPercent } = positionInPercent(position, rect);
     const pathname = getPathFromURL(img.src);
@@ -51,10 +34,7 @@ export function setupPhoto(checkCharacter) {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        let oldBox = document.querySelector("#target-box");
-        if (oldBox) oldBox.remove();
-
-        createTargetingBox({ x, y }, checkCharacter, rect, image);
+        targetingCoordinates({ x, y }, checkCharacter, rect, image);
     });
 }
 
@@ -64,7 +44,10 @@ export function setupMagnifier(image) {
     document.querySelector("#puzzle-container").appendChild(magnifier);
 
     const zoomLevel = 2;
-    const lensSize = 150;
+    let lensSize = 125;
+
+    magnifier.style.height = `${lensSize}px`
+    magnifier.style.width = `${lensSize}px`
 
     image.addEventListener("mouseover", () => {
         magnifier.style.display = "flex";
