@@ -1,54 +1,47 @@
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-} 
-    
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-    display: grid;
-    place-items: center;
-    background: blue;
-    height: 100vh;
-    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  background: blue;
+  height: 100vh;
+}
+
+main {
+    display: flex;
+    width: 80%;
+    gap: .75rem;
+}
+
+#timer {
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 #puzzle-container {
   position: relative;
-  width: 70%;
+  display: flex;
 }
 
 #currentPuzzle {
-    max-width: 100%;
-    height: auto;
+  width: 100%;
+  height: auto;
 }
 
 #currentPuzzle:hover {
   cursor: none; /* Hide default cursor on hover */
 }
 
-#target-box {
-  position: absolute;
-  border: 1px solid blue;
-  border-radius: 50%;
-  background: blue;
-  pointer-events: none; 
-}
-
 #puzzle-selection {
-    background: red;
-}
-
-#puzzle-selection > img {
-    width: 10%;
-    height: auto;
-}
-
-#marker {
-  position: absolute;
-  border: 1px solid green;
-  border-radius: 50%;
-  background: green;
-  pointer-events: none; 
+  display: flex;
+  flex-direction: column;
+  width: 15%;
 }
 
 #magnifier {
@@ -81,7 +74,7 @@ body {
   position: absolute;
   width: 4px;
   height: 4px;
-  background: #000; 
+  background: #000;
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -90,7 +83,7 @@ body {
 
 /* Sniper scope reticle */
 #magnifier.targeting::before {
-  width: 30px; 
+  width: 30px;
   height: 2px;
   border-radius: 0;
   background: #000;
@@ -109,6 +102,6 @@ body {
 
 /* Optional: Thin scope lines */
 #magnifier.targeting {
-  border-color: #333; 
-  background: radial-gradient(circle, rgba(0, 0, 0, 0.1) 50%, transparent 70%); 
+  border-color: #333;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.1) 50%, transparent 70%);
 }

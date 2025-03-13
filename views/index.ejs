@@ -6,9 +6,10 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <div id="timer" data-time-left="<%= initialTime %>">
+    <div id="timer" data-time-left="<%= initialTime %>">
    Time Left: 5:00 
   </div>
+  <main>
   <div id="puzzle-container">
     <img src="<%= puzzles[0] %>" draggable="false" id="currentPuzzle" alt="Tagging Photo">
   </div>
@@ -17,6 +18,7 @@
       <img src="<%= puzzle %>" alt="" class="puzzle">
       <% }) %>
   </div>
+  </main>
   <script>
     let puzzles = <%- JSON.stringify(puzzles) %>;
   </script>

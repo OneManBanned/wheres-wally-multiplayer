@@ -1,4 +1,33 @@
 export const puzzles = [
+    {
+        characters: {
+            waldo: {
+                x: 40.10,
+                y: 61.39,
+                width: 0.83,
+                height: 3.56,
+            },
+            odlaw: {
+                x: 6.46,
+                y: 68.04,
+                width: 1.41,
+                height: 2.93,
+            },
+            wenda: {
+                x: 28.96,
+                y: 50.71,
+                width: 0.99,
+                height: 4.91,
+            },
+            whitebeard: {
+                x: 77.04,
+                y: 58.41,
+                width: 1.25,
+                height: 4.59,
+            },
+        },
+        img: "/images/wallyspace.jpg",
+    },
   {
     characters: {
       waldo: {
@@ -85,35 +114,6 @@ export const puzzles = [
       },
     },
     img: "/images/wallybeach.jpg",
-  },
-  {
-    characters: {
-      waldo: {
-        x: 40.10,
-        y: 61.39,
-        width: 0.83,
-        height: 3.56,
-      },
-      odlaw: {
-        x: 6.46,
-        y: 68.04,
-        width: 1.41,
-        height: 2.93,
-      },
-      wenda: {
-        x: 28.96,
-        y: 50.71,
-        width: 0.99,
-        height: 4.91,
-      },
-      whitebeard: {
-        x: 77.04,
-        y: 58.41,
-        width: 1.25,
-        height: 4.59,
-      },
-    },
-    img: "/images/wallyspace.jpg",
   },
   {
     characters: {

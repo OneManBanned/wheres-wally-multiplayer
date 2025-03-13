@@ -1,12 +1,24 @@
 import { foundArr } from "./game.js";
 import { getPhotoRect, getPathFromURL, positionInPercent, } from "./utils.js";
 
+function syncThumbnailHeights() {
+    const currentPuzzle = document.querySelector("#currentPuzzle");
+    const puzzles = document.querySelectorAll(".puzzle");
+
+    const currentHeight = currentPuzzle.offsetHeight;
+    const thumbnailHeight = currentHeight / puzzles.length;
+
+    puzzles.forEach(puzzle => puzzle.style.height = `${thumbnailHeight}px`)
+}
+
 export function switchInPlayPhoto() {
     const puzzlesAll = document.querySelectorAll(".puzzle");
+    const currentPuzzle = document.querySelector("#currentPuzzle");
+
     puzzlesAll.forEach((puzzle, index) => {
         if (!foundArr[index]) {
             puzzle.addEventListener("click", () => {
-                document.querySelector("#currentPuzzle").src = puzzle.src;
+                currentPuzzle.src = puzzle.src
             });
         } else {
             puzzle.style.opacity = 0.5;
@@ -28,6 +40,7 @@ export function setupPhoto(checkCharacter) {
 
     switchInPlayPhoto();
     const image = document.getElementById("currentPuzzle");
+
     setupMagnifier(image);
     image.addEventListener("click", (e) => {
         const rect = getPhotoRect(image);
@@ -36,6 +49,12 @@ export function setupPhoto(checkCharacter) {
 
         targetingCoordinates({ x, y }, checkCharacter, rect, image);
     });
+
+    image.addEventListener("load", () => {
+        syncThumbnailHeights()
+    })
+
+    syncThumbnailHeights()
 }
 
 export function setupMagnifier(image) {
@@ -44,7 +63,7 @@ export function setupMagnifier(image) {
     document.querySelector("#puzzle-container").appendChild(magnifier);
 
     const zoomLevel = 2;
-    let lensSize = 125;
+    let lensSize = 140;
 
     magnifier.style.height = `${lensSize}px`
     magnifier.style.width = `${lensSize}px`
@@ -83,3 +102,4 @@ export function setupMagnifier(image) {
     magnifier.classList.remove("targeting"); // Reset on exit
   });
 }
+
