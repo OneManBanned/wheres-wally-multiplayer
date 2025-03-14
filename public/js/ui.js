@@ -1,5 +1,5 @@
 import { foundArr } from "./game.js";
-import { getPhotoRect, getPathFromURL, positionInPercent, } from "./utils.js";
+import { getPhotoRect, getPathFromURL, positionInPercent } from "./utils.js";
 
 function syncThumbnailHeights() {
     const currentPuzzle = document.querySelector("#currentPuzzle");
@@ -8,7 +8,7 @@ function syncThumbnailHeights() {
     const currentHeight = currentPuzzle.offsetHeight;
     const thumbnailHeight = currentHeight / puzzles.length;
 
-    puzzles.forEach(puzzle => puzzle.style.height = `${thumbnailHeight}px`)
+    puzzles.forEach((puzzle) => (puzzle.style.height = `${thumbnailHeight}px`));
 }
 
 export function switchInPlayPhoto() {
@@ -18,7 +18,7 @@ export function switchInPlayPhoto() {
     puzzlesAll.forEach((puzzle, index) => {
         if (!foundArr[index]) {
             puzzle.addEventListener("click", () => {
-                currentPuzzle.src = puzzle.src
+                currentPuzzle.src = puzzle.src;
             });
         } else {
             puzzle.style.opacity = 0.5;
@@ -28,7 +28,6 @@ export function switchInPlayPhoto() {
 }
 
 export function targetingCoordinates(position, checkCharacter, rect, img) {
-
     const { xPercent, yPercent } = positionInPercent(position, rect);
     const pathname = getPathFromURL(img.src);
 
@@ -37,7 +36,6 @@ export function targetingCoordinates(position, checkCharacter, rect, img) {
 }
 
 export function setupPhoto(checkCharacter) {
-
     switchInPlayPhoto();
     const image = document.getElementById("currentPuzzle");
 
@@ -51,10 +49,10 @@ export function setupPhoto(checkCharacter) {
     });
 
     image.addEventListener("load", () => {
-        syncThumbnailHeights()
-    })
+        syncThumbnailHeights();
+    });
 
-    syncThumbnailHeights()
+    syncThumbnailHeights();
 }
 
 export function setupMagnifier(image) {
@@ -65,12 +63,12 @@ export function setupMagnifier(image) {
     const zoomLevel = 2;
     let lensSize = 140;
 
-    magnifier.style.height = `${lensSize}px`
-    magnifier.style.width = `${lensSize}px`
+    magnifier.style.height = `${lensSize}px`;
+    magnifier.style.width = `${lensSize}px`;
 
     image.addEventListener("mouseover", () => {
         magnifier.style.display = "flex";
-    })
+    });
 
     image.addEventListener("mousemove", (e) => {
         const rect = getPhotoRect(image);
@@ -84,22 +82,22 @@ export function setupMagnifier(image) {
         // Zoomed background: offset and scale
         const bgX = -(x * zoomLevel - lensSize / 2);
         const bgY = -(y * zoomLevel - lensSize / 2);
+
         magnifier.style.backgroundImage = `url(${image.src})`;
         magnifier.style.backgroundSize = `${rect.width * zoomLevel}px ${rect.height * zoomLevel}px`;
         magnifier.style.backgroundPosition = `${bgX}px ${bgY}px`;
     });
 
-  image.addEventListener("mousedown", () => {
-    magnifier.classList.add("targeting"); // Switch to reticle
-  });
+    image.addEventListener("mousedown", () => {
+        magnifier.classList.add("targeting"); // Switch to reticle
+    });
 
-  image.addEventListener("mouseup", () => {
-    magnifier.classList.remove("targeting"); // Back to dot
-  });
+    image.addEventListener("mouseup", () => {
+        magnifier.classList.remove("targeting"); // Back to dot
+    });
 
-  image.addEventListener("mouseout", () => {
-    magnifier.style.display = "none";
-    magnifier.classList.remove("targeting"); // Reset on exit
-  });
+    image.addEventListener("mouseout", () => {
+        magnifier.style.display = "none";
+        magnifier.classList.remove("targeting"); // Reset on exit
+    });
 }
-
