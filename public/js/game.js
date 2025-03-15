@@ -38,6 +38,7 @@ export async function checkCharacter(index, x, y, switchInPlayPhoto) {
 
         const data = await res.json();
 
+        console.log(foundArr)
 
         const { success, gameOver } = data;
 
@@ -52,7 +53,7 @@ export async function checkCharacter(index, x, y, switchInPlayPhoto) {
                 if (foundArr[i] === false) {
                     document.querySelector("#currentPuzzle").src = puzzles[i];
                     switchInPlayPhoto();
-                    ws.send(JSON.stringify({type: "updateFound", foundArr}))
+                    ws.send(JSON.stringify({type: "updateFound", foundArr, playerId}))
                 }
             }
 

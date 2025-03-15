@@ -5,6 +5,7 @@ export const startGame = (req, res) => {
     gameState.set(sessionId, { startTime: Date.now(), found: new Set()});
     res.render("index", {
         puzzles:  Object.values(puzzles).map(char => char.img),
+        playerId: req.session.playerId,
         initialTime: GAME_DURATION / 1000,
     });
 };
