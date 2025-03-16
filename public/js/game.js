@@ -1,15 +1,24 @@
-import { ws } from "./main.js"
+import { allPuzzles, mainPuzzle, timerDisplay, ws } from "./main.js";
+import {
+    updateTimerDisplay,
+    switchToUnsolvedPuzzle,
+    updateThumbnails,
+} from "./ui.js";
 
 let gameActive, timeLeft;
 export let foundArr = [];
 
 export function setFoundArr(newArr) {
-    console.log("setFoundArr: ", newArr)
+    console.log("setFoundArr: ", newArr);
     foundArr = newArr;
 }
 
+export function setGameOver() {
+    gameActive = false;
+    return alert("Game over");
+}
+
 export function startGame() {
-    const timerDisplay = document.querySelector("#timer");
     timeLeft = parseFloat(timerDisplay.dataset.timeLeft);
     gameActive = true;
 
@@ -20,17 +29,17 @@ export function startGame() {
             const seconds = Math.floor(timeLeft % 60)
                 .toString()
                 .padStart(2, "0");
-            timerDisplay.textContent = `Time left: ${minutes}:${seconds}`;
+            updateTimerDisplay(`Time left: ${minutes}:${seconds}`, timerDisplay);
         } else {
             gameActive = false;
-            timerDisplay.textContent = "Time's up!";
+            updateTimerDisplay("Time's up!", timerDisplay);
         }
     }, 1000);
 }
 
-export async function checkCharacter(index, x, y, switchInPlayPhoto) {
+export async function checkCharacter(index, x, y) {
     try {
-        const res = await fetch("/check", {
+        const res = await fetch("/guess", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ index, x, y }),
@@ -38,29 +47,21 @@ export async function checkCharacter(index, x, y, switchInPlayPhoto) {
 
         const data = await res.json();
 
-        console.log(foundArr)
-
         const { success, gameOver } = data;
-
-        if (gameOver) {
-            gameActive = false;
-            return alert("Game over");
-        }
 
         if (success) {
             foundArr[index] = true;
-            for (let i = 0; i < foundArr.length; i++) {
-                if (foundArr[i] === false) {
-                    document.querySelector("#currentPuzzle").src = puzzles[i];
-                    switchInPlayPhoto();
-                    ws.send(JSON.stringify({type: "updateFound", foundArr, playerId}))
-                }
-            }
+            updateThumbnails(allPuzzles);
+            const unsolvedIdx = foundArr.indexOf(false);
+            if (unsolvedIdx !== -1) switchToUnsolvedPuzzle(mainPuzzle, puzzles, unsolvedIdx);
+            ws.send(JSON.stringify({ type: "updateFound", foundArr, playerId }));
+        }
 
+        if (gameOver) {
+            setGameOver()
         }
     } catch (err) {
         console.error("Fetch error: ", err);
         alert("Something went wrong");
     }
 }
-

@@ -1,30 +1,35 @@
 import { foundArr } from "./game.js";
+import { allPuzzles } from "./main.js";
 import { getPhotoRect, getPathFromURL, positionInPercent } from "./utils.js";
 
-function syncThumbnailHeights() {
-    const currentPuzzle = document.querySelector("#currentPuzzle");
-    const puzzles = document.querySelectorAll(".puzzle");
+export const updateTimerDisplay = (str, timer) => timer.textContent = str;
 
-    const currentHeight = currentPuzzle.offsetHeight;
-    const thumbnailHeight = currentHeight / puzzles.length;
+export function syncThumbnailHeights(thumbnails, mainPuzzle) {
+    const currentHeight = mainPuzzle.offsetHeight;
+    const thumbnailHeight = currentHeight / thumbnails.length;
 
-    puzzles.forEach((puzzle) => (puzzle.style.height = `${thumbnailHeight}px`));
+    thumbnails.forEach((thumb) => (thumb.style.height = `${thumbnailHeight}px`));
 }
 
-export function switchInPlayPhoto() {
-    const puzzlesAll = document.querySelectorAll(".puzzle");
-    const currentPuzzle = document.querySelector("#currentPuzzle");
+export function setupThumbnailListeners(thumbnails, mainPuzzle) {
+    thumbnails.forEach((thumb) => {
+        thumb.addEventListener("click", () => {
+            mainPuzzle.src = thumb.src;
+        });
+    });
+}
 
-    puzzlesAll.forEach((puzzle, index) => {
-        if (!foundArr[index]) {
-            puzzle.addEventListener("click", () => {
-                currentPuzzle.src = puzzle.src;
-            });
-        } else {
+export function updateThumbnails() {
+    allPuzzles.forEach((puzzle, i) => {
+        if (foundArr[i]) {
             puzzle.style.opacity = 0.5;
             puzzle.style.pointerEvents = "none";
         }
     });
+}
+
+export function switchToUnsolvedPuzzle(mainPuzzle, puzzles, idx) {
+    mainPuzzle.src = puzzles[idx];
 }
 
 export function targetingCoordinates(position, checkCharacter, rect, img) {
@@ -32,27 +37,20 @@ export function targetingCoordinates(position, checkCharacter, rect, img) {
     const pathname = getPathFromURL(img.src);
 
     const index = puzzles.indexOf(pathname);
-    checkCharacter(index, xPercent, yPercent, switchInPlayPhoto);
+    checkCharacter(index, xPercent, yPercent);
 }
 
-export function setupPhoto(checkCharacter) {
-    switchInPlayPhoto();
-    const image = document.getElementById("currentPuzzle");
+export function setupPuzzle(mainPuzzle, checkCharacter) {
 
-    setupMagnifier(image);
-    image.addEventListener("click", (e) => {
-        const rect = getPhotoRect(image);
+    mainPuzzle.addEventListener("click", (e) => {
+        const rect = getPhotoRect(mainPuzzle);
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        targetingCoordinates({ x, y }, checkCharacter, rect, image);
+        targetingCoordinates({ x, y }, checkCharacter, rect, mainPuzzle);
     });
 
-    image.addEventListener("load", () => {
-        syncThumbnailHeights();
-    });
-
-    syncThumbnailHeights();
+    setupMagnifier(mainPuzzle);
 }
 
 export function setupMagnifier(image) {

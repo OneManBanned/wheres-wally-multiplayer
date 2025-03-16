@@ -12,6 +12,6 @@ router.get("/", (req, res) => {
   startGame(req, res);
 });
 
-router.post("/check", checkGuess);
+router.post("/guess", checkGuess);
 
 export default router;
