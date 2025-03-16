@@ -76,14 +76,14 @@ wss.on("connection", (ws) => {
       for (const [id, players] of games) {
         if (players.includes(data.playerId)) {
           gameId = id;
-            console.log("updateFound:", players)
           opponentId = players.find((id) => id !== data.playerId);
           break;
         }
       }
+
       if (opponentId) {
         const opponentWs = clients.get(opponentId);
-        if (opponentId?.readyState === opponentWs.OPEN) {
+        if (opponentWs?.readyState === opponentWs.OPEN) {
           opponentWs.send(JSON.stringify({ type: "updateFound", foundArr }));
         }
       }
