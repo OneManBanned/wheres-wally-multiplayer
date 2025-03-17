@@ -5,6 +5,7 @@ import { getPhotoRect, getPathFromURL, positionInPercent } from "./utils.js";
 export const updateTimerDisplay = (str, timer) => timer.textContent = str;
 
 export function syncThumbnailHeights(thumbnails, mainPuzzle) {
+    console.log(mainPuzzle)
     const currentHeight = mainPuzzle.offsetHeight;
     const thumbnailHeight = currentHeight / thumbnails.length;
 

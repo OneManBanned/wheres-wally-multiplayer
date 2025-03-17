@@ -30,14 +30,12 @@ const server = app.listen(PORT, () => {
 });
 
 const wss = new WebSocketServer({ server });
-
 const clients = new Map();
 const lobby = [];
 const games = new Map();
 
 wss.on("connection", (ws) => {
   console.log("New client connected");
-  let foundArr = Array(5).fill(false);
 
   ws.on("message", (msg) => {
     const data = JSON.parse(msg.toString());
@@ -48,16 +46,25 @@ wss.on("connection", (ws) => {
       console.log(`${playerId} joining the lobby`);
       clients.set(playerId, ws);
       lobby.push(playerId);
-      ws.send(JSON.stringify({ type: "init", foundArr, status: "waiting" }));
+      ws.send(
+        JSON.stringify({
+          type: "init",
+          status: "waiting",
+          foundArr: Array(5).fill(false),
+        }),
+      );
       console.log("Lobby: ", lobby);
 
       if (lobby.length > 1) {
         const player1 = lobby.shift();
         const player2 = lobby.shift();
         const gameId = `game-${uuidv4()}`;
-        games.set(gameId, [player1, player2]);
+        games.set(gameId, {
+          players: [player1, player2],
+          foundArr: Array(5).fill(false),
+        });
         console.log(`Paired ${player1} and ${player2} in ${gameId}`);
-          console.log(lobby)
+        console.log(lobby);
 
         const ws1 = clients.get(player1);
         const ws2 = clients.get(player2);
@@ -71,33 +78,69 @@ wss.on("connection", (ws) => {
     }
 
     if (data.type === "updateFound") {
-      foundArr = data.foundArr;
-      let gameId, opponentId;
-      for (const [id, players] of games) {
-        if (players.includes(data.playerId)) {
-          gameId = id;
-          opponentId = players.find((id) => id !== data.playerId);
+      let game = null;
+      for (const [id, gameData] of games) {
+        if (gameData.players.includes(data.playerId)) {
+          game = gameData;
+          game.foundArr = data.foundArr;
           break;
         }
       }
 
-      if (opponentId) {
-        const opponentWs = clients.get(opponentId);
-        if (opponentWs?.readyState === opponentWs.OPEN) {
-          opponentWs.send(JSON.stringify({ type: "updateFound", foundArr }));
+      if (game) {
+        const opponentsId = game.players.find((id) => id !== data.playerId);
+        const opponentsWs = clients.get(opponentsId);
+        const playersWs = clients.get(data.playerId);
+        if (opponentsWs?.readyState === opponentsWs.OPEN) {
+          opponentsWs.send(
+            JSON.stringify({ type: "updateFound", foundArr: game.foundArr }),
+          );
+        }
+
+        if (!game.foundArr.includes(false)) {
+          console.log(`Game ${data.gameId} over: all found`);
+          if (opponentsWs?.readyState === opponentsWs.OPEN) {
+            opponentsWs.send(
+              JSON.stringify({ type: "gameOver", reason: "allFound" }),
+            );
+          }
+          if (playersWs?.readyState === playersWs.OPEN) {
+            playersWs.send(
+              JSON.stringify({ type: "gameOver", reason: "allFound" }),
+            );
+          }
         }
       }
     }
+
+    // End Of WebSocket Messages
   });
 
   ws.on("close", () => {
     const playerId = [...clients].find(([id, client]) => client === ws)?.[0];
     if (playerId) {
-      console.log(`${playerId} disconnected`);
       clients.delete(playerId);
       const index = lobby.indexOf(playerId);
       if (index !== -1) lobby.splice(index, 1);
-      console.log("Lobby after disconnect", lobby);
+
+      let gameIdToRemove;
+
+      for (const [gameId, game] of games) {
+        if (game.players.includes(playerId)) {
+          gameIdToRemove = gameId;
+          const opponentId = game.players.find((id) => id !== playerId);
+          const opponentWs = clients.get(opponentId);
+          if (opponentWs?.readyState === opponentWs.OPEN) {
+            opponentWs.send(JSON.stringify({ type: "opponentQuit", gameId }));
+            lobby.push(opponentId);
+            opponentWs.send(
+              JSON.stringify({ type: "init", foundArr: Array(5).fill(false) }),
+            );
+          }
+          break;
+        }
+      }
+      if (gameIdToRemove) games.delete(gameIdToRemove);
     }
   });
 });

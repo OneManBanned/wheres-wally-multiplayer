@@ -23,7 +23,6 @@ export const checkGuess = (req, res) => {
             success: false,
             message: "Times Up!",
             timeLeft: 0,
-            gameOver: true,
             timeTaken: null,
         });
     }
@@ -46,12 +45,10 @@ export const checkGuess = (req, res) => {
     }
 
     const allFound = state.found.size === Object.keys(puzzles).length;
-    const gameOver = allFound || timeLeft <= 0;
     const timeTaken = allFound ? elapsed / 1000 : null;
 
     res.json({
         success: solved,
-        gameOver,
         timeTaken,
         timeLeft,
     });

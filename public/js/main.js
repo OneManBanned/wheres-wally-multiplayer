@@ -14,10 +14,7 @@ export const timerDisplay = document.querySelector("#timer");
 startGame();
 setupPuzzle(mainPuzzle, checkCharacter);
 setupThumbnailListeners(allPuzzles, mainPuzzle);
-
-mainPuzzle.addEventListener("load", () => {
-    syncThumbnailHeights(allPuzzles, mainPuzzle);
-});
+syncThumbnailHeights(allPuzzles, mainPuzzle);
 
 export const ws = new WebSocket("ws://localhost:3000");
 
@@ -37,14 +34,20 @@ ws.onmessage = (e) => {
         console.log(`Paired in ${data.gameId} vs ${data.opponentId}`);
     }
 
+    if (data.type === "gameOver") {
+        setGameOver();
+        console.log(`Game over: ${data.reason}`)
+        return;
+    }
+
     if (data.type === "updateFound") {
         setFoundArr(data.foundArr);
         updateThumbnails(allPuzzles);
         const unsolvedIdx = data.foundArr.indexOf(false);
         if (unsolvedIdx !== -1) switchToUnsolvedPuzzle(mainPuzzle, puzzles, unsolvedIdx);
-        else setGameOver()
         console.log(`Updated found array ${data.foundArr}`);
     }
+
 };
 
 ws.onclose = () => {

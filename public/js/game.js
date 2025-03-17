@@ -5,7 +5,7 @@ import {
     updateThumbnails,
 } from "./ui.js";
 
-let gameActive, timeLeft;
+let gameOver, timeLeft;
 export let foundArr = [];
 
 export function setFoundArr(newArr) {
@@ -14,16 +14,15 @@ export function setFoundArr(newArr) {
 }
 
 export function setGameOver() {
-    gameActive = false;
+    gameOver = true;
     return alert("Game over");
 }
 
 export function startGame() {
     timeLeft = parseFloat(timerDisplay.dataset.timeLeft);
-    gameActive = true;
 
     setInterval(() => {
-        if (gameActive && timeLeft > 0) {
+        if (!gameOver && timeLeft > 0) {
             timeLeft -= 1;
             const minutes = Math.floor(timeLeft / 60);
             const seconds = Math.floor(timeLeft % 60)
@@ -31,7 +30,6 @@ export function startGame() {
                 .padStart(2, "0");
             updateTimerDisplay(`Time left: ${minutes}:${seconds}`, timerDisplay);
         } else {
-            gameActive = false;
             updateTimerDisplay("Time's up!", timerDisplay);
         }
     }, 1000);
@@ -47,19 +45,17 @@ export async function checkCharacter(index, x, y) {
 
         const data = await res.json();
 
-        const { success, gameOver } = data;
+        const { success } = data;
 
         if (success) {
             foundArr[index] = true;
             updateThumbnails(allPuzzles);
             const unsolvedIdx = foundArr.indexOf(false);
+            console.log(unsolvedIdx)
             if (unsolvedIdx !== -1) switchToUnsolvedPuzzle(mainPuzzle, puzzles, unsolvedIdx);
             ws.send(JSON.stringify({ type: "updateFound", foundArr, playerId }));
         }
 
-        if (gameOver) {
-            setGameOver()
-        }
     } catch (err) {
         console.error("Fetch error: ", err);
         alert("Something went wrong");
