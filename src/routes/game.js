@@ -7,7 +7,6 @@ const router = Router();
 router.get("/", (req, res) => {
   if (!req.session.playerId) {
     req.session.playerId = uuidv4();
-      console.log("Server: ", req.session.playerId)
   }
   startGame(req, res);
 });

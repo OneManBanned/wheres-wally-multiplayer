@@ -25,6 +25,9 @@ export function updateThumbnails() {
         if (foundArr[i]) {
             puzzle.style.opacity = 0.5;
             puzzle.style.pointerEvents = "none";
+        } else {
+            puzzle.style.opacity = 1;
+            puzzle.style.pointerEvents = "auto"
         }
     });
 }
