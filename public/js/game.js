@@ -5,11 +5,10 @@ import {
     updateThumbnails,
 } from "./ui.js";
 
-let gameOver, timeLeft;
+let gameOver, startTime;
 export let foundArr = [];
 
 export function setFoundArr(newArr) {
-    console.log("setFoundArr: ", newArr);
     foundArr = newArr;
 }
 
@@ -18,8 +17,11 @@ export function setGameOver() {
     return alert("Game over");
 }
 
-export function startGame(startTime) {
-    console.log("INSIDE TIMER: ", gameOver)
+export function setStartTime(time) {
+    startTime = time
+}
+
+export function startGame() {
     gameOver = false;
     const totalTime = 300000;
 
@@ -43,22 +45,6 @@ export function startGame(startTime) {
             .padStart(2, "00");
         updateTimerDisplay(`Time left: ${minutes}:${seconds}`, timerDisplay);
     }, 1000);
-    /*
-      timeLeft = parseFloat(timerDisplay.dataset.timeLeft);
-  
-      setInterval(() => {
-          if (!gameOver && timeLeft > 0) {
-              timeLeft -= 1;
-              const minutes = Math.floor(timeLeft / 60);
-              const seconds = Math.floor(timeLeft % 60)
-                  .toString()
-                  .padStart(2, "0");
-              updateTimerDisplay(`Time left: ${minutes}:${seconds}`, timerDisplay);
-          } else {
-              updateTimerDisplay("Time's up!", timerDisplay);
-          }
-      }, 1000);
-      */
 }
 
 export async function checkCharacter(index, x, y) {
@@ -77,7 +63,6 @@ export async function checkCharacter(index, x, y) {
             foundArr[index] = true;
             updateThumbnails(allPuzzles);
             const unsolvedIdx = foundArr.indexOf(false);
-            console.log(unsolvedIdx);
             if (unsolvedIdx !== -1)
                 switchToUnsolvedPuzzle(mainPuzzle, puzzles, unsolvedIdx);
             ws.send(JSON.stringify({ type: "updateFound", foundArr, playerId }));
