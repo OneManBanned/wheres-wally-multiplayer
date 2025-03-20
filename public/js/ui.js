@@ -2,6 +2,16 @@ import { foundArr } from "./game.js";
 import { allPuzzles } from "./main.js";
 import { getPhotoRect, getPathFromURL, positionInPercent } from "./utils.js";
 
+export function showLobby() {
+  document.querySelector("#lobby-view").style.display = "block";
+  document.querySelector("#game-view").style.display = "none";
+}
+
+export function showGame() {
+  document.querySelector("#lobby-view").style.display = "none";
+  document.querySelector("#game-view").style.display = "flex";
+}
+
 export const updateTimerDisplay = (str, timer) => timer.textContent = str;
 
 export function syncThumbnailHeights(thumbnails, mainPuzzle) {

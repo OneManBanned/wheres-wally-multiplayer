@@ -22,7 +22,7 @@
   </main>
   <script>
     let puzzles = <%- JSON.stringify(puzzles) %>;
-    let playerId = "<%= playerId %>";
+    window.playerId = "<%= playerId %>";
   </script>
   <script type="module" src="/js/main.js"></script>
 </body>

@@ -12,6 +12,11 @@ export const checkGuess = (req, res) => {
   const { index, x, y } = req.body;
   const characters = puzzles[index].characters;
 
+  if (!characters)
+    return res
+      .status(400)
+      .json({ success: false, error: "Invalid puzzle index" });
+
   let solved = false;
 
   for (let character in characters) {

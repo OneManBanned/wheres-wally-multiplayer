@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, "../public")));
 
 app.use(
     session({
-        secret: process.env.SECRET,
+        secret: process.env.SECRET || "wheres-wally-secret",
         resave: false,
         saveUninitialized: true,
     }),
@@ -33,5 +33,7 @@ const wss = new WebSocketServer({ server });
 const clients = new Map();
 const lobby = [];
 const games = new Map();
+
+wss.on("listening", () => console.log("WS running"))
 
 setupWebSocket(wss, clients, lobby, games);

@@ -1,9 +1,5 @@
-import { allPuzzles, mainPuzzle, timerDisplay, ws } from "./main.js";
-import {
-    updateTimerDisplay,
-    switchToUnsolvedPuzzle,
-    updateThumbnails,
-} from "./ui.js";
+import { allPuzzles, mainPuzzle, timerDisplay } from "./main.js";
+import { updateTimerDisplay, switchToUnsolvedPuzzle, updateThumbnails, } from "./ui.js";
 
 let gameOver, startTime;
 export let foundArr = [];
@@ -14,7 +10,6 @@ export function setFoundArr(newArr) {
 
 export function setGameOver() {
     gameOver = true;
-    return alert("Game over");
 }
 
 export function setStartTime(time) {
@@ -47,7 +42,7 @@ export function startGame() {
     }, 1000);
 }
 
-export async function checkCharacter(index, x, y) {
+export async function checkCharacter(index, x, y, ws, playerId) {
     try {
         const res = await fetch("/guess", {
             method: "POST",
@@ -55,6 +50,7 @@ export async function checkCharacter(index, x, y) {
             body: JSON.stringify({ index, x, y }),
         });
 
+        console.log(res.headers, playerId)
         const data = await res.json();
 
         const { success } = data;
@@ -65,6 +61,7 @@ export async function checkCharacter(index, x, y) {
             const unsolvedIdx = foundArr.indexOf(false);
             if (unsolvedIdx !== -1)
                 switchToUnsolvedPuzzle(mainPuzzle, puzzles, unsolvedIdx);
+            console.log("Data: ", data)
             ws.send(JSON.stringify({ type: "updateFound", foundArr, playerId }));
         }
     } catch (err) {
