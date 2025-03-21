@@ -11,6 +11,5 @@ const ws = initWebSocket({playerId, allPuzzles, mainPuzzle, timerDisplay})
 setupPuzzle(mainPuzzle, (index, x, y) => checkCharacter(index, x, y, ws, window.playerId));
 setupThumbnailListeners(allPuzzles, mainPuzzle);
 syncThumbnailHeights(allPuzzles, mainPuzzle);
-console.log("HIT")
 showLobby();
 

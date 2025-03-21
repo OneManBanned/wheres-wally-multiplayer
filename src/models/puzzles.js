@@ -20,10 +20,10 @@ export const puzzles = [
                 height: 4.91,
             },
             whitebeard: {
-                x: 77.04,
-                y: 58.41,
-                width: 1.25,
-                height: 4.59,
+                x: 77.60,
+                y: 56.57,
+                width: 0.94,
+                height: 3.80,
             },
         },
         img: "/images/wallyspace.jpg",
@@ -146,5 +146,3 @@ export const puzzles = [
   },
 ];
 
-export const GAME_DURATION = 300000;
-export const gameState = new Map();
