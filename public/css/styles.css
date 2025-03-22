@@ -3,18 +3,28 @@
   margin: 0;
   padding: 0;
 }
+html, body {
+  height: 100%; 
+  width: 100%;  
+  margin: 0;    
+  padding: 0;
+  overflow: hidden;
+}
 
 body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: blue;
   height: 100vh;
+  background-image:  url('/images/background.png');
+  background-size: 200% 200%;
+  background-position: top center;
 }
 
 main {
   display: flex;
-  width: 80%;
+  background: white;
+  height: 80%;
   gap: 1rem;
 }
 
@@ -49,10 +59,9 @@ main {
   border-radius: 50%;
   border: 4px solid #000;
   background-repeat: no-repeat;
-  pointer-events: none; /* Clicks pass through to image */
-  display: none; /* Hidden until hover */
+  pointer-events: none; 
+  display: none; 
   z-index: 10;
-  /* Center Reticle */
   justify-content: center;
   align-items: center;
 }
@@ -61,7 +70,7 @@ main {
   content: "";
   position: absolute;
   width: 2px;
-  height: 20px; /* Vertical line */
+  height: 20px; 
   background: #f00;
   top: 50%;
   left: 50%;
