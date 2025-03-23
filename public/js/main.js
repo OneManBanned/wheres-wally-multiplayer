@@ -1,5 +1,5 @@
 import { checkCharacter } from "./game.js";
-import { showLobby, setupPuzzle, setupThumbnailListeners, syncThumbnailHeights, syncHeadshotsHeights, } from "./ui.js";
+import { showLobby, setupPuzzle, setupThumbnailListeners, syncThumbnailHeights, syncHeadshotHeights, } from "./ui.js";
 import { initWebSocket } from "./websockets.js";
 
 export const allPuzzles = document.querySelectorAll(".puzzle");
@@ -12,5 +12,5 @@ const ws = initWebSocket({ playerId, allPuzzles, mainPuzzle, timerDisplay });
 setupPuzzle(mainPuzzle, (index, x, y) => checkCharacter(index, x, y, ws, window.playerId),);
 setupThumbnailListeners(allPuzzles, mainPuzzle);
 syncThumbnailHeights(allPuzzles, mainPuzzle);
-syncHeadshotsHeights(headshots, allPuzzles[0]);
+syncHeadshotHeights(headshots, allPuzzles[0]);
 showLobby();

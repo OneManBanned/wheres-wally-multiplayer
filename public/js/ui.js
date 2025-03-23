@@ -21,7 +21,7 @@ export function syncThumbnailHeights(thumbnails, mainPuzzle) {
   thumbnails.forEach((thumb) => (thumb.style.height = `calc(${thumbnailHeight}px - .5rem)`));
 }
 
-export function syncHeadshotsHeights(headshots, thumbnail) {
+export function syncHeadshotHeights(headshots, thumbnail) {
   const currentHeight = thumbnail.offsetHeight;
   const headshotHeight = currentHeight / 4;
 
