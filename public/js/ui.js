@@ -18,12 +18,12 @@ export function syncThumbnailHeights(thumbnails, mainPuzzle) {
   const currentHeight = mainPuzzle.offsetHeight;
   const thumbnailHeight = currentHeight / thumbnails.length;
 
-  thumbnails.forEach((thumb) => (thumb.style.height = `calc(${thumbnailHeight}px - .5rem)`));
+  thumbnails.forEach((thumb) => (thumb.style.height = `calc(${thumbnailHeight}px - 1.5rem)`));
 }
 
 export function syncHeadshotHeights(headshots, thumbnail) {
   const currentHeight = thumbnail.offsetHeight;
-  const headshotHeight = currentHeight / 4;
+  const headshotHeight = currentHeight / 3;
 
   headshots.forEach((head) => (head.style.height = `calc(${headshotHeight}px - .1rem)`));
 
