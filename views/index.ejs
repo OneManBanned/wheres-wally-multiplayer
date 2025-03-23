@@ -10,14 +10,25 @@
         <h1>...Waiting for opponent</h1> 
     </div>
   <main id="game-view">
+      <div id="status-bar">
     <div id="timer">Time Left: 5:00</div>
+      </div>
     <div id="puzzle-container">
         <img src="<%= puzzles[0] %>" draggable="false" id="currentPuzzle" alt="Tagging Photo">
     </div>
     <div id="puzzle-selection">
       <% puzzles.forEach(puzzle => { %> 
+      <div id="inner-container">
       <img src="<%= puzzle %>" alt="" class="puzzle">
+      <div id="headshot-container">
+        <% const newImages = ['/images/wally-head.png', '/images/odlaw-head.png', '/images/whitebeard-head.png', '/images/wenda-head.png']; %>
+        <% newImages.forEach(image => { %>
+        <img src="<%= image %>" alt="" class="headshot">
+        <% }) %>
+      </div>
+      </div>
       <% }) %>
+        </div>
     </div>
   </main>
   <script>

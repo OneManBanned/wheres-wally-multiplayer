@@ -9,17 +9,24 @@ export function showLobby() {
 
 export function showGame() {
   document.querySelector("#lobby-view").style.display = "none";
-  document.querySelector("#game-view").style.display = "flex";
+  document.querySelector("#game-view").style.display = "grid";
 }
 
 export const updateTimerDisplay = (str, timer) => (timer.textContent = str);
 
 export function syncThumbnailHeights(thumbnails, mainPuzzle) {
-  console.log(mainPuzzle);
   const currentHeight = mainPuzzle.offsetHeight;
   const thumbnailHeight = currentHeight / thumbnails.length;
 
-  thumbnails.forEach((thumb) => (thumb.style.height = `${thumbnailHeight}px`));
+  thumbnails.forEach((thumb) => (thumb.style.height = `calc(${thumbnailHeight}px - .5rem)`));
+}
+
+export function syncHeadshotsHeights(headshots, thumbnail) {
+  const currentHeight = thumbnail.offsetHeight;
+  const headshotHeight = currentHeight / 4;
+
+  headshots.forEach((head) => (head.style.height = `calc(${headshotHeight}px - .1rem)`));
+
 }
 
 export function setupThumbnailListeners(thumbnails, mainPuzzle) {
