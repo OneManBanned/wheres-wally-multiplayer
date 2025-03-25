@@ -1,7 +1,7 @@
 import { startGame, setFoundArr, setGameOver, setStartTime, setPowerUpsArr, } from "./game.js";
-import { showLobby, showGame, updateThumbnails, switchToUnsolvedPuzzle, setupMagnifier, } from "./ui.js";
+import { showLobby, showGame, updateSolvedThumbnails, updateScores, updateFoundCharacters, switchToUnsolvedPuzzle, syncFoundCharacters, } from "./ui.js";
 
-export function initWebSocket({ playerId, allPuzzles, mainPuzzle }) {
+export function initWebSocket({ playerId, mainPuzzle }) {
     const ws = new WebSocket("ws://localhost:3000");
 
     ws.onopen = () => {
@@ -11,17 +11,16 @@ export function initWebSocket({ playerId, allPuzzles, mainPuzzle }) {
 
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        const { type, startTime, foundArr, gameId, powerUpsArr, character } = data;
+        const { type, startTime, foundArr, gameId, powerUpsArr, playerStats, puzzleIdx, character } = data;
 
-        if (type === "init") {
-            setFoundArr(foundArr);
-            updateThumbnails(allPuzzles);
-            showLobby();
-        }
         if (type === "paired") {
-            showGame();
+            setFoundArr(foundArr)
             setPowerUpsArr(powerUpsArr);
             setStartTime(startTime);
+            updateSolvedThumbnails();
+            syncFoundCharacters()
+            switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
+            showGame();
             startGame();
         }
 
@@ -31,29 +30,33 @@ export function initWebSocket({ playerId, allPuzzles, mainPuzzle }) {
         }
 
         if (type === "updateFound") {
+            console.log(playerStats)
             setFoundArr(foundArr);
-            updateThumbnails(allPuzzles);
-            switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr);
+            updateScores(playerStats, playerId)
+            updateSolvedThumbnails();
+            switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
         }
 
         if (type === "powerUpFound") {
-            console.log("Character power up: ", character);
+            setPowerUpsArr(powerUpsArr)
+            updateFoundCharacters(puzzleIdx, character);
+            /*
             mainPuzzle.style.transform = "rotateX(180deg)";
             mainPuzzle.dataset.flipped = "true";
             setTimeout(() => {
-            mainPuzzle.style.transform = "none";
+                mainPuzzle.style.transform = "none";
                 delete mainPuzzle.dataset.flipped;
-            }, 15000)
-
+            }, 15000);
+            */
         }
 
         if (type === "opponentQuit") {
             console.log(`Opponent quit game ${gameId} is over`);
+            showLobby();
         }
     };
 
     ws.onclose = () => console.log("Disconnected from WebSocket server");
     ws.onerror = (e) => console.log("WebSocker error: ", e);
 
-    return ws;
 }

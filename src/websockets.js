@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { getGameByPlayerId, getGameWsByPlayerId, wsOpenSend } from "./utils/utils.js";
+import { getGameByPlayerId, wsOpenSend } from "./utils/utils.js";
 
 export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR,
 ) {
@@ -8,12 +8,11 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
 
     ws.on("message", (msg) => {
       const data = JSON.parse(msg.toString());
-      const { type, playerId, powerUpsArr, character } = data;
+      const { type, playerId } = data;
 
       if (type === "join") {
         clients.set(playerId, ws);
         lobby.push(playerId);
-        wsOpenSend(ws, { type: "init", foundArr: DEFAULT_FOUND_ARR(), powerUpsArr: DEFAULT_POWERUPS_ARR(), });
 
         if (lobby.length > 1) {
           const player1 = lobby.shift();
@@ -28,8 +27,8 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
 
           const { foundArr, powerUpsArr, startTime, playerStats } = games.get(gameId, data);
 
-          wsOpenSend(ws1, { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats, });
-          wsOpenSend(ws2, { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats, });
+          wsOpenSend(ws1, { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats });
+          wsOpenSend(ws2, { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats });
 
           setTimeout(() => {
             const game = games.get(gameId);
@@ -42,24 +41,12 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
         }
       }
 
-      if (type === "powerUpFound") {
-        let { gameData } = getGameByPlayerId(playerId, games);
-
-        if (gameData) {
-          gameData.powerUpsArr = powerUpsArr;
-          const { opponentsWs } = getGameWsByPlayerId( playerId, gameData, clients,);
-          wsOpenSend(opponentsWs, {
-            type: "powerUpFound",
-            powerUpsArr: powerUpsArr,
-            character,
-          });
-        }
-      }
     });
 
     ws.on("close", () => {
       const playerId = [...clients].find(([id, client]) => client === ws)?.[0];
       if (playerId) {
+
         clients.delete(playerId);
         const index = lobby.indexOf(playerId);
         if (index !== -1) lobby.splice(index, 1);
@@ -70,14 +57,10 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
           return;
         }
         const { gameId, gameData } = result;
-
         const opponentId = gameData.players.find((id) => id !== playerId);
         const opponentWs = clients.get(opponentId);
         wsOpenSend(opponentWs, { type: "opponentQuit", gameId });
-        if (opponentWs?.readyState === opponentWs.OPEN) {
-        wsOpenSend(opponentWs, { type: "init", foundArr: DEFAULT_FOUND_ARR(), powerUpsArr: DEFAULT_POWERUPS_ARR(), });
-        }
-          lobby.push(opponentId);
+        lobby.push(opponentId);
         games.delete(gameId);
       }
     });

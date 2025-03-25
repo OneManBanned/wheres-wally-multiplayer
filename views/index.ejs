@@ -4,26 +4,32 @@
   <meta charset="UTF-8">
   <title>Photo Tagging App</title>
   <link rel="stylesheet" href="/css/styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Comic+Neue&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="lobby-view">
         <h1>...Waiting for opponent</h1> 
     </div>
-  <main id="game-view">
+  <main id="game-view" style="display:none;">
       <div id="status-bar">
+          <div >Player: <span id="playerScore">0</span></div>
     <div id="timer">Time Left: 5:00</div>
+          <div >Opponent: <span id="opponentScore">0</span></div>
       </div>
     <div id="puzzle-container">
         <img src="<%= puzzles[0] %>" draggable="false" id="currentPuzzle" alt="Tagging Photo">
     </div>
     <div id="puzzle-selection">
       <% puzzles.forEach(puzzle => { %> 
-      <div id="inner-container">
-      <img src="<%= puzzle %>" alt="" class="puzzle">
-      <div id="headshot-container">
+      <div class="puzzleSelect-container">
+      <img src="<%= puzzle %>" alt="" draggable="false" class="puzzle">
+      <div class="headshot-container">
         <% const newImages = ['/images/odlaw-head.png', '/images/whitebeard-head.png', '/images/wenda-head.png']; %>
         <% newImages.forEach(image => { %>
-        <img src="<%= image %>" alt="" class="headshot">
+        <div class="headshot-wrapper">
+        <img src="<%= image %>" alt="" draggable="false" class="headshot">
+        <img src="/images/red-cross.png" alt="found" draggable="false" class="overlay" style="display: none; position: absolute;">
+        </div>
         <% }) %>
       </div>
       </div>

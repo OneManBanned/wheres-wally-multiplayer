@@ -39,6 +39,7 @@ export function startGame() {
 
 export async function checkCharacter(puzzleIdx, x, y, playerId) {
     try {
+        console.log("checking guess on client")
          await fetch("/guess", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -1,8 +1,16 @@
+:root {
+  --puzzleHeight: 500px;
+  --numberOfPuzzles: 5;
+  --numberOfHeadshots: 3;
+  --puzzleSelectContainerGap: 1rem;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
+
 html,
 body {
   height: 100%;
@@ -22,6 +30,11 @@ body {
   background-position: top center;
 }
 
+h1 {
+  font-family: "Bubblegum Sans", sans-serif;
+  font-size: 2rem;
+}
+
 #game-view {
   grid-template-rows: auto 1fr;
   grid-template-columns: auto 1fr;
@@ -36,11 +49,15 @@ body {
 }
 
 #timer {
+  font-family: "Comic Neue", sans-serif;
+  font-size: 1.15rem;
 }
 
 #status-bar {
   grid-row: 1;
   grid-column: 1/3;
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 1rem;
   padding: 0.25rem 1rem;
   border: 2px solid black;
@@ -60,8 +77,8 @@ body {
 }
 
 #currentPuzzle {
-  width: 800px;
-  height: 500px;
+  height: var(--puzzleHeight);
+  aspect-ratio: 8/5;
   object-fit: cover;
   border: 2px solid black;
   border-image-slice: 50 50 50 50;
@@ -72,7 +89,7 @@ body {
 }
 
 #currentPuzzle:hover {
-  cursor: none; /* Hide default cursor on hover */
+  cursor: none;
 }
 
 #puzzle-selection {
@@ -82,14 +99,12 @@ body {
   flex-direction: column;
   justify-content: space-between;
   gap: 1rem;
+  height: calc(
+    var(--puzzleHeight) - (1rem * (var(--numberOfPuzzles) - 1))
+  ); /* height - (gap * numberOfGaps)*/
 }
 
-.puzzle {
-  width: 100%;
-  object-fit: cover;
-}
-
-#inner-container {
+.puzzleSelect-container {
   display: flex;
   padding: 0.1rem;
   flex-direction: row;
@@ -99,18 +114,41 @@ body {
   border-image-outset: 5px 5px 5px 5px;
   border-image-repeat: repeat repeat;
   border-image-source: url("/images/box.png");
+  height: calc(100% / var(--numberOfPuzzles));
 }
 
-#headshot-container {
+.puzzle {
+  width: 100%;
+  object-fit: cover;
+}
+
+.headshot-container {
   display: flex;
   flex-direction: column;
   padding-left: 0.25rem;
-  justify-content: space-between;
+  justify-content: space-evenly;
+  height: 100%;
+}
+
+.headshot-wrapper {
+    position: relative;
+    height: calc(100% / var(--numberOfHeadshots));
+    aspect-ratio: 1 / 1;
 }
 
 .headshot {
-    border-radius: 50%;
-    background: green;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none; 
 }
 
 #magnifier {

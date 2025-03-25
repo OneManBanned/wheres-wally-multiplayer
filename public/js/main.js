@@ -1,16 +1,18 @@
 import { checkCharacter } from "./game.js";
-import { showLobby, setupPuzzle, setupThumbnailListeners, syncThumbnailHeights, syncHeadshotHeights, } from "./ui.js";
+import { showLobby, setupPuzzle, setupThumbnailListeners } from "./ui.js";
 import { initWebSocket } from "./websockets.js";
 
 export const allPuzzles = document.querySelectorAll(".puzzle");
 export const mainPuzzle = document.querySelector("#currentPuzzle");
 export const timerDisplay = document.querySelector("#timer");
 export const headshots = document.querySelectorAll(".headshot");
+export const allHeadshotContainers = document.querySelectorAll(".headshot-container")
+export const allPuzzleContainers = document.querySelectorAll(".puzzleSelect-container")
+export const playerScore = document.querySelector("#playerScore")
+export const opponentScore = document.querySelector("#opponentScore")
 
-const ws = initWebSocket({ playerId, allPuzzles, mainPuzzle, timerDisplay });
+initWebSocket({ playerId, mainPuzzle, allPuzzleContainers });
 
-setupPuzzle(mainPuzzle, (index, x, y) => checkCharacter(index, x, y, ws, window.playerId),);
+setupPuzzle(mainPuzzle, (index, x, y) => checkCharacter(index, x, y, window.playerId),);
 setupThumbnailListeners(allPuzzles, mainPuzzle);
-syncThumbnailHeights(allPuzzles, mainPuzzle);
-syncHeadshotHeights(headshots, allPuzzles[0]);
 showLobby();
