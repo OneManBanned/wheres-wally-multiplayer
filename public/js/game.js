@@ -33,7 +33,7 @@ export function startGame() {
             .toString()
             .padStart(2, "00");
 
-        updateTimerDisplay(`Time left: ${minutes}:${seconds}`, timerDisplay);
+        updateTimerDisplay(`${minutes}:${seconds}`, timerDisplay);
     }, 1000);
 }
 

@@ -10,11 +10,13 @@
     <div id="lobby-view">
         <h1>...Waiting for opponent</h1> 
     </div>
-  <main id="game-view" style="display:none;">
+  <main id="game-view" style="display=none;">
       <div id="status-bar">
-          <div >Player: <span id="playerScore">0</span></div>
-    <div id="timer">Time Left: 5:00</div>
-          <div >Opponent: <span id="opponentScore">0</span></div>
+          <div id="playerStatus" >Player: <span id="playerScore">0</span></div>
+          <div id="timer-wrapper">
+    <div id="timer">5:00</div>
+          </div>
+          <div id="opponentStatus">Opponent: <span id="opponentScore">0</span></div>
       </div>
     <div id="puzzle-container">
         <img src="<%= puzzles[0] %>" draggable="false" id="currentPuzzle" alt="Tagging Photo">
@@ -42,5 +44,6 @@
     window.playerId = "<%= playerId %>";
   </script>
   <script type="module" src="/js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </body>
 </html>

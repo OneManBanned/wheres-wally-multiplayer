@@ -1,12 +1,7 @@
 import { puzzles } from "../models/puzzles.js";
 import { v4 as uuidv4 } from "uuid";
 import { games, clients } from "../app.js";
-import {
-  checkCharacterInRange,
-  getGameByPlayerId,
-  getGameWsByPlayerId,
-  wsOpenSend,
-} from "../utils/utils.js";
+import { checkCharacterInRange, getGameByPlayerId, getGameWsByPlayerId, wsOpenSend, } from "../utils/utils.js";
 
 export const startGame = (req, res) => {
   res.render("index", {
@@ -45,7 +40,7 @@ export const checkGuess = (req, res) => {
             games.delete(gameId);
           }
 
-      } else {
+      } else if (!powerUpsArr[puzzleIdx][character]) {
         powerUpsArr[puzzleIdx][character] = true;
         wsOpenSend(opponentsWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx });
         wsOpenSend(playersWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx });
