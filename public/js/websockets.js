@@ -1,109 +1,105 @@
 import { startGame, setFoundArr, setGameOver, setStartTime, setPowerUpsArr, } from "./game.js";
-import { showLobby, showGame, updateSolvedThumbnails, updateScores, updateFoundCharacters, switchToUnsolvedPuzzle, syncFoundCharacters, } from "./ui.js";
+import {
+    showLobby,
+    showGame,
+    updateSolvedThumbnails,
+    updateScores,
+    updateFoundCharacters,
+    switchToUnsolvedPuzzle,
+    syncFoundCharacters,
+    setupConfetti,
+} from "./ui.js";
 
+export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer}) {
+    const ws = new WebSocket("ws://localhost:3000");
 
-document.addEventListener("DOMContentLoaded", () => {
-  const puzzleContainer = document.getElementById("puzzle-container");
-  if (!puzzleContainer) {
-    console.error("puzzleContainer is null or undefined!");
-    return;
-  }
+    ws.onopen = () => {
+        console.log("Connected to WebSocket Server");
+        ws.send(JSON.stringify({ type: "join", playerId }));
+    };
 
-  // Create a canvas element and append it to puzzleContainer
-  const canvas = document.createElement("canvas");
-  canvas.width = puzzleContainer.offsetWidth;
-  canvas.height = puzzleContainer.offsetHeight;
-  canvas.style.position = "absolute";
-  canvas.style.top = "0";
-  canvas.style.left = "0";
-  canvas.style.zIndex = "1";
-  puzzleContainer.appendChild(canvas);
+    ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        const {
+            type,
+            startTime,
+            foundArr,
+            gameId,
+            powerUpsArr,
+            playerStats,
+            puzzleIdx,
+            character,
+        } = data;
 
-  // Store the confetti instance
-  window.confettiInstance = confetti.create(canvas, { resize: true });
-});
+        if (type === "paired") {
+            setFoundArr(foundArr);
+            setPowerUpsArr(powerUpsArr);
+            setStartTime(startTime);
+            updateSolvedThumbnails();
+            syncFoundCharacters();
+            switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
+            showGame();
+            startGame();
+        }
 
-export function initWebSocket({ playerId, mainPuzzle }) {
-  const ws = new WebSocket("ws://localhost:3000");
+        if (type === "gameOver") {
+            setGameOver();
+            return alert("Game over");
+        }
 
-  ws.onopen = () => {
-    console.log("Connected to WebSocket Server");
-    ws.send(JSON.stringify({ type: "join", playerId }));
-  };
+        if (type === "updateFound") {
+            setFoundArr(foundArr);
+            updateScores(playerStats, playerId);
+            updateSolvedThumbnails();
+            switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
+        }
 
-  ws.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    const {
-      type,
-      startTime,
-      foundArr,
-      gameId,
-      powerUpsArr,
-      playerStats,
-      puzzleIdx,
-      character,
-    } = data;
+        if (type === "powerUpFound") {
+            setPowerUpsArr(powerUpsArr);
+            updateFoundCharacters(puzzleIdx, character);
 
-    if (type === "paired") {
-      setFoundArr(foundArr);
-      setPowerUpsArr(powerUpsArr);
-      setStartTime(startTime);
-      updateSolvedThumbnails();
-      syncFoundCharacters();
-      switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
-      showGame();
-      startGame();
-    }
+            if (character === "odlaw") {
+                const confettiBottomLeft = setupConfetti(
+                    mainPuzzleContainer,
+                    { x: 0, y: 1.1 },
+                    60,
+                );
+                const confettiBottomRight = setupConfetti(
+                    mainPuzzleContainer,
+                    { x: 1, y: 1.1 },
+                    120,
+                );
+                
+                const confettiMiddleBottom = setupConfetti(
+                    mainPuzzleContainer,
+                    { x: 0.5, y: 1.1 },
+                    90,
+                );
 
-    if (type === "gameOver") {
-      setGameOver();
-      return alert("Game over");
-    }
+                setTimeout(() => {
+                    confettiBottomLeft();
+                    confettiBottomRight();
+                    confettiMiddleBottom();
+                }, 10000);
 
-    if (type === "updateFound") {
-      setFoundArr(foundArr);
-      updateScores(playerStats, playerId);
-      updateSolvedThumbnails();
-      switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
-    }
+                /*
+                            mainPuzzle.style.transform = "rotateX(180deg)";
+                            mainPuzzle.dataset.flipped = "true";
+                            setTimeout(() => {
+                                mainPuzzle.style.transform = "none";
+                                delete mainPuzzle.dataset.flipped;
+                            }, 15000);
+                
+                */
+            }
+        }
 
-    if (type === "powerUpFound") {
-      setPowerUpsArr(powerUpsArr);
-      updateFoundCharacters(puzzleIdx, character);
+        if (type === "opponentQuit") {
+            console.log(`Opponent quit game ${gameId} is over`);
+            showLobby();
+        }
+    };
 
-      if (character === "odlaw") {
-
-          const confettiBomb = setInterval(() => {
-  window.confettiInstance({
-            particleCount: 1500,
-            spread: 100,
-            origin: { y: 1 },
-            colors: ['#000000', '#FFC107', '#FFFFFF'],
-          });
-}, 1000)
-
-          setTimeout(() => {
-              clearInterval(confettiBomb)
-          }, 10000)
-
-        /*
-            mainPuzzle.style.transform = "rotateX(180deg)";
-            mainPuzzle.dataset.flipped = "true";
-            setTimeout(() => {
-                mainPuzzle.style.transform = "none";
-                delete mainPuzzle.dataset.flipped;
-            }, 15000);
-
-*/
-      }
-    }
-
-    if (type === "opponentQuit") {
-      console.log(`Opponent quit game ${gameId} is over`);
-      showLobby();
-    }
-  };
-
-  ws.onclose = () => console.log("Disconnected from WebSocket server");
-  ws.onerror = (e) => console.log("WebSocker error: ", e);
+    ws.onclose = () => console.log("Disconnected from WebSocket server");
+    ws.onerror = (e) => console.log("WebSocker error: ", e);
 }

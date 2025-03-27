@@ -57,7 +57,6 @@ export function updateScores(playerStats, playerId) {
 }
 
 export function updateFoundCharacters(idx, character) {
-
     const container = allHeadshotContainers[idx];
     if (!container) return;
 
@@ -74,28 +73,28 @@ export function updateFoundCharacters(idx, character) {
 
 export function syncFoundCharacters() {
     allHeadshotContainers.forEach((container, idx) => {
-        headshots.forEach(img => {
-            const char = getCharacterFromImagePath(img.src)
+        headshots.forEach((img) => {
+            const char = getCharacterFromImagePath(img.src);
             const isFound = powerUpsArr[idx][char];
             const overlay = img.nextElementSibling;
             img.style.opacity = isFound ? "0.5" : "1";
             overlay.style.display = isFound ? "block" : "none";
-        }) 
-    })
+        });
+    });
 }
 
 function extractImagePath(url) {
-  const pathStart = url.indexOf('/images/');
-  if (pathStart === -1) return null; 
-  return url.substring(pathStart);
+    const pathStart = url.indexOf("/images/");
+    if (pathStart === -1) return null;
+    return url.substring(pathStart);
 }
 
 export function switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, idx) {
-    const mainPuzzleSrc = extractImagePath(mainPuzzle.src)
+    const mainPuzzleSrc = extractImagePath(mainPuzzle.src);
     const currentPuzzleIdx = puzzles.indexOf(mainPuzzleSrc);
-    console.log(currentPuzzleIdx, idx)
-    if (currentPuzzleIdx !== idx) return
-    
+    console.log(currentPuzzleIdx, idx);
+    if (currentPuzzleIdx !== idx) return;
+
     const unsolvedIdx = foundArr.indexOf(false);
     if (unsolvedIdx !== -1) mainPuzzle.src = puzzles[unsolvedIdx];
 }
@@ -126,6 +125,10 @@ export function setupMagnifier(image) {
     const magnifier = document.createElement("div");
     magnifier.id = "magnifier";
     document.querySelector("#puzzle-container").appendChild(magnifier);
+
+    const glassEffect = document.createElement("div");
+    glassEffect.className = "glass-effect";
+    magnifier.appendChild(glassEffect);
 
     const zoomLevel = 2;
     let lensSize = 140;
@@ -175,4 +178,38 @@ export function setupMagnifier(image) {
         magnifier.style.display = "none";
         magnifier.classList.remove("targeting"); // Reset on exit
     });
+}
+
+export function setupConfetti(puzzleContainer, origin, angle) {
+    const canvas = document.createElement("canvas");
+    canvas.width = puzzleContainer.offsetWidth;
+    canvas.height = puzzleContainer.offsetHeight;
+    canvas.style.position = "absolute";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.zIndex = "1";
+    canvas.style.pointerEvents = "none";
+    puzzleContainer.appendChild(canvas);
+
+    const confettiInstance = confetti.create(canvas, { resize: true });
+
+    const fireConfetti = () => {
+        confettiInstance({
+            particleCount: 500,
+            spread: 50,
+            angle: angle,
+            origin: origin,
+            colors: ["#000000", "#FFC107", "#FFFFFF"],
+            scalar: 0.9,
+        });
+    };
+
+    const confettiInterval = setInterval(fireConfetti, 1000);
+
+    return () => {
+        clearInterval(confettiInterval);
+        setTimeout(() => {
+            confettiInstance.reset();
+        }, 3000);
+    };
 }
