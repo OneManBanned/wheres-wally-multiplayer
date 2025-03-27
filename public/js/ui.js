@@ -112,7 +112,7 @@ export function setupPuzzle(mainPuzzle, checkCharacter) {
         const rect = getPhotoRect(mainPuzzle);
         const isFlipped = mainPuzzle.dataset.flipped === "true";
 
-        const x = e.clientX - rect.left;
+        const x = isFlipped ? -(e.clientX - rect.right) : e.clientX - rect.left;
         const y = isFlipped ? -(e.clientY - rect.bottom) : e.clientY - rect.top;
 
         targetingCoordinates({ x, y }, checkCharacter, rect, mainPuzzle);
@@ -152,15 +152,18 @@ export function setupMagnifier(image) {
         magnifier.style.top = `${y - lensSize / 2}px`;
 
         // Zoomed background: offset and scale
-        let bgX = -(x * zoomLevel - lensSize / 2);
+        let bgX = isFlipped
+            ? -((rect.width - x) * zoomLevel - lensSize / 2) // Reflect the offset
+            : -(x * zoomLevel - lensSize / 2);
+
         let bgY = isFlipped
             ? -((rect.height - y) * zoomLevel - lensSize / 2) // Reflect the offset
             : -(y * zoomLevel - lensSize / 2);
 
         magnifier.style.backgroundImage = `url(${image.src})`;
         isFlipped
-            ? (magnifier.style.transform = "rotateX(180deg)")
-            : (magnifier.style.transform = "none");
+            ? (magnifier.style.transform = "rotate(180deg)")
+            : (magnifier.style.transform = "rotate(0deg)");
 
         magnifier.style.backgroundSize = `${rect.width * zoomLevel}px ${rect.height * zoomLevel}px`;
         magnifier.style.backgroundPosition = `${bgX}px ${bgY}px`;

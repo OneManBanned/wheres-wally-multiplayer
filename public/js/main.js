@@ -2,7 +2,6 @@ import { checkCharacter } from "./game.js";
 import { showLobby, setupPuzzle, setupThumbnailListeners } from "./ui.js";
 import { initWebSocket } from "./websockets.js";
 
-
 export const allPuzzles = document.querySelectorAll(".puzzle");
 export const mainPuzzle = document.querySelector("#currentPuzzle");
 export const mainPuzzleContainer = document.getElementById("puzzle-container");

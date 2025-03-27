@@ -1,4 +1,10 @@
-import { startGame, setFoundArr, setGameOver, setStartTime, setPowerUpsArr, } from "./game.js";
+import {
+    startGame,
+    setFoundArr,
+    setGameOver,
+    setStartTime,
+    setPowerUpsArr,
+} from "./game.js";
 import {
     showLobby,
     showGame,
@@ -10,7 +16,7 @@ import {
     setupConfetti,
 } from "./ui.js";
 
-export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer}) {
+export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer }) {
     const ws = new WebSocket("ws://localhost:3000");
 
     ws.onopen = () => {
@@ -59,38 +65,42 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer}) {
             updateFoundCharacters(puzzleIdx, character);
 
             if (character === "odlaw") {
-                const confettiBottomLeft = setupConfetti(
-                    mainPuzzleContainer,
-                    { x: 0, y: 1.1 },
-                    60,
-                );
-                const confettiBottomRight = setupConfetti(
-                    mainPuzzleContainer,
-                    { x: 1, y: 1.1 },
-                    120,
-                );
                 
-                const confettiMiddleBottom = setupConfetti(
-                    mainPuzzleContainer,
-                    { x: 0.5, y: 1.1 },
-                    90,
-                );
+                                const confettiBottomLeft = setupConfetti(
+                                    mainPuzzleContainer,
+                                    { x: 0, y: 1.1 },
+                                    60,
+                                );
+                                const confettiBottomRight = setupConfetti(
+                                    mainPuzzleContainer,
+                                    { x: 1, y: 1.1 },
+                                    120,
+                                );
+                                
+                                const confettiMiddleBottom = setupConfetti(
+                                    mainPuzzleContainer,
+                                    { x: 0.5, y: 1.1 },
+                                    90,
+                                );
+                
+                                setTimeout(() => {
+                                    confettiBottomLeft();
+                                    confettiBottomRight();
+                                    confettiMiddleBottom();
+                                }, 10000);
+                
+                mainPuzzle.classList.remove("spin-to-upside-down", "spin-to-normal");
+
+                console.log("Odlaw found, adding spin-to-upside-down");
+                mainPuzzle.dataset.flipped = "true";
+                mainPuzzle.classList.add("spin-to-upside-down");
 
                 setTimeout(() => {
-                    confettiBottomLeft();
-                    confettiBottomRight();
-                    confettiMiddleBottom();
-                }, 10000);
-
-                /*
-                            mainPuzzle.style.transform = "rotateX(180deg)";
-                            mainPuzzle.dataset.flipped = "true";
-                            setTimeout(() => {
-                                mainPuzzle.style.transform = "none";
-                                delete mainPuzzle.dataset.flipped;
-                            }, 15000);
-                
-                */
+                    console.log("Upside-down complete, flipping back");
+                    mainPuzzle.classList.remove("spin-to-upside-down");
+                    mainPuzzle.classList.add("spin-to-normal");
+                    mainPuzzle.dataset.flipped = "false";
+                }, 10000); // Matches spin-to-upside-down duration
             }
         }
 

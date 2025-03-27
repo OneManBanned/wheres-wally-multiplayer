@@ -97,7 +97,7 @@ export const puzzles = [
       odlaw: {
         x: 10.27,
         y: 32.69,
-        width: 0.94,
+        width: 2.00,
         height: 4.62,
       },
       wenda: {
@@ -108,8 +108,8 @@ export const puzzles = [
       },
       whitebeard: {
         x: 26.41,
-        y: 32.19,
-        width: 1.21,
+        y: 33.19,
+        width: 1.00,
         height: 4.31,
       },
     },
@@ -124,10 +124,10 @@ export const puzzles = [
         height: 3.10,
       },
       odlaw: {
-        x: 55.03,
+        x: 56.03,
         y: 78.60,
-        width: 1.07,
-        height: 2.33,
+        width: 1.00,
+        height: 3.00,
       },
       wenda: {
         x: 58.70,
