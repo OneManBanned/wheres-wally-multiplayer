@@ -20,10 +20,13 @@ export const checkGuess = (req, res) => {
       .status(400)
       .json({ success: false, error: "Invalid puzzle index" });
 
+let charFound = false;
+
   for (let character in characters) {
     const inRange = checkCharacterInRange(character, { x, y }, characters);
 
     if (inRange) {
+        charFound = true;
       const { gameId, gameData } = getGameByPlayerId(playerId, games);
       const { opponentsWs, playersWs } = getGameWsByPlayerId( playerId, gameData, clients,);
       const { foundArr, powerUpsArr, playerStats } = gameData;
@@ -47,5 +50,5 @@ export const checkGuess = (req, res) => {
       }
     }
   }
-    res.json()
+    res.json({charFound})
 };

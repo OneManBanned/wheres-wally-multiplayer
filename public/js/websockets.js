@@ -65,6 +65,7 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer }) {
             updateFoundCharacters(puzzleIdx, character);
 
             if (character === "odlaw") {
+                /*
                 
                                 const confettiBottomLeft = setupConfetti(
                                     mainPuzzleContainer,
@@ -88,8 +89,10 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer }) {
                                     confettiBottomRight();
                                     confettiMiddleBottom();
                                 }, 10000);
+                                */
                 
                 mainPuzzle.classList.remove("spin-to-upside-down", "spin-to-normal");
+                mainPuzzleContainer.classList.add("flipped");
 
                 console.log("Odlaw found, adding spin-to-upside-down");
                 mainPuzzle.dataset.flipped = "true";
@@ -99,8 +102,9 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer }) {
                     console.log("Upside-down complete, flipping back");
                     mainPuzzle.classList.remove("spin-to-upside-down");
                     mainPuzzle.classList.add("spin-to-normal");
+                mainPuzzleContainer.classList.remove("flipped");
                     mainPuzzle.dataset.flipped = "false";
-                }, 10000); // Matches spin-to-upside-down duration
+                }, 15000); // Matches spin-to-upside-down duration
             }
         }
 

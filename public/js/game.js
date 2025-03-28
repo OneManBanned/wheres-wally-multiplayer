@@ -1,4 +1,4 @@
-import {  timerDisplay } from "./main.js";
+import {  mainPuzzleContainer, timerDisplay } from "./main.js";
 import { updateTimerDisplay, } from "./ui.js";
 
 let gameOver, startTime;
@@ -39,14 +39,33 @@ export function startGame() {
 
 export async function checkCharacter(puzzleIdx, x, y, playerId) {
     try {
-        console.log("checking guess on client")
-         await fetch("/guess", {
+         const res = await fetch("/guess", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ puzzleIdx, x, y, playerId }),
         });
+
+        const { charFound } = await res.json()
+
+        if (!charFound) {
+            showMissFeedback(mainPuzzleContainer)
+        }
+
     } catch (err) {
         console.error("Fetch error: ", err);
         alert("Something went wrong");
     }
+}
+
+export function showMissFeedback(puzzleContainer) {
+
+    const buzzSound = document.querySelector("#miss-buzz")
+
+    buzzSound.volume = 0.6;
+    buzzSound.play()
+
+  puzzleContainer.classList.add("shake");
+  setTimeout(() => {
+    puzzleContainer.classList.remove("shake");
+  }, 500); // Matches animation duration
 }

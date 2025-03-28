@@ -203,6 +203,20 @@ h1 {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); 
 }
 
+.lens-content {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-repeat: no-repeat;
+border-radius: 50%;
+}
+
+#puzzle-container.flipped .lens-content {
+  transform: rotate(180deg);
+}
+
 #magnifier .glass-effect {
   position: absolute;
   width: 100%;
@@ -225,7 +239,7 @@ h1 {
   box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); 
 }
 
-#magnifier::before {
+.lens-content::before {
   content: "";
   position: absolute;
   width: 4px;
@@ -237,7 +251,7 @@ h1 {
   transform: translate(-50%, -50%);
 }
 
-#magnifier.targeting::after {
+#magnifier.targeting .lens-content::after {
   content: "";
   position: absolute;
   width: 2px;
@@ -249,14 +263,14 @@ h1 {
 }
 
 /* Sniper scope reticle */
-#magnifier.targeting::before {
+#magnifier.targeting .lens-content::before {
   width: 30px;
   height: 2px;
   border-radius: 0;
   background: #000;
 }
 
-#magnifier.targeting::after {
+#magnifier.targeting .lens-content::after {
   content: "";
   position: absolute;
   width: 2px;
@@ -322,4 +336,18 @@ h1 {
   height: 100% !important;
   z-index: 2; !important;
   pointer-events: none !important;
+}
+
+/* missed guess animation */
+
+#puzzle-container.shake {
+  animation: shake 0.5s ease-in-out;
+}
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(-2deg); }
+  40% { transform: rotate(2deg); }
+  60% { transform: rotate(-1deg); }
+  80% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg); }
 }

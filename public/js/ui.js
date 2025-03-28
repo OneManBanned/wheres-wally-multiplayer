@@ -126,6 +126,10 @@ export function setupMagnifier(image) {
     magnifier.id = "magnifier";
     document.querySelector("#puzzle-container").appendChild(magnifier);
 
+    const lens = document.createElement("div")
+    lens.className = "lens-content"
+    magnifier.appendChild(lens)
+
     const glassEffect = document.createElement("div");
     glassEffect.className = "glass-effect";
     magnifier.appendChild(glassEffect);
@@ -160,13 +164,10 @@ export function setupMagnifier(image) {
             ? -((rect.height - y) * zoomLevel - lensSize / 2) // Reflect the offset
             : -(y * zoomLevel - lensSize / 2);
 
-        magnifier.style.backgroundImage = `url(${image.src})`;
-        isFlipped
-            ? (magnifier.style.transform = "rotate(180deg)")
-            : (magnifier.style.transform = "rotate(0deg)");
+        lens.style.backgroundImage = `url(${image.src})`;
 
-        magnifier.style.backgroundSize = `${rect.width * zoomLevel}px ${rect.height * zoomLevel}px`;
-        magnifier.style.backgroundPosition = `${bgX}px ${bgY}px`;
+        lens.style.backgroundSize = `${rect.width * zoomLevel}px ${rect.height * zoomLevel}px`;
+        lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
     });
 
     image.addEventListener("mousedown", () => {
