@@ -4,7 +4,7 @@ export const puzzles = [
             waldo: {
                 x: 39.00,
                 y: 62.00,
-                width: 2.00,
+                width: 3.00,
                 height: 6.00,
             },
             odlaw: {

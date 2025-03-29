@@ -13,14 +13,18 @@ import {
     positionInPercent,
 } from "./utils.js";
 
-export function showLobby() {
-    document.querySelector("#lobby-view").style.display = "block";
-    document.querySelector("#game-view").style.display = "none";
+export function showLobby(lobby, game) {
+    lobby.style.display = "block";
+    game.style.display = "none";
+  allPuzzleContainers.forEach((container) => {
+        const extras = container.querySelectorAll(".wally-found-bg, .wally-headshot");
+        extras.forEach((el) => el.remove());
+    });
 }
 
-export function showGame() {
-    document.querySelector("#lobby-view").style.display = "none";
-    document.querySelector("#game-view").style.display = "grid";
+export function showGame(lobby, game) {
+    lobby.style.display = "none";
+    game.style.display = "grid";
 }
 
 export const updateTimerDisplay = (str, timer) => (timer.textContent = str);
@@ -28,7 +32,17 @@ export const updateTimerDisplay = (str, timer) => (timer.textContent = str);
 export function setupThumbnailListeners(thumbnails, mainPuzzle) {
     thumbnails.forEach((thumb) => {
         thumb.addEventListener("click", () => {
-            mainPuzzle.src = thumb.src;
+            mainPuzzle.style.opacity = "0";
+
+            setTimeout(() => {
+                mainPuzzle.src = thumb.src;
+
+                mainPuzzle.onload = () => {
+                    mainPuzzle.style.opacity = "1";
+                    mainPuzzle.onload = null; // Clean up
+                };
+                kkkkk;
+            }, 300);
         });
     });
 }
@@ -36,10 +50,8 @@ export function setupThumbnailListeners(thumbnails, mainPuzzle) {
 export function updateSolvedThumbnails() {
     allPuzzleContainers.forEach((puzzle, i) => {
         if (foundArr[i]) {
-            puzzle.style.opacity = 0.5;
             puzzle.style.pointerEvents = "none";
         } else {
-            puzzle.style.opacity = 1;
             puzzle.style.pointerEvents = "auto";
         }
     });
@@ -92,11 +104,22 @@ function extractImagePath(url) {
 export function switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, idx) {
     const mainPuzzleSrc = extractImagePath(mainPuzzle.src);
     const currentPuzzleIdx = puzzles.indexOf(mainPuzzleSrc);
-    console.log(currentPuzzleIdx, idx);
     if (currentPuzzleIdx !== idx) return;
 
     const unsolvedIdx = foundArr.indexOf(false);
-    if (unsolvedIdx !== -1) mainPuzzle.src = puzzles[unsolvedIdx];
+
+    if (unsolvedIdx !== -1) {
+        mainPuzzle.style.opacity = "0";
+
+        setTimeout(() => {
+            mainPuzzle.src = puzzles[unsolvedIdx];
+
+            mainPuzzle.onload = () => {
+                mainPuzzle.style.opacity = "1";
+                mainPuzzle.onload = null;
+            };
+        }, 300);
+    }
 }
 
 export function targetingCoordinates(position, checkCharacter, rect, img) {
@@ -126,9 +149,9 @@ export function setupMagnifier(image) {
     magnifier.id = "magnifier";
     document.querySelector("#puzzle-container").appendChild(magnifier);
 
-    const lens = document.createElement("div")
-    lens.className = "lens-content"
-    magnifier.appendChild(lens)
+    const lens = document.createElement("div");
+    lens.className = "lens-content";
+    magnifier.appendChild(lens);
 
     const glassEffect = document.createElement("div");
     glassEffect.className = "glass-effect";
@@ -216,4 +239,88 @@ export function setupConfetti(puzzleContainer, origin, angle) {
             confettiInstance.reset();
         }, 3000);
     };
+}
+
+export function showWallyFoundFeedback(lensContent, thumbnail, game) {
+    // Create background and headshot
+    const background = document.createElement("div");
+    background.className = "wally-found-bg";
+
+    const headshot = document.createElement("img");
+    headshot.src = "/images/wally-head.png";
+    headshot.className = "wally-headshot";
+    headshot.alt = "Wally Found";
+
+    // Append both to body for page-absolute positioning
+    game.appendChild(background);
+    game.appendChild(headshot);
+
+    // Get starting position (magnifier center)
+    const magnifier = lensContent.parentElement;
+    const magRect = magnifier.getBoundingClientRect();
+    const startX = magRect.left + magRect.width / 2;
+    const startY = magRect.top + magRect.height / 2;
+
+    // Get ending position (thumbnail center)
+    //
+    const thumbRect = thumbnail.getBoundingClientRect();
+    const endX = thumbRect.left + thumbRect.width / 2;
+    const endY = thumbRect.top + thumbRect.height / 2;
+
+    // Adjust for element size (140px)
+    const offset = 140 / 2; // Half of width/height
+    background.style.left = `${startX - offset}px`;
+    background.style.top = `${startY - offset}px`;
+    headshot.style.left = `${startX - offset}px`;
+    headshot.style.top = `${startY - offset}px`;
+
+    background.style.setProperty("--end-x", `${endX - offset}px`);
+    background.style.setProperty("--end-y", `${endY - offset}px`);
+    headshot.style.setProperty("--end-x", `${endX - offset}px`);
+    headshot.style.setProperty("--end-y", `${endY - offset}px`);
+
+    background.style.setProperty("--thumb-width", `${thumbRect.width}px`);
+    background.style.setProperty("--thumb-height", `${thumbRect.height}px`); // Remove after animation
+
+    // Start magnifier fill
+    background.classList.add("fill");
+    headshot.classList.add("fill");
+
+    // Traversal after 1s
+    setTimeout(() => {
+        background.classList.remove("fill");
+        headshot.classList.remove("fill");
+        background.classList.add("traverse");
+        headshot.classList.add("traverse");
+    }, 1000);
+
+
+setTimeout(() => {
+    console.log("Spread starting!");
+    background.className = "wally-found-bg";
+    headshot.className = "wally-headshot";
+    // Targeted reset, keep background
+    background.style.animation = "none";
+    background.style.left = "50%";
+    background.style.top = "50%";
+    background.style.transform = "translate(-50%, -50%) scale(0.5) rotate(720deg)";
+    background.style.width = "140px";
+    background.style.height = "140px";
+    headshot.style.animation = "none";
+    headshot.style.left = "50%";
+    headshot.style.top = "50%";
+    headshot.style.transform = "translate(-50%, -50%) scale(0.5) rotate(720deg)";
+    headshot.style.width = "140px";
+    headshot.style.height = "140px";
+    background.offsetHeight;
+    headshot.offsetHeight;
+    thumbnail.style.position = "relative";
+    thumbnail.appendChild(background);
+    thumbnail.appendChild(headshot);
+    console.log("Classes before spread:", background.className, headshot.className);
+    background.classList.add("spread");
+    headshot.classList.add("spread");
+    console.log("Classes after spread:", background.className, headshot.className);
+}, 2000);
+
 }

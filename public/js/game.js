@@ -1,5 +1,5 @@
-import {  mainPuzzleContainer, timerDisplay } from "./main.js";
-import { updateTimerDisplay, } from "./ui.js";
+import {  allPuzzleContainers, gameView, mainPuzzleContainer, timerDisplay } from "./main.js";
+import { showWallyFoundFeedback, updateTimerDisplay, } from "./ui.js";
 
 let gameOver, startTime;
 export let foundArr = [];
@@ -49,6 +49,12 @@ export async function checkCharacter(puzzleIdx, x, y, playerId) {
 
         if (!charFound) {
             showMissFeedback(mainPuzzleContainer)
+        } else {
+            if (charFound === "waldo") {
+                const thumbnail = allPuzzleContainers[puzzleIdx]
+                console.log(thumbnail)
+                showWallyFoundFeedback(mainPuzzleContainer.querySelector("#magnifier .lens-content"), thumbnail, gameView)
+            }
         }
 
     } catch (err) {
@@ -61,7 +67,7 @@ export function showMissFeedback(puzzleContainer) {
 
     const buzzSound = document.querySelector("#miss-buzz")
 
-    buzzSound.volume = 0.6;
+    buzzSound.volume = 0.2;
     buzzSound.play()
 
   puzzleContainer.classList.add("shake");

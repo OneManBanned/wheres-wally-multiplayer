@@ -13,10 +13,9 @@ import {
     updateFoundCharacters,
     switchToUnsolvedPuzzle,
     syncFoundCharacters,
-    setupConfetti,
 } from "./ui.js";
 
-export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer }) {
+export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer, lobbyView, gameView }) {
     const ws = new WebSocket("ws://localhost:3000");
 
     ws.onopen = () => {
@@ -26,25 +25,20 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer }) {
 
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        const {
-            type,
-            startTime,
-            foundArr,
-            gameId,
-            powerUpsArr,
-            playerStats,
-            puzzleIdx,
-            character,
-        } = data;
+        const { type, startTime, foundArr, gameId, powerUpsArr,
+            playerStats, puzzleIdx, character, } = data;
 
         if (type === "paired") {
             setFoundArr(foundArr);
             setPowerUpsArr(powerUpsArr);
+
             setStartTime(startTime);
             updateSolvedThumbnails();
             syncFoundCharacters();
+            updateScores(playerStats,  playerId)
             switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
-            showGame();
+
+            showGame(lobbyView, gameView);
             startGame();
         }
 
@@ -110,7 +104,7 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer }) {
 
         if (type === "opponentQuit") {
             console.log(`Opponent quit game ${gameId} is over`);
-            showLobby();
+            showLobby(lobbyView, gameView);
         }
     };
 

@@ -126,7 +126,7 @@ h1 {
   border-image-repeat: repeat repeat;
   border-image-source: url("/images/box.png");
   transform: rotate(0deg); 
-  transition: transform 0.2s ease-in-out; 
+  transition: transform 0.2s ease-in-out, opacity 0.3s ease-in-out; 
 }
 
 #currentPuzzle:hover {
@@ -350,4 +350,219 @@ border-radius: 50%;
   60% { transform: rotate(-1deg); }
   80% { transform: rotate(1deg); }
   100% { transform: rotate(0deg); }
+}
+.wally-headshot {
+  position: absolute;
+  width: 100%; /* Fills the 140px lens */
+  height: 100%;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.2); /* Start small */
+  opacity: 0; /* Start invisible */
+  pointer-events: none; /* Avoids blocking clicks */
+  z-index: 2; /* Above lens background but below glass-effect */
+}
+
+#puzzle-container.flipped .wally-headshot {
+  transform: translate(-50%, -50%) scale(0.2) rotate(-180deg);
+}
+/* Flipped state animation */
+#puzzle-container.flipped .wally-headshot {
+  animation: wallyFadeScaleFlipped 0.5s ease-in-out forwards;
+}
+
+@keyframes wallyFadeScaleFlipped {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2) rotate(-180deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(-180deg);
+  }
+}
+@keyframes wallyFadeScale {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.wally-found-bg {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wally-found-bg.fill {
+  animation: bgFill 1s ease-in-out forwards;
+}
+
+.wally-found-bg.traverse {
+  animation: bgTraverse 1s ease-in-out forwards;
+  transform-origin: center;
+}
+
+.wally-headshot {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.wally-headshot.fill {
+  animation: wallyFill 1s ease-in-out forwards;
+}
+
+@keyframes wallyFill {
+  0% { opacity: 0; transform: scale(0.2); }
+  50% {opacity: 0.5; transfom: scale(0.6)}
+  100% { opacity: 1; transform: scale(0.8); } /* Pause */
+}
+
+@keyframes bgFill {
+  0% { opacity: 0; transform: scale(0.2); }
+  50% { opacity: 0.5; background: radial-gradient(circle, rgba(255, 255, 255, 1) 10%, #fff 60%); } /* Shine at 0.5s */
+  100% { opacity: 1; transform: scale(0.9); background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%); } /* Pause */
+}
+
+.wally-headshot.traverse {
+  animation: wallyTraverse 1s ease-in-out forwards;
+}
+
+@keyframes bgTraverse {
+  0% { opacity: 1; transform: scale(0.9); }
+  50% { opacity: 1; left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(360deg); }
+  100% { opacity: 1; left: var(--end-x); top: var(--end-y); transform: scale(0.5) rotate(720deg); transform-origin: center; }
+}
+
+@keyframes wallyTraverse {
+  0% { opacity: 1; transform: scale(0.9); }
+  50% { opacity: 1; left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(360deg); }
+  100% { opacity: 1; left: var(--end-x); top: var(--end-y); transform: scale(0.5) rotate(720deg); }
+}
+
+.wally-found-bg.spread {
+  animation: bgSpread 0.5s ease-in-out forwards !important;
+  left: 50%;
+  top: 50%;
+  transform-origin: center;
+}
+
+@keyframes bgSpread {
+  0% { 
+    opacity: 1; 
+    width: 140px; 
+    height: 140px; 
+    border-radius: 50%; 
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg); 
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%);
+  }
+  80% { 
+    opacity: 1; 
+    width: calc(var(--thumb-width) * 1.1); 
+    height: calc(var(--thumb-height) * 1.1); 
+    border-radius: 0; 
+    transform: translate(-50%, -50%) scale(1) rotate(720deg); 
+  } /* Slight overshoot */
+  100% { 
+    opacity: 1; 
+    width: var(--thumb-width); 
+    height: var(--thumb-height); 
+    border-radius: 0; 
+    transform: translate(-50%, -50%) scale(1) rotate(720deg); 
+    background: #fff;
+  }
+}
+
+.wally-headshot.spread {
+  animation: wallySpread 0.5s ease-in-out forwards !important;
+  left: 50%;
+  top: 50%;
+  transform-origin: center;
+}
+
+@keyframes wallySpread {
+  0% { 
+    opacity: 1; 
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg); 
+  }
+  100% { 
+    opacity: 1; 
+    width: 70%; 
+    height: auto; 
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg); /* No change in scale */
+  }
+}
+
+#puzzle-container.flipped .wally-headshot.fill {
+  animation: wallyFillFlipped 1s ease-in-out forwards;
+}
+
+#puzzle-container.flipped .wally-headshot.traverse {
+  animation: wallyTraverseFlipped 1s ease-in-out forwards;
+}
+
+#puzzle-container.flipped .wally-headshot.spread {
+  animation: wallySpreadFlipped 0.5s ease-in-out forwards;
+}
+
+@keyframes wallyFillFlipped {
+  0% { opacity: 0; transform: scale(0.2) rotate(-180deg); }
+  25% { opacity: 1; transform: scale(0.6) rotate(-180deg); }
+  40% { transform: scale(1) rotate(-180deg); }
+  50% { transform: scale(1) rotate(-180deg); }
+  100% { transform: scale(1) rotate(-180deg); }
+}
+
+@keyframes wallyTraverseFlipped {
+  0% { transform: scale(1) rotate(-180deg); }
+  50% { left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(180deg); }
+  100% { left: var(--end-x); top: var(--end-y); transform: scale(0.7) rotate(540deg); }
+}
+
+@keyframes wallySpreadFlipped {
+  0% { transform: scale(0.7) rotate(540deg); }
+  100% { width: 70%; height: auto; transform: scale(1) rotate(540deg); }
+}
+
+
+#puzzle-container.flipped .wally-found-bg.fill {
+  animation: bgFillFlipped 1s ease-in-out forwards;
+}
+
+#puzzle-container.flipped .wally-found-bg.traverse {
+  animation: bgTraverseFlipped 1s ease-in-out forwards;
+}
+
+#puzzle-container.flipped .wally-found-bg.spread {
+  animation: bgSpreadFlipped 0.5s ease-in-out forwards !important;
+}
+
+@keyframes bgFillFlipped {
+  0% { opacity: 0; transform: scale(0.2) rotate(-180deg); }
+  50% { opacity: 1; background: radial-gradient(circle, rgba(255, 255, 255, 1) 10%, #fff 60%); }
+  100% { opacity: 1; transform: scale(1) rotate(-180deg); background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%); }
+}
+
+@keyframes bgTraverseFlipped {
+  0% { transform: scale(1) rotate(-180deg); }
+  50% { left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(180deg); }
+  100% { left: var(--end-x); top: var(--end-y); transform: scale(0.7) rotate(540deg); } /* 720 - 180 */
+}
+
+@keyframes bgSpreadFlipped {
+  0% { width: 140px; height: 140px; border-radius: 50%; transform: scale(0.7) rotate(540deg); }
+  80% { width: calc(var(--thumb-width) * 1); height: calc(var(--thumb-height) * 1); border-radius: 0; transform: scale(1) rotate(540deg); }
+  100% { width: var(--thumb-width); height: var(--thumb-height); border-radius: 0; transform: scale(1) rotate(540deg); }
 }
