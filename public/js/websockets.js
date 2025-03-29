@@ -10,6 +10,7 @@ import {
     showGame,
     updateSolvedThumbnails,
     updateScores,
+    setupConfetti,
     updateFoundCharacters,
     switchToUnsolvedPuzzle,
     syncFoundCharacters,
@@ -26,7 +27,8 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer, lobby
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
         const { type, startTime, foundArr, gameId, powerUpsArr,
-            playerStats, puzzleIdx, character, } = data;
+            playerStats, puzzleIdx, character, playerWhoFoundId } = data;
+        console.log(data)
 
         if (type === "paired") {
             setFoundArr(foundArr);
@@ -50,7 +52,7 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer, lobby
         if (type === "updateFound") {
             setFoundArr(foundArr);
             updateScores(playerStats, playerId);
-            updateSolvedThumbnails();
+            updateSolvedThumbnails(playerWhoFoundId);
             switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
         }
 
@@ -58,8 +60,8 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer, lobby
             setPowerUpsArr(powerUpsArr);
             updateFoundCharacters(puzzleIdx, character);
 
-            if (character === "odlaw") {
-                /*
+            console.log(playerWhoFoundId, "\n", playerId)
+            if (character === "odlaw" && playerWhoFoundId !== playerId) {
                 
                                 const confettiBottomLeft = setupConfetti(
                                     mainPuzzleContainer,
@@ -83,7 +85,6 @@ export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer, lobby
                                     confettiBottomRight();
                                     confettiMiddleBottom();
                                 }, 10000);
-                                */
                 
                 mainPuzzle.classList.remove("spin-to-upside-down", "spin-to-normal");
                 mainPuzzleContainer.classList.add("flipped");

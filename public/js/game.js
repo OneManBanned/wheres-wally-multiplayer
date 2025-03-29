@@ -5,7 +5,7 @@ let gameOver, startTime;
 export let foundArr = [];
 export let powerUpsArr = [];
 
-export const setFoundArr = (newArr) => foundArr = newArr;
+export const setFoundArr = (newArr) =>  foundArr = newArr; 
 export const setPowerUpsArr = (newArr) => powerUpsArr = newArr;
 export const setGameOver = () => gameOver = true;
 export const setStartTime = (time) => startTime = time;
@@ -52,7 +52,6 @@ export async function checkCharacter(puzzleIdx, x, y, playerId) {
         } else {
             if (charFound === "waldo") {
                 const thumbnail = allPuzzleContainers[puzzleIdx]
-                console.log(thumbnail)
                 showWallyFoundFeedback(mainPuzzleContainer.querySelector("#magnifier .lens-content"), thumbnail, gameView)
             }
         }

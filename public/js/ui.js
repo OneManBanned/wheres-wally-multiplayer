@@ -13,6 +13,9 @@ import {
     positionInPercent,
 } from "./utils.js";
 
+
+let isAnimatingFill = false;
+
 export function showLobby(lobby, game) {
     lobby.style.display = "block";
     game.style.display = "none";
@@ -47,10 +50,15 @@ export function setupThumbnailListeners(thumbnails, mainPuzzle) {
     });
 }
 
-export function updateSolvedThumbnails() {
+export function updateSolvedThumbnails(id) {
     allPuzzleContainers.forEach((puzzle, i) => {
         if (foundArr[i]) {
             puzzle.style.pointerEvents = "none";
+            console.log(id, "\n" ,playerId, "\n", window.playerId)
+            if (id != playerId) {
+                console.log("your opponent found wally on map", i)
+                puzzle.style.opacity = 0.2
+            }
         } else {
             puzzle.style.pointerEvents = "auto";
         }
@@ -158,7 +166,9 @@ export function setupMagnifier(image) {
     magnifier.appendChild(glassEffect);
 
     const zoomLevel = 2;
-    let lensSize = 140;
+  const lensSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--lens-size"), 10);
+
+    console.log("magnifyingGlasslens: ", lensSize)
 
     magnifier.style.height = `${lensSize}px`;
     magnifier.style.width = `${lensSize}px`;
@@ -168,6 +178,7 @@ export function setupMagnifier(image) {
     });
 
     image.addEventListener("mousemove", (e) => {
+        if (isAnimatingFill) return;
         let rect = getPhotoRect(image);
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
@@ -207,6 +218,7 @@ export function setupMagnifier(image) {
     });
 }
 
+
 export function setupConfetti(puzzleContainer, origin, angle) {
     const canvas = document.createElement("canvas");
     canvas.width = puzzleContainer.offsetWidth;
@@ -242,85 +254,76 @@ export function setupConfetti(puzzleContainer, origin, angle) {
 }
 
 export function showWallyFoundFeedback(lensContent, thumbnail, game) {
-    // Create background and headshot
-    const background = document.createElement("div");
-    background.className = "wally-found-bg";
 
-    const headshot = document.createElement("img");
-    headshot.src = "/images/wally-head.png";
-    headshot.className = "wally-headshot";
-    headshot.alt = "Wally Found";
+  const background = document.createElement("div");
+  background.className = "wally-found-bg";
+  const whiteCircle = document.createElement("div"); 
+  whiteCircle.className = "wally-white-circle";
+  const headshot = document.createElement("img");
 
-    // Append both to body for page-absolute positioning
-    game.appendChild(background);
-    game.appendChild(headshot);
+  headshot.src = "/images/wally-head.png";
+  headshot.className = "wally-headshot";
+  headshot.alt = "Wally Found";
 
-    // Get starting position (magnifier center)
-    const magnifier = lensContent.parentElement;
-    const magRect = magnifier.getBoundingClientRect();
-    const startX = magRect.left + magRect.width / 2;
-    const startY = magRect.top + magRect.height / 2;
+  game.appendChild(headshot);
+  game.appendChild(background);
+  game.appendChild(whiteCircle);
 
-    // Get ending position (thumbnail center)
-    //
-    const thumbRect = thumbnail.getBoundingClientRect();
-    const endX = thumbRect.left + thumbRect.width / 2;
-    const endY = thumbRect.top + thumbRect.height / 2;
-
-    // Adjust for element size (140px)
-    const offset = 140 / 2; // Half of width/height
-    background.style.left = `${startX - offset}px`;
-    background.style.top = `${startY - offset}px`;
-    headshot.style.left = `${startX - offset}px`;
-    headshot.style.top = `${startY - offset}px`;
-
-    background.style.setProperty("--end-x", `${endX - offset}px`);
-    background.style.setProperty("--end-y", `${endY - offset}px`);
-    headshot.style.setProperty("--end-x", `${endX - offset}px`);
-    headshot.style.setProperty("--end-y", `${endY - offset}px`);
-
-    background.style.setProperty("--thumb-width", `${thumbRect.width}px`);
-    background.style.setProperty("--thumb-height", `${thumbRect.height}px`); // Remove after animation
-
-    // Start magnifier fill
-    background.classList.add("fill");
-    headshot.classList.add("fill");
-
-    // Traversal after 1s
-    setTimeout(() => {
-        background.classList.remove("fill");
-        headshot.classList.remove("fill");
-        background.classList.add("traverse");
-        headshot.classList.add("traverse");
-    }, 1000);
+  const gameRect = game.getBoundingClientRect();
+  const magnifier = lensContent.parentElement;
+  const magRect = magnifier.getBoundingClientRect();
+  const startX = magRect.left + magRect.width / 2 - gameRect.left;
+  const startY = magRect.top + magRect.height / 2 - gameRect.top; 
+  const thumbRect = thumbnail.getBoundingClientRect();
+  const endX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
+  const endY = thumbRect.top + thumbRect.height / 2 - gameRect.top; 
 
 
-setTimeout(() => {
-    console.log("Spread starting!");
-    background.className = "wally-found-bg";
-    headshot.className = "wally-headshot";
-    // Targeted reset, keep background
-    background.style.animation = "none";
-    background.style.left = "50%";
-    background.style.top = "50%";
-    background.style.transform = "translate(-50%, -50%) scale(0.5) rotate(720deg)";
-    background.style.width = "140px";
-    background.style.height = "140px";
-    headshot.style.animation = "none";
-    headshot.style.left = "50%";
-    headshot.style.top = "50%";
-    headshot.style.transform = "translate(-50%, -50%) scale(0.5) rotate(720deg)";
-    headshot.style.width = "140px";
-    headshot.style.height = "140px";
-    background.offsetHeight;
-    headshot.offsetHeight;
-    thumbnail.style.position = "relative";
-    thumbnail.appendChild(background);
-    thumbnail.appendChild(headshot);
-    console.log("Classes before spread:", background.className, headshot.className);
-    background.classList.add("spread");
-    headshot.classList.add("spread");
-    console.log("Classes after spread:", background.className, headshot.className);
-}, 2000);
+  const lensSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--lens-size"), 10);
+  const offset = lensSize / 2;
 
+  document.documentElement.style.setProperty("--wally-start-x", `${startX - offset}px`);
+  document.documentElement.style.setProperty("--wally-start-y", `${startY - offset}px`);
+  document.documentElement.style.setProperty("--wally-end-x", `${endX - offset}px`);
+  document.documentElement.style.setProperty("--wally-end-y", `${endY - offset}px`);
+  document.documentElement.style.setProperty("--thumb-width", `${thumbRect.width}px`);
+  document.documentElement.style.setProperty("--thumb-height", `${thumbRect.height}px`);
+
+  isAnimatingFill = true;
+  background.classList.add("fill");
+  whiteCircle.classList.add("fill"); 
+  headshot.classList.add("fill");
+
+    game.style.position = "relative";
+    game.style.zIndex = `1000`; // Above all prior thumbnails
+
+  setTimeout(() => {
+
+    background.classList.remove("fill");
+    whiteCircle.classList.remove("fill"); 
+    headshot.classList.remove("fill");
+
+    isAnimatingFill = false;
+
+    background.classList.add("traverse");
+    whiteCircle.classList.add("traverse"); 
+    headshot.classList.add("traverse");
+
+  }, 1000);
+
+  setTimeout(() => {
+
+      thumbnail.style.position = "relative";
+
+      thumbnail.appendChild(background);
+      thumbnail.appendChild(headshot);
+      thumbnail.appendChild(whiteCircle);
+
+    game.style.zIndex = "";
+
+      background.classList.add("spread")
+      whiteCircle.classList.add("spread")
+      headshot.classList.add("spread")
+
+  }, 2000);
 }

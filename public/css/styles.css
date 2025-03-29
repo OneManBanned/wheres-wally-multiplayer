@@ -1,9 +1,6 @@
-:root {
-  --puzzleHeight: 500px;
-  --numberOfPuzzles: 5;
-  --numberOfHeadshots: 3;
-  --puzzleSelectContainerGap: 1rem;
-}
+/* ==========================================================================
+   Resets
+   ========================================================================== */
 
 * {
   box-sizing: border-box;
@@ -30,38 +27,87 @@ body {
   background-position: top center;
 }
 
-h1 {
-  font-family: "Bubblegum Sans", sans-serif;
-  font-size: 2rem;
+/* ==========================================================================
+   Variables
+   ========================================================================== */
+
+:root {
+  /* Sizes */
+  --puzzle-height: 500px;
+  --number-of-puzzles: 5;
+  --number-of-headshots: 3;
+  --puzzle-select-container-gap: 1rem;
+  --lens-size: 140px;
+
+  /* Borders */
+  --border: 2px solid black;
+  --border-image: url("/images/box.png") 50 50 50 50 / 20px 20px 20px 20px / 5px
+    5px 5px 5px repeat repeat;
+
+  /* Colors */
+  --white: #fff;
+  --black: #000;
+  --gray-dark: #1a1a1a;
+  --red: #f00;
+
+  /* Fonts */
+  --font-title: "Bubblegum Sans", sans-serif;
+  --font-timer: "Comic Neue", sans-serif;
 }
 
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
 #game-view {
+  display: grid;
   grid-template-rows: auto 1fr;
   grid-template-columns: auto 1fr;
-  background: white;
+  background: var(--white);
   padding: 1rem;
-  border: 2px solid black;
-  border-image-slice: 50 50 50 50;
-  border-image-width: 20px 20px 20px 20px;
-  border-image-outset: 5px 5px 5px 5px;
-  border-image-repeat: repeat repeat;
-  border-image-source: url("/images/box.png");
+  border: var(--border);
+  border-image: var(--border-image);
 }
 
 #status-bar {
   position: relative;
   grid-row: 1;
-  grid-column: 1/3;
+  grid-column: 1 / 3;
   display: flex;
-  flex-basis: stretch;
   justify-content: space-between;
   margin-bottom: 1rem;
-  border: 2px solid black;
-  border-image-slice: 50 50 50 50;
-  border-image-width: 20px 20px 20px 20px;
-  border-image-outset: 5px 5px 5px 5px;
-  border-image-repeat: repeat repeat;
-  border-image-source: url("/images/box.png");
+  border: var(--border);
+  border-image: var(--border-image);
+}
+
+#puzzle-container {
+  position: relative;
+  display: flex;
+  grid-row: 2;
+  grid-column: 1 / 2;
+  margin-right: 1rem;
+}
+
+#puzzle-selection {
+  grid-row: 2;
+  grid-column: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--puzzle-select-container-gap);
+  height: calc(
+    var(--puzzle-height) -
+      (var(--puzzle-select-container-gap) * (var(--number-of-puzzles) - 1))
+  );
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+
+h1 {
+  font-family: var(--font-title);
+  font-size: 2rem;
 }
 
 #timer-wrapper {
@@ -69,7 +115,7 @@ h1 {
   aspect-ratio: 1 / 1;
   background: url("/images/circle.png") no-repeat center;
   background-size: cover;
-  background-color: white;
+  background-color: var(--white);
   clip-path: circle(35% at 50% 53%);
   overflow: hidden;
   position: absolute;
@@ -85,9 +131,9 @@ h1 {
   transform: translate(-50%, -50%);
   width: calc(100% - 500px);
   aspect-ratio: 1 / 1;
-  font-family: "Comic Neue", sans-serif;
+  font-family: var(--font-timer);
   font-size: 1.15rem;
-  background: white;
+  background: var(--white);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -97,7 +143,7 @@ h1 {
 
 #playerStatus,
 #opponentStatus {
-  background: white;
+  background: var(--white);
   padding: 0.25rem 1rem;
   flex: 1;
 }
@@ -106,54 +152,32 @@ h1 {
   text-align: right;
 }
 
-#puzzle-container {
-  position: relative;
-  display: flex;
-  grid-row: 2;
-  grid-column: 1/2;
-  margin-right: 1rem;
-}
-
 #currentPuzzle {
-  height: var(--puzzleHeight);
-  aspect-ratio: 8/5;
+  height: var(--puzzle-height);
+  aspect-ratio: 8 / 5;
   object-fit: cover;
-  border: 2px solid black;
+  border: var(--border);
+  border-image: var(--border-image);
   overflow: hidden;
-  border-image-slice: 50 50 50 50;
-  border-image-width: 20px 20px 20px 20px;
-  border-image-outset: 5px 5px 5px 5px;
-  border-image-repeat: repeat repeat;
-  border-image-source: url("/images/box.png");
-  transform: rotate(0deg); 
-  transition: transform 0.2s ease-in-out, opacity 0.3s ease-in-out; 
+  transform: rotate(0deg);
+  transition:
+    transform 0.2s ease-in-out,
+    opacity 0.3s ease-in-out;
 }
 
 #currentPuzzle:hover {
   cursor: none;
 }
 
-#puzzle-selection {
-  grid-row: 2;
-  grid-column: 2/3;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 1rem;
-  height: calc( var(--puzzleHeight) - (1rem * (var(--numberOfPuzzles) - 1))); /* height - (gap * numberOfGaps)*/
-}
-
 .puzzleSelect-container {
   display: flex;
+  position: relative;
+  z-index: 0;
   padding: 0.1rem;
   flex-direction: row;
-  border: 2px solid black;
-  border-image-slice: 50 50 50 50;
-  border-image-width: 20px 20px 20px 20px;
-  border-image-outset: 5px 5px 5px 5px;
-  border-image-repeat: repeat repeat;
-  border-image-source: url("/images/box.png");
-  height: calc(100% / var(--numberOfPuzzles));
+  border: var(--border);
+  border-image: var(--border-image);
+  height: calc(100% / var(--number-of-puzzles));
 }
 
 .puzzle {
@@ -171,7 +195,7 @@ h1 {
 
 .headshot-wrapper {
   position: relative;
-  height: calc(100% / var(--numberOfHeadshots));
+  height: calc(100% / var(--number-of-headshots));
   aspect-ratio: 1 / 1;
 }
 
@@ -192,15 +216,17 @@ h1 {
 
 #magnifier {
   position: absolute;
+  width: var(--lens-size);
+  height: var(--lens-size);
   border-radius: 50%;
-  border: 8px solid #000;
+  border: 8px solid var(--black);
   background-repeat: no-repeat;
   pointer-events: none;
   display: none;
   z-index: 1;
   justify-content: center;
   align-items: center;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); 
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .lens-content {
@@ -210,11 +236,7 @@ h1 {
   top: 0;
   left: 0;
   background-repeat: no-repeat;
-border-radius: 50%;
-}
-
-#puzzle-container.flipped .lens-content {
-  transform: rotate(180deg);
+  border-radius: 50%;
 }
 
 #magnifier .glass-effect {
@@ -222,21 +244,70 @@ border-radius: 50%;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.3),
+    transparent 70%
+  );
   pointer-events: none;
 }
 
 #magnifier::after {
   content: "";
   position: absolute;
-  width: 16px; 
-  height: 30px; 
-  background: linear-gradient(to right, #1a1a1a, #000); 
-  border-radius: 5px; 
-  bottom: -20px; 
-  right: -10px; 
-  transform: rotate(135deg); 
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); 
+  width: 16px;
+  height: 30px;
+  background: linear-gradient(to right, var(--gray-dark), var(--black));
+  border-radius: 5px;
+  bottom: -20px;
+  right: -10px;
+  transform: rotate(135deg);
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   States
+   ========================================================================== */
+
+#puzzle-container.flipped .lens-content {
+  transform: rotate(180deg);
+}
+
+#currentPuzzle[data-flipped="true"] {
+  transform: rotate(0deg);
+}
+
+#currentPuzzle[data-flipped="false"] {
+  transform: rotate(180deg);
+}
+
+#magnifier.targeting .lens-content::before {
+  width: 30px;
+  height: 2px;
+  border-radius: 0;
+  background: var(--black);
+}
+
+#magnifier.targeting .lens-content::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 30px;
+  background: var(--black);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+.wally-found-bg,
+.wally-white-circle,
+.wally-headshot {
+  left: var(--wally-start-x);
+  top: var(--wally-start-y);
 }
 
 .lens-content::before {
@@ -244,7 +315,7 @@ border-radius: 50%;
   position: absolute;
   width: 4px;
   height: 4px;
-  background: #000;
+  background: var(--black);
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -255,42 +326,11 @@ border-radius: 50%;
   content: "";
   position: absolute;
   width: 2px;
-  height: 20px;
-  background: #f00;
+  height: 25px;
+  background: var(--black);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
-
-/* Sniper scope reticle */
-#magnifier.targeting .lens-content::before {
-  width: 30px;
-  height: 2px;
-  border-radius: 0;
-  background: #000;
-}
-
-#magnifier.targeting .lens-content::after {
-  content: "";
-  position: absolute;
-  width: 2px;
-  height: 30px;
-  background: #000;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* power up styles  */
-
-/* puzzle flicp */
-
-#currentPuzzle[data-flipped="true"] {
-  transform: rotate(0deg);
-}
-
-#currentPuzzle[data-flipped="false"] {
-  transform: rotate(180deg);  
 }
 
 @keyframes spinToUpsideDown {
@@ -298,7 +338,7 @@ border-radius: 50%;
     transform: rotate(0deg);
   }
   100% {
-    transform: rotate(900deg); /* Two full spins (720deg) + 180deg to end upside down */
+    transform: rotate(900deg);
   }
 }
 
@@ -307,17 +347,17 @@ border-radius: 50%;
     transform: rotate(180deg);
   }
   100% {
-    transform: rotate(0deg); /* Two full spins (-720deg) + 180deg to end at 0deg */
+    transform: rotate(0deg);
   }
 }
+
 #currentPuzzle.spin-to-upside-down {
-  animation: spinToUpsideDown 1s ease-in-out forwards; /* Spin to upside down over 2 seconds */
+  animation: spinToUpsideDown 1s ease-in-out forwards;
 }
 
 #currentPuzzle.spin-to-normal {
-  animation: spinToNormal .5s ease-in-out forwards; /* Spin back to normal over 2 seconds */
+  animation: spinToNormal 0.5s ease-in-out forwards;
 }
-/* confetti canvas */
 
 #puzzle-container canvas {
   position: absolute !important;
@@ -325,244 +365,235 @@ border-radius: 50%;
   left: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  z-index: 2; !important;
+  z-index: 2 !important;
   pointer-events: none !important;
 }
-#puzzle-container canvas {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 2; !important;
-  pointer-events: none !important;
-}
-
-/* missed guess animation */
 
 #puzzle-container.shake {
   animation: shake 0.5s ease-in-out;
 }
+
 @keyframes shake {
-  0% { transform: rotate(0deg); }
-  20% { transform: rotate(-2deg); }
-  40% { transform: rotate(2deg); }
-  60% { transform: rotate(-1deg); }
-  80% { transform: rotate(1deg); }
-  100% { transform: rotate(0deg); }
-}
-.wally-headshot {
-  position: absolute;
-  width: 100%; /* Fills the 140px lens */
-  height: 100%;
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.2); /* Start small */
-  opacity: 0; /* Start invisible */
-  pointer-events: none; /* Avoids blocking clicks */
-  z-index: 2; /* Above lens background but below glass-effect */
-}
-
-#puzzle-container.flipped .wally-headshot {
-  transform: translate(-50%, -50%) scale(0.2) rotate(-180deg);
-}
-/* Flipped state animation */
-#puzzle-container.flipped .wally-headshot {
-  animation: wallyFadeScaleFlipped 0.5s ease-in-out forwards;
-}
-
-@keyframes wallyFadeScaleFlipped {
   0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.2) rotate(-180deg);
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-2deg);
+  }
+  40% {
+    transform: rotate(2deg);
+  }
+  60% {
+    transform: rotate(-1deg);
+  }
+  80% {
+    transform: rotate(1deg);
   }
   100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1) rotate(-180deg);
-  }
-}
-@keyframes wallyFadeScale {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.2);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: rotate(0deg);
   }
 }
 
 .wally-found-bg {
   position: absolute;
-  width: 140px;
-  height: 140px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%);
+  width: var(--lens-size);
+  height: var(--lens-size);
+  background: repeating-linear-gradient(
+    #ff0000 0px,
+    #ff0000 10px,
+    #ffffff 10px,
+    #ffffff 20px
+  );
   border-radius: 50%;
   pointer-events: none;
-  z-index: 1;
-}
+  z-index: 1; 
+  }
 
 .wally-found-bg.fill {
   animation: bgFill 1s ease-in-out forwards;
+  border: 5px white solid;
 }
 
 .wally-found-bg.traverse {
   animation: bgTraverse 1s ease-in-out forwards;
+  border: 5px white solid;
+}
+
+@keyframes bgFill {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes bgTraverse {
+  0% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    left: calc(var(--wally-end-x) + 50px);
+    top: calc(var(--wally-end-y) - 100px);
+    transform: scale(0.9) rotate(360deg);
+  }
+  100% {
+    opacity: 1;
+    left: var(--wally-end-x);
+    top: var(--wally-end-y);
+    transform: scale(0.5) rotate(720deg);
+  }
+}
+
+.wally-found-bg.spread {
+  animation: bgSpread 0.5s ease-in-out forwards !important;
+  width: var(--thumb-width);
+  height: var(--thumb-height);
+  left: 50% !important;
+  top: 50% !important;
   transform-origin: center;
+  position: absolute;
+}
+
+@keyframes bgSpread {
+  0% {
+    opacity: 1;
+    width: var(--lens-size);
+    height: var(--lens-size);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
+  80% {
+    opacity: 1;
+    width: calc(var(--thumb-width) * 1.1);
+    height: calc(var(--thumb-height) * 1.1);
+    border-radius: 0;
+    transform: translate(-50%, -50%) scale(1) rotate(720deg);
+  }
+  100% {
+    opacity: 1;
+    width: var(--thumb-width);
+    height: var(--thumb-height);
+    border-radius: 0;
+    transform: translate(-50%, -50%) scale(1) rotate(720deg);
+  }
+}
+
+.wally-white-circle {
+  position: absolute;
+  width: var(--lens-size);
+  height: var(--lens-size);
+  pointer-events: none;
+  z-index: 2; 
+}
+
+.wally-white-circle.fill {
+  animation: bgFill 1s ease-in-out forwards; /* Reuse bgFill for simplicity */
+}
+
+.wally-white-circle.traverse {
+  animation: bgTraverse 1s ease-in-out forwards; /* Sync with bg */
+  transform-origin: center;
+}
+
+.wally-white-circle.spread {
+  animation: whiteCircle 0.5s ease-in-out forwards !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform-origin: center;
+  background: var(--white);
+  border-radius: 50%;
+}
+
+@keyframes whiteCircle {
+  0% {
+    opacity: 0;
+    width: 100px;
+    height: 100px;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    width: 120px;
+    height: 120px;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
 }
 
 .wally-headshot {
   position: absolute;
-  width: 140px;
-  height: 140px;
+  width: var(--lens-size);
+  height: var(--lens-size);
+  border-radius: 50%;
   pointer-events: none;
-  z-index: 2;
-}
+  z-index: 3; }
 
 .wally-headshot.fill {
   animation: wallyFill 1s ease-in-out forwards;
-}
-
-@keyframes wallyFill {
-  0% { opacity: 0; transform: scale(0.2); }
-  50% {opacity: 0.5; transfom: scale(0.6)}
-  100% { opacity: 1; transform: scale(0.8); } /* Pause */
-}
-
-@keyframes bgFill {
-  0% { opacity: 0; transform: scale(0.2); }
-  50% { opacity: 0.5; background: radial-gradient(circle, rgba(255, 255, 255, 1) 10%, #fff 60%); } /* Shine at 0.5s */
-  100% { opacity: 1; transform: scale(0.9); background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%); } /* Pause */
 }
 
 .wally-headshot.traverse {
   animation: wallyTraverse 1s ease-in-out forwards;
 }
 
-@keyframes bgTraverse {
-  0% { opacity: 1; transform: scale(0.9); }
-  50% { opacity: 1; left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(360deg); }
-  100% { opacity: 1; left: var(--end-x); top: var(--end-y); transform: scale(0.5) rotate(720deg); transform-origin: center; }
+@keyframes wallyFill {
+  0% {
+    transform: scale(0.2);
+  }
+  50% {
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(0.8);
+  }
 }
 
 @keyframes wallyTraverse {
-  0% { opacity: 1; transform: scale(0.9); }
-  50% { opacity: 1; left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(360deg); }
-  100% { opacity: 1; left: var(--end-x); top: var(--end-y); transform: scale(0.5) rotate(720deg); }
-}
-
-.wally-found-bg.spread {
-  animation: bgSpread 0.5s ease-in-out forwards !important;
-  left: 50%;
-  top: 50%;
-  transform-origin: center;
-}
-
-@keyframes bgSpread {
-  0% { 
-    opacity: 1; 
-    width: 140px; 
-    height: 140px; 
-    border-radius: 50%; 
-    transform: translate(-50%, -50%) scale(0.5) rotate(720deg); 
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%);
+  0% {
+    opacity: 1;
+    transform: scale(0.9);
   }
-  80% { 
-    opacity: 1; 
-    width: calc(var(--thumb-width) * 1.1); 
-    height: calc(var(--thumb-height) * 1.1); 
-    border-radius: 0; 
-    transform: translate(-50%, -50%) scale(1) rotate(720deg); 
-  } /* Slight overshoot */
-  100% { 
-    opacity: 1; 
-    width: var(--thumb-width); 
-    height: var(--thumb-height); 
-    border-radius: 0; 
-    transform: translate(-50%, -50%) scale(1) rotate(720deg); 
-    background: #fff;
+  50% {
+    opacity: 1;
+    left: calc(var(--wally-end-x) + 50px);
+    top: calc(var(--wally-end-y) - 100px);
+    transform: scale(0.9) rotate(360deg);
+  }
+  100% {
+    opacity: 1;
+    left: var(--wally-end-x);
+    top: var(--wally-end-y);
+    transform: scale(0.5) rotate(720deg);
   }
 }
 
 .wally-headshot.spread {
   animation: wallySpread 0.5s ease-in-out forwards !important;
-  left: 50%;
-  top: 50%;
+  left: 50% !important;
+  top: 50% !important;
   transform-origin: center;
 }
 
 @keyframes wallySpread {
-  0% { 
-    opacity: 1; 
-    transform: translate(-50%, -50%) scale(0.5) rotate(720deg); 
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
   }
-  100% { 
-    opacity: 1; 
-    width: 70%; 
-    height: auto; 
-    transform: translate(-50%, -50%) scale(0.5) rotate(720deg); /* No change in scale */
+  100% {
+    opacity: 1;
+    width: 70%;
+    height: auto;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
   }
-}
-
-#puzzle-container.flipped .wally-headshot.fill {
-  animation: wallyFillFlipped 1s ease-in-out forwards;
-}
-
-#puzzle-container.flipped .wally-headshot.traverse {
-  animation: wallyTraverseFlipped 1s ease-in-out forwards;
-}
-
-#puzzle-container.flipped .wally-headshot.spread {
-  animation: wallySpreadFlipped 0.5s ease-in-out forwards;
-}
-
-@keyframes wallyFillFlipped {
-  0% { opacity: 0; transform: scale(0.2) rotate(-180deg); }
-  25% { opacity: 1; transform: scale(0.6) rotate(-180deg); }
-  40% { transform: scale(1) rotate(-180deg); }
-  50% { transform: scale(1) rotate(-180deg); }
-  100% { transform: scale(1) rotate(-180deg); }
-}
-
-@keyframes wallyTraverseFlipped {
-  0% { transform: scale(1) rotate(-180deg); }
-  50% { left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(180deg); }
-  100% { left: var(--end-x); top: var(--end-y); transform: scale(0.7) rotate(540deg); }
-}
-
-@keyframes wallySpreadFlipped {
-  0% { transform: scale(0.7) rotate(540deg); }
-  100% { width: 70%; height: auto; transform: scale(1) rotate(540deg); }
-}
-
-
-#puzzle-container.flipped .wally-found-bg.fill {
-  animation: bgFillFlipped 1s ease-in-out forwards;
-}
-
-#puzzle-container.flipped .wally-found-bg.traverse {
-  animation: bgTraverseFlipped 1s ease-in-out forwards;
-}
-
-#puzzle-container.flipped .wally-found-bg.spread {
-  animation: bgSpreadFlipped 0.5s ease-in-out forwards !important;
-}
-
-@keyframes bgFillFlipped {
-  0% { opacity: 0; transform: scale(0.2) rotate(-180deg); }
-  50% { opacity: 1; background: radial-gradient(circle, rgba(255, 255, 255, 1) 10%, #fff 60%); }
-  100% { opacity: 1; transform: scale(1) rotate(-180deg); background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 20%, #fff 70%); }
-}
-
-@keyframes bgTraverseFlipped {
-  0% { transform: scale(1) rotate(-180deg); }
-  50% { left: calc(var(--end-x) + 50px); top: calc(var(--end-y) - 100px); transform: scale(0.9) rotate(180deg); }
-  100% { left: var(--end-x); top: var(--end-y); transform: scale(0.7) rotate(540deg); } /* 720 - 180 */
-}
-
-@keyframes bgSpreadFlipped {
-  0% { width: 140px; height: 140px; border-radius: 50%; transform: scale(0.7) rotate(540deg); }
-  80% { width: calc(var(--thumb-width) * 1); height: calc(var(--thumb-height) * 1); border-radius: 0; transform: scale(1) rotate(540deg); }
-  100% { width: var(--thumb-width); height: var(--thumb-height); border-radius: 0; transform: scale(1) rotate(540deg); }
 }

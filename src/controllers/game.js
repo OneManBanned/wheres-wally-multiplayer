@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { games, clients } from "../app.js";
 import { checkCharacterInRange, getGameByPlayerId, getGameWsByPlayerId, wsOpenSend, } from "../utils/utils.js";
 
+
 export const startGame = (req, res) => {
   res.render("index", {
     puzzles: Object.values(puzzles).map((char) => char.img),
@@ -34,8 +35,8 @@ let charFound;
       if (character === "waldo") {
           foundArr[puzzleIdx] = true;
           playerStats[playerId].wallysFound += 1;
-          wsOpenSend(playersWs, { type: "updateFound", foundArr, playerStats, puzzleIdx});
-          wsOpenSend(opponentsWs, { type: "updateFound", foundArr, playerStats, puzzleIdx});
+          wsOpenSend(playersWs, { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
+          wsOpenSend(opponentsWs, { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
 
           if (!foundArr.includes(false)) {
             wsOpenSend(opponentsWs, { type: "gameOver", reason: "allFound" });
@@ -45,8 +46,8 @@ let charFound;
 
       } else if (!powerUpsArr[puzzleIdx][character]) {
         powerUpsArr[puzzleIdx][character] = true;
-        wsOpenSend(opponentsWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx });
-        wsOpenSend(playersWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx });
+          wsOpenSend(playersWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx, playerWhoFoundId: playerId });
+        wsOpenSend(opponentsWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx, playerWhoFoundId: playerId });
       }
     }
   }
