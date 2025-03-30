@@ -1,4 +1,3 @@
-
 export function checkCharacterInRange(char, { x, y }, characters) {
   return (
     x >= characters[char].x &&

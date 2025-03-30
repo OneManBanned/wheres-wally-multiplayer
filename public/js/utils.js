@@ -1,4 +1,9 @@
-export const getPhotoRect = (img) => img.getBoundingClientRect();
+export function extractImagePath(url) {
+    const pathStart = url.indexOf("/images/");
+    if (pathStart === -1) return null;
+    return url.substring(pathStart);
+}
+
 export function getPathFromURL(url) {
     const parsedURL = new URL(url);
     return parsedURL.pathname;

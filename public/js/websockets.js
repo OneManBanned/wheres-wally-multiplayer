@@ -1,114 +1,82 @@
-import {
-    startGame,
-    setFoundArr,
-    setGameOver,
-    setStartTime,
-    setPowerUpsArr,
-} from "./game.js";
-import {
-    showLobby,
-    showGame,
-    updateSolvedThumbnails,
-    updateScores,
-    setupConfetti,
-    updateFoundCharacters,
-    switchToUnsolvedPuzzle,
-    syncFoundCharacters,
-} from "./ui.js";
+import { startGameTimer, setGameOver, setStartTime } from "./game.js";
+import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, } from "./ui/ui.js";
+import { setupConfetti } from "./ui/animations.js";
+import { DOM } from "./main.js";
 
-export function initWebSocket({ playerId, mainPuzzle, mainPuzzleContainer, lobbyView, gameView }) {
-    const ws = new WebSocket("ws://localhost:3000");
+export function initWebSocket({ playerId }) {
+  const ws = new WebSocket("ws://localhost:3000");
 
-    ws.onopen = () => {
-        console.log("Connected to WebSocket Server");
-        ws.send(JSON.stringify({ type: "join", playerId }));
-    };
+  ws.onopen = () => {
+    console.log("Connected to WebSocket Server");
+    ws.send(JSON.stringify({ type: "join", playerId }));
+  };
 
-    ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        const { type, startTime, foundArr, gameId, powerUpsArr,
-            playerStats, puzzleIdx, character, playerWhoFoundId } = data;
-        console.log(data)
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    console.log("WebSocket message:", data);
+    const handler = handlers[data.type];
+    if (handler) handler(data);
+    else console.warn(`Unhandled message type: ${data.type}`);
+  };
 
-        if (type === "paired") {
-            setFoundArr(foundArr);
-            setPowerUpsArr(powerUpsArr);
-
-            setStartTime(startTime);
-            updateSolvedThumbnails();
-            syncFoundCharacters();
-            updateScores(playerStats,  playerId)
-            switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
-
-            showGame(lobbyView, gameView);
-            startGame();
-        }
-
-        if (type === "gameOver") {
-            setGameOver();
-            return alert("Game over");
-        }
-
-        if (type === "updateFound") {
-            setFoundArr(foundArr);
-            updateScores(playerStats, playerId);
-            updateSolvedThumbnails(playerWhoFoundId);
-            switchToUnsolvedPuzzle(mainPuzzle, puzzles, foundArr, puzzleIdx);
-        }
-
-        if (type === "powerUpFound") {
-            setPowerUpsArr(powerUpsArr);
-            updateFoundCharacters(puzzleIdx, character);
-
-            console.log(playerWhoFoundId, "\n", playerId)
-            if (character === "odlaw" && playerWhoFoundId !== playerId) {
-                
-                                const confettiBottomLeft = setupConfetti(
-                                    mainPuzzleContainer,
-                                    { x: 0, y: 1.1 },
-                                    60,
-                                );
-                                const confettiBottomRight = setupConfetti(
-                                    mainPuzzleContainer,
-                                    { x: 1, y: 1.1 },
-                                    120,
-                                );
-                                
-                                const confettiMiddleBottom = setupConfetti(
-                                    mainPuzzleContainer,
-                                    { x: 0.5, y: 1.1 },
-                                    90,
-                                );
-                
-                                setTimeout(() => {
-                                    confettiBottomLeft();
-                                    confettiBottomRight();
-                                    confettiMiddleBottom();
-                                }, 10000);
-                
-                mainPuzzle.classList.remove("spin-to-upside-down", "spin-to-normal");
-                mainPuzzleContainer.classList.add("flipped");
-
-                console.log("Odlaw found, adding spin-to-upside-down");
-                mainPuzzle.dataset.flipped = "true";
-                mainPuzzle.classList.add("spin-to-upside-down");
-
-                setTimeout(() => {
-                    console.log("Upside-down complete, flipping back");
-                    mainPuzzle.classList.remove("spin-to-upside-down");
-                    mainPuzzle.classList.add("spin-to-normal");
-                mainPuzzleContainer.classList.remove("flipped");
-                    mainPuzzle.dataset.flipped = "false";
-                }, 15000); // Matches spin-to-upside-down duration
-            }
-        }
-
-        if (type === "opponentQuit") {
-            console.log(`Opponent quit game ${gameId} is over`);
-            showLobby(lobbyView, gameView);
-        }
-    };
-
-    ws.onclose = () => console.log("Disconnected from WebSocket server");
-    ws.onerror = (e) => console.log("WebSocker error: ", e);
+  ws.onclose = () => console.log("Disconnected from WebSocket server");
+  ws.onerror = (e) => console.log("WebSocker error: ", e);
 }
+
+const handlers = {
+    paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
+      setStartTime(startTime);
+      switchPuzzle(puzzles, foundArr, puzzleIdx);
+      updateScores(playerStats, playerId);
+      showGame();
+      startGameTimer();
+    },
+
+    updateFound: ({foundArr, playerStats, playerWhoFoundId, puzzleIdx}) => {
+      updateScores(playerStats, playerId);
+      updateThumbnailUI(playerWhoFoundId, puzzleIdx);
+      switchPuzzle(puzzles, foundArr, puzzleIdx);
+    },
+
+    gameOver: () => {
+      setGameOver();
+      return alert("Game over");
+    },
+
+    opponentQuit: ({gameId}) => {
+      console.log(`Opponent quit game ${gameId} is over`);
+      showLobby();
+    },
+
+    powerUpFound: ({puzzleIdx, character, playerWhoFoundId}) => {
+      updateFoundCharacterUI(puzzleIdx, character);
+
+      if (character === "odlaw" && playerWhoFoundId !== playerId) {
+        const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
+        const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
+        const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
+
+        setTimeout(() => {
+          confettiBottomLeft();
+          confettiBottomRight();
+          confettiMiddleBottom();
+        }, 10000);
+
+        DOM.mainPuzzle.classList.remove(
+          "spin-to-upside-down",
+          "spin-to-normal",
+        );
+        DOM.mainPuzzleContainer.classList.add("flipped");
+
+        DOM.mainPuzzle.dataset.flipped = "true";
+        DOM.mainPuzzle.classList.add("spin-to-upside-down");
+
+        setTimeout(() => {
+          DOM.mainPuzzle.classList.remove("spin-to-upside-down");
+          DOM.mainPuzzle.classList.add("spin-to-normal");
+          DOM.mainPuzzleContainer.classList.remove("flipped");
+          DOM.mainPuzzle.dataset.flipped = "false";
+        }, 15000); // Matches spin-to-upside-down duration
+      }
+    },
+  };
