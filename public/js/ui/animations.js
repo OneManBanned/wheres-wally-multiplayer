@@ -1,80 +1,131 @@
 import { DOM } from "../main.js";
-import { setIsAnimatingFill } from "./ui.js";
 
-export function showWallyFoundFeedback(idx) {
+export let isAnimatingFill = false;
+export const setIsAnimatingFill = (bool) => (isAnimatingFill = bool);
 
-  const background = document.createElement("div");
-  background.className = "wally-found-bg";
+export function playerFoundWallyFeedback(idx) {
+    const background = document.createElement("div");
+    background.className = "wally-found-bg";
 
-  const whiteCircle = document.createElement("div"); 
-  whiteCircle.className = "wally-white-circle";
+    const whiteCircle = document.createElement("div");
+    whiteCircle.className = "wally-white-circle";
 
-  const headshot = document.createElement("img");
-  headshot.className = "wally-headshot";
-  headshot.src = "/images/wally-head.png";
-  headshot.alt = "Wally Found";
+    const headshot = document.createElement("img");
+    headshot.className = "wally-headshot";
+    headshot.src = "/images/wally-head.png";
+    headshot.alt = "Wally Found";
 
-  DOM.gameView.appendChild(headshot);
-  DOM.gameView.appendChild(background);
-  DOM.gameView.appendChild(whiteCircle);
+    DOM.gameView.appendChild(headshot);
+    DOM.gameView.appendChild(background);
+    DOM.gameView.appendChild(whiteCircle);
 
-  const gameRect = DOM.gameView.getBoundingClientRect();
-  const magnifier = document.querySelector(".lens-content");
-  const magRect = magnifier.getBoundingClientRect();
-  const startX = magRect.left + magRect.width / 2 - gameRect.left;
-  const startY = magRect.top + magRect.height / 2 - gameRect.top; 
-  const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
-  const endX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
-  const endY = thumbRect.top + thumbRect.height / 2 - gameRect.top; 
+    const gameRect = DOM.gameView.getBoundingClientRect();
+    const magnifier = document.querySelector(".lens-content");
+    const magRect = magnifier.getBoundingClientRect();
+    const startX = magRect.left + magRect.width / 2 - gameRect.left;
+    const startY = magRect.top + magRect.height / 2 - gameRect.top;
+    const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
+    const endX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
+    const endY = thumbRect.top + thumbRect.height / 2 - gameRect.top;
 
+    const lensSize = parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue("--lens-size"),
+        10,
+    );
+    console.log(lensSize);
+    const offset = lensSize / 2;
 
-  const lensSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--lens-size"), 10);
-  const offset = lensSize / 2;
+    document.documentElement.style.setProperty(
+        "--wally-start-x",
+        `${startX - offset - 2}px`,
+    );
+    document.documentElement.style.setProperty(
+        "--wally-start-y",
+        `${startY - offset - 2}px`,
+    );
+    document.documentElement.style.setProperty(
+        "--wally-end-x",
+        `${endX - offset}px`,
+    );
+    document.documentElement.style.setProperty(
+        "--wally-end-y",
+        `${endY - offset}px`,
+    );
 
-  document.documentElement.style.setProperty("--wally-start-x", `${startX - offset}px`);
-  document.documentElement.style.setProperty("--wally-start-y", `${startY - offset}px`);
-  document.documentElement.style.setProperty("--wally-end-x", `${endX - offset}px`);
-  document.documentElement.style.setProperty("--wally-end-y", `${endY - offset}px`);
-  document.documentElement.style.setProperty("--thumb-width", `${thumbRect.width}px`);
-  document.documentElement.style.setProperty("--thumb-height", `${thumbRect.height}px`);
-
-    setIsAnimatingFill(true)
-  background.classList.add("fill");
-  whiteCircle.classList.add("fill"); 
-  headshot.classList.add("fill");
+    setIsAnimatingFill(true);
+    background.classList.add("fill");
+    whiteCircle.classList.add("fill");
+    headshot.classList.add("fill");
 
     DOM.gameView.style.position = "relative";
     DOM.gameView.style.zIndex = `1000`; // Above all prior thumbnails
 
-  setTimeout(() => {
+    setTimeout(() => {
+        background.classList.remove("fill");
+        whiteCircle.classList.remove("fill");
+        headshot.classList.remove("fill");
 
-    background.classList.remove("fill");
-    whiteCircle.classList.remove("fill"); 
-    headshot.classList.remove("fill");
+        setIsAnimatingFill(false);
 
-setIsAnimatingFill(false)
+        background.classList.add("traverse");
+        whiteCircle.classList.add("traverse");
+        headshot.classList.add("traverse");
+    }, 1000);
 
-    background.classList.add("traverse");
-    whiteCircle.classList.add("traverse"); 
-    headshot.classList.add("traverse");
+    setTimeout(() => {
+        DOM.allPuzzleContainers[idx].style.position = "relative";
 
-  }, 1000);
+        DOM.allPuzzleContainers[idx].appendChild(background);
+        DOM.allPuzzleContainers[idx].appendChild(headshot);
+        DOM.allPuzzleContainers[idx].appendChild(whiteCircle);
 
-  setTimeout(() => {
+        DOM.gameView.style.zIndex = "";
 
-      DOM.allPuzzleContainers[idx].style.position = "relative";
+        applySpreadAnimation(
+            DOM.gameView,
+            background,
+            whiteCircle,
+            headshot,
+            thumbRect,
+        );
+    }, 2000);
+}
 
-      DOM.allPuzzleContainers[idx].appendChild(background);
-      DOM.allPuzzleContainers[idx].appendChild(headshot);
-      DOM.allPuzzleContainers[idx].appendChild(whiteCircle);
+export function opponentFoundWallyFeedback(idx) {
+    // Create elements
+    const bg = document.createElement("div");
+    bg.classList.add("wally-found-bg");
 
-      DOM.gameView.style.zIndex = "";
+    const circle = document.createElement("div");
+    circle.classList.add("wally-white-circle");
 
-      background.classList.add("spread")
-      whiteCircle.classList.add("spread")
-      headshot.classList.add("spread")
+    const headshot = document.createElement("img");
+    headshot.classList.add("wally-headshot");
+    headshot.src = "/images/odlaw-head.png";
 
-  }, 2000);
+    // Position them (start centered)
+
+    const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
+    const startX = thumbRect.width / 2;
+    const startY = thumbRect.height / 2;
+    document.documentElement.style.setProperty("--wally-start-x", `${startX}px`);
+    document.documentElement.style.setProperty("--wally-start-y", `${startY}px`);
+
+    DOM.allPuzzleContainers[idx].appendChild(bg);
+    DOM.allPuzzleContainers[idx].appendChild(circle);
+    DOM.allPuzzleContainers[idx].appendChild(headshot);
+        bg.style.background = "repeating-linear-gradient(#FFC107 0px, #FFC107 10px, #000000 10px, #000000 20px)"; // Yellow and black
+    bg.style.border = "5px black solid"
+    // Immediate spread with a twist (e.g., different color)
+    applySpreadAnimation(DOM.gameView, bg, circle, headshot, thumbRect);
+}
+
+function applySpreadAnimation(container, bg, circle, headshot, rect) {
+    container.style.setProperty("--thumb-width", `${rect.width}px`);
+    container.style.setProperty("--thumb-height", `${rect.height}px`);
+    bg.classList.add("spread");
+    circle.classList.add("spread");
+    headshot.classList.add("spread");
 }
 
 export function setupConfetti(origin, angle) {
@@ -112,10 +163,25 @@ export function setupConfetti(origin, angle) {
 }
 
 export function showMissFeedback() {
+    DOM.mainPuzzleContainer.classList.add("shake");
+    setTimeout(() => {
+        DOM.mainPuzzleContainer.classList.remove("shake");
+    }, 500);
+}
 
-  DOM.mainPuzzleContainer.classList.add("shake");
-  setTimeout(() => {
-    DOM.mainPuzzleContainer.classList.remove("shake");
-  }, 500); 
+export function fadePuzzle(newSrc) {
+    DOM.mainPuzzle.style.opacity = "0";
 
+    const magnifier = document.querySelector(".lens-content");
+    magnifier.classList.add("fade-out");
+
+    setTimeout(() => {
+        DOM.mainPuzzle.src = newSrc;
+
+        DOM.mainPuzzle.onload = () => {
+            DOM.mainPuzzle.style.opacity = "1";
+            magnifier.classList.remove("fade-out");
+            DOM.mainPuzzle.onload = null;
+        };
+    }, 300);
 }

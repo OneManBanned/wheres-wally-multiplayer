@@ -1,4 +1,4 @@
-export function extractImagePath(url) {
+export function extractImgPath(url) {
     const pathStart = url.indexOf("/images/");
     if (pathStart === -1) return null;
     return url.substring(pathStart);
@@ -17,7 +17,7 @@ export function positionInPercent(position, rect) {
     return { xPercent, yPercent };
 }
 
-export function getCharacterFromImagePath(imagePath) {
+export function getCharFromImgPath(imagePath) {
     const filename = imagePath.split("/").pop();
     const character = filename.split(".")[0].split("-")[0];
     return character;

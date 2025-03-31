@@ -40,7 +40,7 @@
     </div>
   </main>
   <script>
-    let puzzles = <%- JSON.stringify(puzzles) %>;
+    window.puzzles = <%- JSON.stringify(puzzles) %>;
     window.playerId = "<%= playerId %>";
   </script>
   <script type="module" src="/js/main.js"></script>

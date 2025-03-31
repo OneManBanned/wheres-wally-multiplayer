@@ -1,9 +1,10 @@
+import { PUZZLES, PLAYER_ID } from "./game.js";
 import { startGameTimer, setGameOver, setStartTime } from "./game.js";
 import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, } from "./ui/ui.js";
 import { setupConfetti } from "./ui/animations.js";
 import { DOM } from "./main.js";
 
-export function initWebSocket({ playerId }) {
+export function initWebSocket(playerId) {
   const ws = new WebSocket("ws://localhost:3000");
 
   ws.onopen = () => {
@@ -26,16 +27,16 @@ export function initWebSocket({ playerId }) {
 const handlers = {
     paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
       setStartTime(startTime);
-      switchPuzzle(puzzles, foundArr, puzzleIdx);
-      updateScores(playerStats, playerId);
+      switchPuzzle(PUZZLES, foundArr, puzzleIdx);
+      updateScores(playerStats, PLAYER_ID);
       showGame();
       startGameTimer();
     },
 
     updateFound: ({foundArr, playerStats, playerWhoFoundId, puzzleIdx}) => {
-      updateScores(playerStats, playerId);
+      updateScores(playerStats, PLAYER_ID);
       updateThumbnailUI(playerWhoFoundId, puzzleIdx);
-      switchPuzzle(puzzles, foundArr, puzzleIdx);
+      switchPuzzle(PUZZLES, foundArr, puzzleIdx);
     },
 
     gameOver: () => {
@@ -51,7 +52,7 @@ const handlers = {
     powerUpFound: ({puzzleIdx, character, playerWhoFoundId}) => {
       updateFoundCharacterUI(puzzleIdx, character);
 
-      if (character === "odlaw" && playerWhoFoundId !== playerId) {
+      if (character === "odlaw" && playerWhoFoundId !== PLAYER_ID) {
         const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
         const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
         const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
