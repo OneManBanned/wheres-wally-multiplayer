@@ -33,6 +33,7 @@ let charFound;
       const { foundArr, powerUpsArr, playerStats } = gameData;
 
       if (character === "waldo") {
+          console.log("waldo game data", gameData.playerStats[playerId])
           foundArr[puzzleIdx] = true;
           playerStats[playerId].wallysFound += 1;
           wsOpenSend(playersWs, { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
@@ -46,8 +47,8 @@ let charFound;
 
       } else if (!powerUpsArr[puzzleIdx][character]) {
         powerUpsArr[puzzleIdx][character] = true;
-          wsOpenSend(playersWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx, playerWhoFoundId: playerId });
-        wsOpenSend(opponentsWs, { type: "powerUpFound", powerUpsArr, character, puzzleIdx, playerWhoFoundId: playerId });
+        wsOpenSend(playersWs, { type: "powerUpFound", powerUpsArr, character, playerStats, puzzleIdx, playerWhoFoundId: playerId });
+        wsOpenSend(opponentsWs, { type: "powerUpFound", powerUpsArr, character, playerStats, puzzleIdx, playerWhoFoundId: playerId });
       }
     }
   }

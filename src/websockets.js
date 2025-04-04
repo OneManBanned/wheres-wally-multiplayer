@@ -19,7 +19,7 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
           const player2 = lobby.shift();
           const gameId = `game-${uuidv4()}`;
           games.set(gameId, { players: [player1, player2], foundArr: DEFAULT_FOUND_ARR(), powerUpsArr: DEFAULT_POWERUPS_ARR(),
-            startTime: Date.now(), playerStats: { [player1]: { wallysFound: 0 }, [player2]: { wallysFound: 0 }, },
+            startTime: Date.now(), playerStats: { [player1]: { wallysFound: 0, activeEffect: [] }, [player2]: { wallysFound: 0, activeEffect: [] }, },
           });
 
           const ws1 = clients.get(player1);
@@ -39,6 +39,18 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
             }
           }, GAME_DURATION);
         }
+      }
+
+      if (type === "activeEffectUpdate") { 
+
+      const data = JSON.parse(msg.toString());
+      const {playerStats, playerId} = data;
+          console.log("stats from client: ", playerStats)
+
+      const { gameId, gameData } = getGameByPlayerId(playerId, games);
+      gameData.playerStats = playerStats
+          console.log(playerStats[playerId].activeEffect)
+
       }
 
     });

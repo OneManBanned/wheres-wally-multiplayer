@@ -402,6 +402,7 @@ h1 {
   }
 }
 
+
 .wally-found-bg {
   position: absolute;
   width: var(--lens-size);
@@ -417,6 +418,11 @@ h1 {
   pointer-events: none;
   z-index: 1; 
   }
+
+.wally-found-bg-opponent {
+  background: repeating-linear-gradient(#87CEEB 0px, #87CEEB 10px, #ffffff 10px, #ffffff 20px);
+  border: 5px white solid;
+}
 
 .wally-found-bg.fill {
   animation: bgFill 1s ease-in-out forwards;

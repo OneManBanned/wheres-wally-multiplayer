@@ -1,8 +1,14 @@
 import { PUZZLES, PLAYER_ID } from "./game.js";
 import { startGameTimer, setGameOver, setStartTime } from "./game.js";
-import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, } from "./ui/ui.js";
-import { setupConfetti } from "./ui/animations.js";
-import { DOM } from "./main.js";
+import { getRandomPowerUp, powerUpsObj } from "./powerups.js";
+import {
+  showLobby,
+  showGame,
+  updateScores,
+  updateFoundCharacterUI,
+  switchPuzzle,
+  updateThumbnailUI,
+} from "./ui/ui.js";
 
 export function initWebSocket(playerId) {
   const ws = new WebSocket("ws://localhost:3000");
@@ -16,7 +22,7 @@ export function initWebSocket(playerId) {
     const data = JSON.parse(e.data);
     console.log("WebSocket message:", data);
     const handler = handlers[data.type];
-    if (handler) handler(data);
+    if (handler) handler(data, ws);
     else console.warn(`Unhandled message type: ${data.type}`);
   };
 
@@ -25,59 +31,156 @@ export function initWebSocket(playerId) {
 }
 
 const handlers = {
-    paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
-      setStartTime(startTime);
-      switchPuzzle(PUZZLES, foundArr, puzzleIdx);
-      updateScores(playerStats, PLAYER_ID);
-      showGame();
-      startGameTimer();
-    },
+  paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
+    setStartTime(startTime);
+    switchPuzzle(PUZZLES, foundArr, puzzleIdx);
+    updateScores(playerStats, PLAYER_ID);
+    showGame();
+    startGameTimer();
+  },
 
-    updateFound: ({foundArr, playerStats, playerWhoFoundId, puzzleIdx}) => {
-      updateScores(playerStats, PLAYER_ID);
-      updateThumbnailUI(playerWhoFoundId, puzzleIdx);
-      switchPuzzle(PUZZLES, foundArr, puzzleIdx);
-    },
+  updateFound: ({ foundArr, playerStats, playerWhoFoundId, puzzleIdx }, ws) => {
+    updateScores(playerStats, PLAYER_ID);
+    cancelNegativePowerUps(playerWhoFoundId, playerStats, ws);
+    updateThumbnailUI(playerWhoFoundId, puzzleIdx);
+    switchPuzzle(PUZZLES, foundArr, puzzleIdx);
+  },
 
-    gameOver: () => {
-      setGameOver();
-      return alert("Game over");
-    },
+  gameOver: () => {
+    setGameOver();
+    return alert("Game over");
+  },
 
-    opponentQuit: ({gameId}) => {
-      console.log(`Opponent quit game ${gameId} is over`);
-      showLobby();
-    },
+  opponentQuit: ({ gameId }) => {
+    console.log(`Opponent quit game ${gameId} is over`);
+    showLobby();
+  },
 
-    powerUpFound: ({puzzleIdx, character, playerWhoFoundId}) => {
-      updateFoundCharacterUI(puzzleIdx, character);
+  powerUpFound: (
+    { puzzleIdx, character, playerWhoFoundId, playerStats },
+    ws,
+  ) => {
+    updateFoundCharacterUI(puzzleIdx, character);
 
-      if (character === "odlaw" && playerWhoFoundId !== PLAYER_ID) {
-        const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
-        const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
-        const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
+    const positiveEffectsTarget = playerWhoFoundId;
+    const negativeEffectTarget = Object.keys(playerStats).filter(
+      (id) => id != playerWhoFoundId,
+    )[0];
 
-        setTimeout(() => {
-          confettiBottomLeft();
-          confettiBottomRight();
-          confettiMiddleBottom();
-        }, 10000);
+    const powerUp = getRandomPowerUp(character);
 
-        DOM.mainPuzzle.classList.remove(
-          "spin-to-upside-down",
-          "spin-to-normal",
+    switch (character) {
+      case "odlaw":
+        applyPowerUp(powerUp, negativeEffectTarget, playerStats, ws);
+        break;
+      case "wenda":
+        // wendas double effect implementation
+        applyPowerUp(powerUp, { positiveEffectsTarget }, playerStats, ws);
+        break;
+      case "whitebeard":
+        applyPowerUp(
+          powerUp,
+          positiveEffectsTarget,
+          playerStats,
+          ws,
+          puzzleIdx,
         );
-        DOM.mainPuzzleContainer.classList.add("flipped");
+        break;
+    }
+  },
+};
 
-        DOM.mainPuzzle.dataset.flipped = "true";
-        DOM.mainPuzzle.classList.add("spin-to-upside-down");
+function applyPowerUp(powerUp, target, playerStats, ws, idx = null) {
+  if (PLAYER_ID === target) {
+    const activeEffects = playerStats[target].activeEffect;
+    const existingEffectIdx = activeEffects.findIndex(
+      (item) => item.name === powerUp.name,
+    );
 
-        setTimeout(() => {
-          DOM.mainPuzzle.classList.remove("spin-to-upside-down");
-          DOM.mainPuzzle.classList.add("spin-to-normal");
-          DOM.mainPuzzleContainer.classList.remove("flipped");
-          DOM.mainPuzzle.dataset.flipped = "false";
-        }, 15000); // Matches spin-to-upside-down duration
-      }
-    },
-  };
+    if (existingEffectIdx !== -1) {
+      // Power-up already active extend duration.
+
+      const existingEffect = activeEffects[existingEffectIdx];
+      const elapsed = Date.now() - existingEffect.startTime;
+      const remaining = existingEffect.duration - elapsed;
+      const newDuration = Math.max(0, remaining) + powerUp.duration;
+
+      clearTimeout(existingEffect.timeoutId);
+      existingEffect.duration = newDuration;
+      existingEffect.startTime = Date.now();
+
+      existingEffect.timeoutId = setTimeout(() => {
+        powerUp.cleanUpFn();
+        const effectIdx = activeEffects.findIndex(
+          (item) => item.name === powerUp.name,
+        );
+        if (effectIdx !== -1) activeEffects.splice(effectIdx, 1);
+        ws.send(
+          JSON.stringify({
+            type: "activeEffectUpdate",
+            playerStats,
+            playerId: PLAYER_ID,
+          }),
+        );
+      }, newDuration);
+
+      console.log(`Extended ${powerUp.name} duration to ${newDuration}ms`);
+    } else {
+      powerUp.fn();
+      const effect = {
+        ...powerUp,
+        startTime: Date.now(),
+        timeoutId: setTimeout(() => {
+          powerUp.cleanUpFn();
+          const effectIdx = activeEffects.findIndex(
+            (item) => item.name === powerUp.name,
+          );
+          if (effectIdx !== -1) activeEffects.splice(effectIdx, 1);
+          ws.send(
+            JSON.stringify({
+              type: "activeEffectUpdate",
+              playerStats,
+              playerId: PLAYER_ID,
+            }),
+          );
+        }, powerUp.duration),
+      };
+
+        activeEffects.push(effect)
+        console.log(`Applied ${powerUp.name} for ${powerUp.duration}ms`)
+    }
+
+      ws.send(JSON.stringify({
+          type: "activeEffectUpdate",
+          playerStats,
+          playerId: PLAYER_ID
+      }))
+  }
+}
+
+function cancelNegativePowerUps(playerId, playerStats, ws) {
+  const negativeArr = playerStats[playerId].activeEffect.filter(
+    (effect) => effect.type === "negative",
+  );
+
+  if (negativeArr.length === 0) return;
+
+  negativeArr.forEach((active) => {
+    const idx = powerUpsObj[active.char].findIndex(
+      (powerUp) => powerUp.name === active.name,
+    );
+    powerUpsObj[active.char][idx].cleanUpFn();
+  });
+
+  const effectIdx = playerStats[playerId].activeEffect.findIndex(
+    (item) => item.type === "negative",
+  );
+  playerStats[playerId].activeEffect.splice(effectIdx, 1);
+  ws.send(
+    JSON.stringify({
+      type: "activeEffectUpdate",
+      playerStats,
+      playerId: PLAYER_ID,
+    }),
+  );
+}

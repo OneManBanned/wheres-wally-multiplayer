@@ -1,4 +1,4 @@
-import { PLAYER_ID, PUZZLES, checkCharacter } from "./game.js";
+import { PLAYER_ID, checkCharacter } from "./game.js";
 import { showLobby, setupPuzzle, setupThumbnailListeners } from "./ui/ui.js";
 import { initWebSocket } from "./websockets.js";
 
@@ -20,3 +20,4 @@ initWebSocket(PLAYER_ID);
 setupPuzzle((index, x, y) => checkCharacter(index, x, y, PLAYER_ID));
 setupThumbnailListeners();
 showLobby();
+
