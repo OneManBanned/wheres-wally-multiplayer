@@ -54,14 +54,24 @@ export function confettiCleanup() {
 }
 
 export function screenFlipPowerUp() {
-  DOM.mainPuzzleContainer.classList.add("flipped");
-  DOM.mainPuzzle.dataset.flipped = "true";
+
+DOM.mainPuzzleContainer.classList.add("flipped");
+  DOM.mainPuzzle.dataset.flipped = "true"; // For tracking
+  DOM.mainPuzzle.classList.remove("spin-to-normal", "spin-to-upside-down");
+  void DOM.mainPuzzle.offsetHeight; // Force reflow
   DOM.mainPuzzle.classList.add("spin-to-upside-down");
+
+    console.log("screenFlipInit: ", DOM.mainPuzzle)
+
+
 }
 
 export function screenFlipCleanup() {
-    DOM.mainPuzzle.classList.remove("spin-to-upside-down");
-    DOM.mainPuzzle.classList.add("spin-to-normal");
-    DOM.mainPuzzleContainer.classList.remove("flipped");
-    DOM.mainPuzzle.dataset.flipped = "false";
+
+ DOM.mainPuzzle.classList.remove("spin-to-upside-down", "spin-to-normal");
+  DOM.mainPuzzleContainer.classList.remove("flipped");
+  DOM.mainPuzzle.dataset.flipped = "false";
+  DOM.mainPuzzle.style.transform = "rotate(0deg)"; // Explicit reset
+  void DOM.mainPuzzle.offsetHeight; // Force reflow
+
 }

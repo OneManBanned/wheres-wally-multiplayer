@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { getGameByPlayerId, wsOpenSend } from "./utils/utils.js";
+import { getGameByPlayerId, getGameWsByPlayerId, wsOpenSend } from "./utils/utils.js";
 
 export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR,
 ) {
@@ -8,7 +8,7 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
 
     ws.on("message", (msg) => {
       const data = JSON.parse(msg.toString());
-      const { type, playerId } = data;
+      const { type, playerId, playerStats } = data;
 
       if (type === "join") {
         clients.set(playerId, ws);
@@ -43,13 +43,10 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
 
       if (type === "activeEffectUpdate") { 
 
-      const data = JSON.parse(msg.toString());
-      const {playerStats, playerId} = data;
-          console.log("stats from client: ", playerStats)
-
-      const { gameId, gameData } = getGameByPlayerId(playerId, games);
+      const { gameData } = getGameByPlayerId(playerId, games);
       gameData.playerStats = playerStats
-          console.log(playerStats[playerId].activeEffect)
+      const {opponentsWs} = getGameWsByPlayerId(playerId, gameData, clients)
+      wsOpenSend(opponentsWs, { type: "activeEffectUpdate", playerStats})
 
       }
 

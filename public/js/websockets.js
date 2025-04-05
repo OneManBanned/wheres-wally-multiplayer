@@ -1,14 +1,7 @@
 import { PUZZLES, PLAYER_ID } from "./game.js";
 import { startGameTimer, setGameOver, setStartTime } from "./game.js";
 import { getRandomPowerUp, powerUpsObj } from "./powerups.js";
-import {
-  showLobby,
-  showGame,
-  updateScores,
-  updateFoundCharacterUI,
-  switchPuzzle,
-  updateThumbnailUI,
-} from "./ui/ui.js";
+import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, } from "./ui/ui.js";
 
 export function initWebSocket(playerId) {
   const ws = new WebSocket("ws://localhost:3000");
@@ -20,7 +13,7 @@ export function initWebSocket(playerId) {
 
   ws.onmessage = (e) => {
     const data = JSON.parse(e.data);
-    console.log("WebSocket message:", data);
+    // console.log("WebSocket message:", data);
     const handler = handlers[data.type];
     if (handler) handler(data, ws);
     else console.warn(`Unhandled message type: ${data.type}`);
@@ -41,9 +34,9 @@ const handlers = {
 
   updateFound: ({ foundArr, playerStats, playerWhoFoundId, puzzleIdx }, ws) => {
     updateScores(playerStats, PLAYER_ID);
-    cancelNegativePowerUps(playerWhoFoundId, playerStats, ws);
     updateThumbnailUI(playerWhoFoundId, puzzleIdx);
     switchPuzzle(PUZZLES, foundArr, puzzleIdx);
+    if (playerWhoFoundId === PLAYER_ID ) cancelNegativePowerUps(playerWhoFoundId, playerStats, ws);
   },
 
   gameOver: () => {
@@ -56,16 +49,21 @@ const handlers = {
     showLobby();
   },
 
-  powerUpFound: (
-    { puzzleIdx, character, playerWhoFoundId, playerStats },
-    ws,
-  ) => {
+  activeEffectUpdate: ({playerStats}) => {
+
+      Object.keys(playerStats).forEach(key => {
+          playerStats[key].activeEffect.forEach(effect => {
+              // console.log(`${key} has power-up ${effect.name} currently running for ${effect.duration}`)
+          })
+      })
+  },
+
+  powerUpFound: ({ puzzleIdx, character, playerWhoFoundId, playerStats }, ws,) => {
+        
     updateFoundCharacterUI(puzzleIdx, character);
 
     const positiveEffectsTarget = playerWhoFoundId;
-    const negativeEffectTarget = Object.keys(playerStats).filter(
-      (id) => id != playerWhoFoundId,
-    )[0];
+    const negativeEffectTarget = Object.keys(playerStats).filter( (id) => id != playerWhoFoundId,)[0];
 
     const powerUp = getRandomPowerUp(character);
 
@@ -78,13 +76,7 @@ const handlers = {
         applyPowerUp(powerUp, { positiveEffectsTarget }, playerStats, ws);
         break;
       case "whitebeard":
-        applyPowerUp(
-          powerUp,
-          positiveEffectsTarget,
-          playerStats,
-          ws,
-          puzzleIdx,
-        );
+        applyPowerUp( powerUp, positiveEffectsTarget, playerStats, ws, puzzleIdx,);
         break;
     }
   },
@@ -96,10 +88,12 @@ function applyPowerUp(powerUp, target, playerStats, ws, idx = null) {
     const existingEffectIdx = activeEffects.findIndex(
       (item) => item.name === powerUp.name,
     );
+    let effectAlreadyActive = existingEffectIdx !== -1 ? true : false
+    const { duration, cleanUpFn, name} = powerUp
+   // console.log("CONSOLE: ", powerUp, "\n", activeEffects)
 
-    if (existingEffectIdx !== -1) {
-      // Power-up already active extend duration.
-
+    if (effectAlreadyActive) {
+      // Power--up already active extend duration.
       const existingEffect = activeEffects[existingEffectIdx];
       const elapsed = Date.now() - existingEffect.startTime;
       const remaining = existingEffect.duration - elapsed;
@@ -109,78 +103,57 @@ function applyPowerUp(powerUp, target, playerStats, ws, idx = null) {
       existingEffect.duration = newDuration;
       existingEffect.startTime = Date.now();
 
-      existingEffect.timeoutId = setTimeout(() => {
-        powerUp.cleanUpFn();
-        const effectIdx = activeEffects.findIndex(
-          (item) => item.name === powerUp.name,
-        );
-        if (effectIdx !== -1) activeEffects.splice(effectIdx, 1);
-        ws.send(
-          JSON.stringify({
-            type: "activeEffectUpdate",
-            playerStats,
-            playerId: PLAYER_ID,
-          }),
-        );
-      }, newDuration);
-
-      console.log(`Extended ${powerUp.name} duration to ${newDuration}ms`);
+      existingEffect.timeoutId = setEffectTimeout(name, newDuration, cleanUpFn, activeEffects, playerStats, ws)
+     // console.log(`Extended ${name} duration to ${newDuration}ms`);
     } else {
-      powerUp.fn();
+      // power-up not active
+      powerUp.fn(idx);
       const effect = {
         ...powerUp,
         startTime: Date.now(),
-        timeoutId: setTimeout(() => {
-          powerUp.cleanUpFn();
-          const effectIdx = activeEffects.findIndex(
-            (item) => item.name === powerUp.name,
-          );
-          if (effectIdx !== -1) activeEffects.splice(effectIdx, 1);
-          ws.send(
-            JSON.stringify({
-              type: "activeEffectUpdate",
-              playerStats,
-              playerId: PLAYER_ID,
-            }),
-          );
-        }, powerUp.duration),
+        timeoutId: setEffectTimeout(name, duration, cleanUpFn, activeEffects, playerStats, ws),
       };
 
         activeEffects.push(effect)
-        console.log(`Applied ${powerUp.name} for ${powerUp.duration}ms`)
+      //  console.log(`Applied ${name} for ${duration}ms`)
     }
-
-      ws.send(JSON.stringify({
-          type: "activeEffectUpdate",
-          playerStats,
-          playerId: PLAYER_ID
-      }))
+      wsSend(ws, { type: "activeEffectUpdate", playerStats, playerId: PLAYER_ID })
   }
 }
 
 function cancelNegativePowerUps(playerId, playerStats, ws) {
-  const negativeArr = playerStats[playerId].activeEffect.filter(
+  const negativeEffectsArr = playerStats[playerId].activeEffect.filter(
     (effect) => effect.type === "negative",
   );
 
-  if (negativeArr.length === 0) return;
+  if (negativeEffectsArr.length === 0) return;
 
-  negativeArr.forEach((active) => {
-    const idx = powerUpsObj[active.char].findIndex(
-      (powerUp) => powerUp.name === active.name,
+  negativeEffectsArr.forEach((activeEffect) => {
+    const idx = powerUpsObj[activeEffect.char].findIndex(
+      (powerUp) => powerUp.name === activeEffect.name,
     );
-    powerUpsObj[active.char][idx].cleanUpFn();
+      // call clean-up function for negative effect
+      clearTimeout(activeEffect.timeoutId)
+    powerUpsObj[activeEffect.char][idx].cleanUpFn();
+      const effectIdx = playerStats[playerId].activeEffect.findIndex(
+          (item) => item.name === activeEffect.name,
+      );
+      // remove negative effect from active effect array
+      playerStats[playerId].activeEffect.splice(effectIdx, 1);
   });
 
-  const effectIdx = playerStats[playerId].activeEffect.findIndex(
-    (item) => item.type === "negative",
-  );
-  playerStats[playerId].activeEffect.splice(effectIdx, 1);
-  ws.send(
-    JSON.stringify({
-      type: "activeEffectUpdate",
-      playerStats,
-      playerId: PLAYER_ID,
-    }),
-  );
+  wsSend(ws, { type: "activeEffectUpdate", playerStats, playerId: PLAYER_ID })
+}
+
+const wsSend = (ws, jsonData) => ws.send(JSON.stringify(jsonData))
+
+function setEffectTimeout(name, duration, cleanUpFn, activeEffects, playerStats, ws) {
+
+    return setTimeout(() => {
+        cleanUpFn();
+        const effectIdx = activeEffects.findIndex(item => item.name === name);
+        if (effectIdx !== -1) activeEffects.splice(effectIdx, 1);
+        wsSend(ws,{ type: "activeEffectUpdate", playerStats, playerId: PLAYER_ID, })
+    }, duration)
+
 }

@@ -158,12 +158,13 @@ h1 {
   object-fit: cover;
   border: var(--border);
   border-image: var(--border-image);
-  overflow: hidden;
   transform: rotate(0deg);
+  overflow: hidden;
   transition:
     transform 0.2s ease-in-out,
     opacity 0.3s ease-in-out;
 }
+
 
 #currentPuzzle:hover {
   cursor: none;
@@ -269,17 +270,19 @@ h1 {
    States
    ========================================================================== */
 
+#puzzle-container.flipped #currentPuzzle {
+  transform: rotate(180deg); 
+}
+#puzzle-container:not(.flipped) #currentPuzzle {
+  transform: rotate(0deg); 
+}
 #puzzle-container.flipped .lens-content {
-  transform: rotate(180deg);
+  transform: rotate(180deg); 
+}
+#puzzle-container:not(.flipped) .lens-content {
+  transform: rotate(0deg); 
 }
 
-#currentPuzzle[data-flipped="true"] {
-  transform: rotate(0deg);
-}
-
-#currentPuzzle[data-flipped="false"] {
-  transform: rotate(180deg);
-}
 
 #magnifier.targeting .lens-content::before {
   width: 30px;
@@ -346,7 +349,7 @@ h1 {
     transform: rotate(0deg);
   }
   100% {
-    transform: rotate(900deg);
+    transform: rotate(180deg);
   }
 }
 
