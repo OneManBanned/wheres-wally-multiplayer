@@ -1,3 +1,5 @@
+import WebSocket from "ws";
+
 export function checkCharacterInRange(char, { x, y }, characters) {
   return (
     x >= characters[char].x &&
@@ -8,7 +10,21 @@ export function checkCharacterInRange(char, { x, y }, characters) {
 }
 
 export const wsOpenSend = (ws, jsonData) => {
-  if (ws?.readyState === ws.OPEN) ws.send(JSON.stringify(jsonData));
+  if (!ws) {
+    console.warn("WebSocket is undefined");
+    return false;
+  }
+  if (ws.readyState !== WebSocket.OPEN) {
+    console.warn(`WebSocket not open: readyState=${ws.readyState}`);
+    return false;
+  }
+  try {
+    ws.send(JSON.stringify(jsonData));
+    return true;
+  } catch (error) {
+    console.error(`WebSocket send failed: ${error.message}`);
+    return false;
+  }
 };
 
 export function getGameByPlayerId(playerId, games) {

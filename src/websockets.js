@@ -13,6 +13,7 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
       if (type === "join") {
         clients.set(playerId, ws);
         lobby.push(playerId);
+          console.log(lobby)
 
         if (lobby.length > 1) {
           const player1 = lobby.shift();
@@ -44,6 +45,9 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
       if (type === "activeEffectUpdate") { 
 
       const { gameData } = getGameByPlayerId(playerId, games);
+
+      if (!gameData) return;
+
       gameData.playerStats = playerStats
       const {opponentsWs} = getGameWsByPlayerId(playerId, gameData, clients)
       wsOpenSend(opponentsWs, { type: "activeEffectUpdate", playerStats})
@@ -54,7 +58,10 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
 
     ws.on("close", () => {
       const playerId = [...clients].find(([id, client]) => client === ws)?.[0];
-      if (playerId) {
+        if (!playerId) {
+            console.log("No playerId found for closed WebSocket")
+            return;
+        }
 
         clients.delete(playerId);
         const index = lobby.indexOf(playerId);
@@ -65,13 +72,26 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
           console.log("No game found for closing  player:", playerId);
           return;
         }
+
         const { gameId, gameData } = result;
         const opponentId = gameData.players.find((id) => id !== playerId);
+
+        if (!opponentId) {
+            console.log(`No opponent found for game ${gameId}`)
+            games.delete(gameId);
+            return;
+        }
+
         const opponentWs = clients.get(opponentId);
-        wsOpenSend(opponentWs, { type: "opponentQuit", gameId });
-        lobby.push(opponentId);
+        if (opponentWs && wsOpenSend(opponentWs, { type: "opponentQuit", gameId })) {
+            console.log(`Notified opponent ${opponentId} of quit game ${gameId}`)
+            lobby.push(opponentId);
+        } else {
+            console.warn(`Opponent ${opponentId} unavailable for game ${gameId}`)
+            clients.delete(opponentId)
+        };
+
         games.delete(gameId);
-      }
     });
   });
 }
