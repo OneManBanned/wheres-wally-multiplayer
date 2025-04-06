@@ -28,27 +28,32 @@ let charFound;
 
     if (inRange) {
         charFound = character;
-      const { gameId, gameData } = getGameByPlayerId(playerId, games);
+        const result = getGameByPlayerId(playerId, games);
+
+      if (!result || !result.gameData) {
+          console.warn(`No game found for playerId ${playerId} in checkGuess`)
+        return;
+      };
+
+      const { gameId, gameData } = result
       const { opponentsWs, playersWs } = getGameWsByPlayerId( playerId, gameData, clients,);
       const { foundArr, powerUpsArr, playerStats } = gameData;
 
       if (character === "waldo") {
-          console.log("waldo game data", gameData.playerStats[playerId])
           foundArr[puzzleIdx] = true;
           playerStats[playerId].wallysFound += 1;
-          wsOpenSend(playersWs, { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
-          wsOpenSend(opponentsWs, { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
 
           if (!foundArr.includes(false)) {
-            wsOpenSend(opponentsWs, { type: "gameOver", reason: "allFound" });
-            wsOpenSend(playersWs, { type: "gameOver", reason: "allFound" });
+            wsOpenSend([playersWs, opponentsWs], { type: "gameOver", reason: "allFound" });
+              wsOpenSend([playersWs, opponentsWs], { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
             games.delete(gameId);
+          } else {
+            wsOpenSend([playersWs, opponentsWs], { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
           }
 
       } else if (!powerUpsArr[puzzleIdx][character]) {
         powerUpsArr[puzzleIdx][character] = true;
-        wsOpenSend(playersWs, { type: "powerUpFound", powerUpsArr, character, playerStats, puzzleIdx, playerWhoFoundId: playerId });
-        wsOpenSend(opponentsWs, { type: "powerUpFound", powerUpsArr, character, playerStats, puzzleIdx, playerWhoFoundId: playerId });
+        wsOpenSend([playersWs, opponentsWs], { type: "powerUpFound", powerUpsArr, character, playerStats, puzzleIdx, playerWhoFoundId: playerId });
       }
     }
   }

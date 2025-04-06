@@ -28,14 +28,12 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
 
           const { foundArr, powerUpsArr, startTime, playerStats } = games.get(gameId, data);
 
-          wsOpenSend(ws1, { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats });
-          wsOpenSend(ws2, { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats });
+          wsOpenSend([ws1, ws2], { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats });
 
           setTimeout(() => {
             const game = games.get(gameId);
             if (game && Date.now() - game.startTime >= GAME_DURATION) {
-              wsOpenSend(ws1, { type: "gameOver", reason: "timeUp" });
-              wsOpenSend(ws2, { type: "gameOver", reason: "timeUp" });
+              wsOpenSend([ws1, ws2], { type: "gameOver", reason: "timeUp" });
               games.delete(gameId);
             }
           }, GAME_DURATION);
@@ -44,13 +42,19 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
 
       if (type === "activeEffectUpdate") { 
 
-      const { gameData } = getGameByPlayerId(playerId, games);
+      const result = getGameByPlayerId(playerId, games);
 
-      if (!gameData) return;
+      if (!result || !result.gameData) {
+          console.warn(`No game found for playerId ${playerId} in activeEffectUpdate`)
+        return;
+      };
 
+      const { gameData } = result;
       gameData.playerStats = playerStats
       const {opponentsWs} = getGameWsByPlayerId(playerId, gameData, clients)
-      wsOpenSend(opponentsWs, { type: "activeEffectUpdate", playerStats})
+      if (!wsOpenSend([opponentsWs], { type: "activeEffectUpdate", playerStats})) {
+        console.warn(`Failed to send activeEffectUpdate to opponent for playerId ${playerId}`)
+      }
 
       }
 
@@ -83,7 +87,7 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
         }
 
         const opponentWs = clients.get(opponentId);
-        if (opponentWs && wsOpenSend(opponentWs, { type: "opponentQuit", gameId })) {
+        if (opponentWs && wsOpenSend([opponentWs], { type: "opponentQuit", gameId })) {
             console.log(`Notified opponent ${opponentId} of quit game ${gameId}`)
             lobby.push(opponentId);
         } else {
