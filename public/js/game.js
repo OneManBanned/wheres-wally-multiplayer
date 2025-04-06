@@ -10,16 +10,16 @@ export const PUZZLES = window.puzzles || [
 ];
 export const PLAYER_ID = window.playerId || "default-player-id";
 
-let gameOver, startTime;
-export const setGameOver = () => (gameOver = true);
+export let isGameOver = false;
+let startTime;
+export const setGameOver = () => (isGameOver = true);
 export const setStartTime = (time) => (startTime = time);
 
 export function startGameTimer() {
-    gameOver = false;
     const totalTime = 300000;
 
     const timerInterval = setInterval(() => {
-        if (gameOver) {
+        if (isGameOver) {
             clearInterval(timerInterval);
             return;
         }

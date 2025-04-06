@@ -1,5 +1,5 @@
-import { PUZZLES, PLAYER_ID } from "./game.js";
-import { startGameTimer, setGameOver, setStartTime } from "./game.js";
+import { PUZZLES, PLAYER_ID, setGameOver } from "./game.js";
+import { startGameTimer, setStartTime, isGameOver } from "./game.js";
 import { getRandomPowerUp, powerUpsObj } from "./powerups.js";
 import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, } from "./ui/ui.js";
 
@@ -13,7 +13,7 @@ export function initWebSocket(playerId) {
 
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        // console.log("WebSocket message:", data);
+  //      console.log("WebSocket message:", data);
         const handler = handlers[data.type];
         if (handler) handler(data, ws);
         else console.warn(`Unhandled message type: ${data.type}`);
@@ -36,13 +36,15 @@ const handlers = {
         updateScores(playerStats, PLAYER_ID);
         updateThumbnailUI(playerWhoFoundId, puzzleIdx);
         switchPuzzle(PUZZLES, foundArr, puzzleIdx);
-        if (playerWhoFoundId === PLAYER_ID)
+        console.log(`updateFound current gameOver state = ${isGameOver}`)
+        if (playerWhoFoundId === PLAYER_ID && !isGameOver) {
+            console.log("calling cancelNegativePowerUps: ", isGameOver)
             cancelNegativePowerUps(playerWhoFoundId, playerStats, ws);
+        }
     },
 
     gameOver: () => {
         setGameOver();
-        return alert("Game over");
     },
 
     opponentQuit: ({ gameId }) => {
@@ -122,6 +124,7 @@ function applyPowerUp(powerUp, target, playerStats, ws, idx = null) {
 }
 
 function cancelNegativePowerUps(playerId, playerStats, ws) {
+    console.log("Running cancelNegativePowerUps: ", isGameOver)
     const negativeEffectsArr = playerStats[playerId].activeEffect.filter(
         (effect) => effect.type === "negative",
     );
