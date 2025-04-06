@@ -9,7 +9,8 @@ export function checkCharacterInRange(char, { x, y }, characters) {
   );
 }
 
-export const wsOpenSend = (ws, jsonData) => {
+export const wsOpenSend = (wsArr, jsonData) => {
+    wsArr.forEach(ws => {
   if (!ws) {
     console.warn("WebSocket is undefined");
     return false;
@@ -25,6 +26,7 @@ export const wsOpenSend = (ws, jsonData) => {
     console.error(`WebSocket send failed: ${error.message}`);
     return false;
   }
+    })
 };
 
 export function getGameByPlayerId(playerId, games) {
