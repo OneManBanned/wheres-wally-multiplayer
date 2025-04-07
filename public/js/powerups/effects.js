@@ -1,10 +1,5 @@
-import { DOM } from "./main.js";
-import { setupConfetti } from "./ui/animations.js";
-
-export let cleanUpArr = [];
-function setCleanUpArr(arr) {
-    cleanUpArr = arr;
-}
+import { DOM } from "../main.js";
+import { setupConfetti } from "../ui/animations.js";
 
 export const powerUpsObj = {
   odlaw: [
@@ -16,39 +11,42 @@ export const powerUpsObj = {
     { name: "lensGrow", type: "positive", fn: lensGrowPowerUp, char: "wenda" },
   ],
   whitebeard: [
-    { name: "overlayHint", type: "positive", fn: overlayHintPowerUp, char: "whitbeard" },
+    { name: "overlayHint", type: "positive", fn: overlayHintPowerUp, char: "whitebeard" },
   ],
 };
 
-// Placeholder power-up functions (we’ll implement these later)
-function blurLensPowerUp(target) {
+export function blurLensPowerUp(target) {
   console.log(`${target} blurs lens!`);
 }
-function lensGrowPowerUp(target) {
+export function lensGrowPowerUp(target) {
   console.log(`${target} increased lens size!`);
 }
-function overlayHintPowerUp(target) {
+export function overlayHintPowerUp(target) {
   console.log(`${target} shows hint overlay!`);
 }
 
-// Export utility to get a random power-up for a character
-export function getRandomPowerUp(character) {
-  const available = powerUpsObj[character] || [];
-  if (available.length === 0) return null;
-  return available[Math.floor(Math.random() * available.length)];
-}
+const cleanupState = (() => {
+    let cleanUpArr = [];
+    return {
+        get: () => cleanUpArr,
+        set: (arr) => cleanUpArr = arr,
+        clear: () => {
+            cleanUpArr.forEach(fn => fn())
+            cleanUpArr = [];
+        }
+    }
+})()
 
-function confettiPowerUp() {
+export function confettiPowerUp() {
   const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
   const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
   const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
 
-  cleanUpArr = [confettiBottomLeft, confettiMiddleBottom, confettiBottomRight];
+  cleanupState.set([confettiBottomLeft, confettiMiddleBottom, confettiBottomRight]);
 }
 
 export function confettiCleanup() {
-    cleanUpArr.forEach(fn => fn())
-    setCleanUpArr([])
+    cleanupState.clear();
 }
 
 export function screenFlipPowerUp() {

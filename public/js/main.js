@@ -1,6 +1,7 @@
-import { PLAYER_ID, checkCharacter } from "./game.js";
+import { PLAYER_ID } from "./constants.js";
+import { checkCharacter } from "./game/api.js";
 import { showLobby, setupPuzzle, setupThumbnailListeners } from "./ui/ui.js";
-import { initWebSocket } from "./websockets.js";
+import { initWebSocket } from "./websockets/websockets.js";
 
 export const DOM = {
   lobbyView: document.querySelector("#lobby-view"), // lobby

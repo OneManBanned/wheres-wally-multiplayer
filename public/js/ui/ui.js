@@ -1,8 +1,9 @@
-import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback } from "./animations.js";
+import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback } from "./animations.js";
 import { DOM } from "../main.js";
 import { setupMagnifier } from "./magnifier.js";
 import { extractImgPath, getCharFromImgPath,
-    getPathFromURL, positionInPercent, } from "../utils.js";
+    getPathFromURL, positionInPercent, } from "../utils/utils.js";
+import { PLAYER_ID } from "../constants.js";
 
 export function showGame() {
     DOM.lobbyView.style.display = "none";
@@ -37,7 +38,7 @@ function resetThumbnailsUI() {
 
 export function updateThumbnailUI(id, idx) {
     DOM.allPuzzleContainers[idx].style.pointerEvents = "none";
-    id === playerId
+    id === PLAYER_ID
         ? playerFoundWallyFeedback(idx)
         : opponentFoundWallyFeedback(idx);
 }
@@ -90,23 +91,24 @@ export function switchPuzzle(puzzles, foundArr, idx) {
     }
 }
 
-export function targetingCoordinates(position, checkCharacter, rect) {
+export async function targetingCoordinates(position, checkCharacter, rect) {
     const { xPercent, yPercent } = positionInPercent(position, rect);
     const pathname = getPathFromURL(DOM.mainPuzzle.src);
 
     const index = puzzles.indexOf(pathname);
-    checkCharacter(index, xPercent, yPercent);
+    return await checkCharacter(index, xPercent, yPercent);
 }
 
 export function setupPuzzle(checkCharacter) {
-    DOM.mainPuzzle.addEventListener("click", (e) => {
+    DOM.mainPuzzle.addEventListener("click", async (e) => {
         const rect = DOM.mainPuzzle.getBoundingClientRect();
         const isFlipped = DOM.mainPuzzle.dataset.flipped === "true";
 
         const x = isFlipped ? -(e.clientX - rect.right) : e.clientX - rect.left;
         const y = isFlipped ? -(e.clientY - rect.bottom) : e.clientY - rect.top;
 
-        targetingCoordinates({ x, y }, checkCharacter, rect);
+        const charFound = await targetingCoordinates({ x, y }, checkCharacter, rect);
+        if (charFound === false) showMissFeedback()
     });
 
     setupMagnifier();

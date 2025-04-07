@@ -21,7 +21,7 @@ export const checkGuess = (req, res) => {
       .status(400)
       .json({ success: false, error: "Invalid puzzle index" });
 
-let charFound;
+let charFound = false;
 
   for (let character in characters) {
     const inRange = checkCharacterInRange(character, { x, y }, characters);

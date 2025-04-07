@@ -1,7 +1,12 @@
 import { DOM } from "../main.js";
 
-export let isAnimatingFill = false;
-export const setIsAnimatingFill = (bool) => (isAnimatingFill = bool);
+export const animationState = (() => {
+    let isAnimatingFill = false;
+    return {
+        set: (bool) => isAnimatingFill = bool,
+        get: () => isAnimatingFill,
+    }
+})()
 
 export function playerFoundWallyFeedback(idx) {
 
@@ -39,7 +44,7 @@ export function playerFoundWallyFeedback(idx) {
   document.documentElement.style.setProperty( "--wally-end-x", `${endX - offset}px`,);
   document.documentElement.style.setProperty( "--wally-end-y", `${endY - offset}px`,);
 
-  setIsAnimatingFill(true);
+  animationState.set(true);
   bg.classList.add("fill");
   circle.classList.add("fill");
   headshot.classList.add("fill");
@@ -52,7 +57,7 @@ export function playerFoundWallyFeedback(idx) {
     circle.classList.remove("fill");
     headshot.classList.remove("fill");
 
-    setIsAnimatingFill(false);
+    animationState.set(false);
 
     bg.classList.add("traverse");
     circle.classList.add("traverse");
