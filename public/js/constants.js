@@ -1,4 +1,4 @@
-export const PUZZLES = window.puzzles || [
+export const PUZZLES = window.PUZZLES || [
     "/images/wallyspace.jpg",
     "/images/wallysnow.jpg",
     "/images/wallyrace.jpg",
@@ -6,7 +6,8 @@ export const PUZZLES = window.puzzles || [
     "/images/wallyblue.jpg",
 ];
 
-export const PLAYER_ID = window.playerId || "default-player-id";
+export const PLAYER_ID = window.PLAYER_ID || "default-player-id";
+export const GAME_DURATION = window.GAME_DURATIOIN || 300000;
 
 export const magnifierConfig = {
   zoomLevel: 2,

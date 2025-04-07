@@ -1,6 +1,6 @@
 import { puzzles } from "../models/puzzles.js";
 import { v4 as uuidv4 } from "uuid";
-import { games, clients } from "../app.js";
+import { games, clients, GAME_DURATION } from "../app.js";
 import { checkCharacterInRange, getGameByPlayerId, getGameWsByPlayerId, wsOpenSend, } from "../utils/utils.js";
 
 
@@ -8,6 +8,7 @@ export const startGame = (req, res) => {
   res.render("index", {
     puzzles: Object.values(puzzles).map((char) => char.img),
     playerId: (req.session.playerId = uuidv4()),
+    gameDuration: GAME_DURATION,
   });
 };
 

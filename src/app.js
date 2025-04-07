@@ -34,7 +34,7 @@ const wss = new WebSocketServer({ server });
 export const clients = new Map();
 const lobby = [];
 export const games = new Map();
-const GAME_DURATION = 300000; // 5 minutes
+export const GAME_DURATION = 300000; // 5 minutes
 const NUMBER_OF_PUZZLES = puzzles.length;
 const DEFAULT_FOUND_ARR = () => Array(NUMBER_OF_PUZZLES).fill(false)
 const DEFAULT_POWERUPS_ARR = () => Array.from({length: NUMBER_OF_PUZZLES}, () => ({

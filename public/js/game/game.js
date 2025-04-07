@@ -1,3 +1,4 @@
+import { GAME_DURATION } from "../constants.js";
 import { updateTimerDisplay } from "../ui/ui.js";
 
 export let isGameOver = false;
@@ -6,7 +7,7 @@ export const setGameOver = () => (isGameOver = true);
 export const setStartTime = (time) => (startTime = time);
 
 export function startGameTimer() {
-    const totalTime = 300000;
+    const totalTime = GAME_DURATION;
 
     const timerInterval = setInterval(() => {
         if (isGameOver) {
