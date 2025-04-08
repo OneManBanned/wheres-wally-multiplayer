@@ -10,6 +10,8 @@ function createMagnifier() {
 
   const lens = document.createElement("div");
   lens.className = "lens-content";
+  lens.style.filter = "blur(0px)"; 
+  lens.style.transition = "filter .5s ease-in, opacity 0.3s ease";
   magnifier.appendChild(lens);
 
   const glassEffect = document.createElement("div");

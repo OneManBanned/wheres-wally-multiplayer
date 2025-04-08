@@ -3,7 +3,7 @@ import { DOM } from "../main.js";
 import { setupMagnifier } from "./magnifier.js";
 import { extractImgPath, getCharFromImgPath,
     getPathFromURL, positionInPercent, } from "../utils/utils.js";
-import { PLAYER_ID } from "../constants.js";
+import { PLAYER_ID, PUZZLES } from "../constants.js";
 
 export function showGame() {
     DOM.lobbyView.style.display = "none";
@@ -95,7 +95,7 @@ export async function targetingCoordinates(position, checkCharacter, rect) {
     const { xPercent, yPercent } = positionInPercent(position, rect);
     const pathname = getPathFromURL(DOM.mainPuzzle.src);
 
-    const index = puzzles.indexOf(pathname);
+    const index = PUZZLES.indexOf(pathname);
     return await checkCharacter(index, xPercent, yPercent);
 }
 

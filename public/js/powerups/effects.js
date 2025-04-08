@@ -7,23 +7,52 @@ export const powerUpsObj = {
     { name: "confetti", type: "negative", fn: confettiPowerUp, cleanUpFn: confettiCleanup, duration: 15000, char: "odlaw" },
   ],
   wenda: [
-    { name: "lensBlur", type: "negative", fn: blurLensPowerUp, char: "wenda" },
-    { name: "lensGrow", type: "positive", fn: lensGrowPowerUp, char: "wenda" },
+    { name: "lensBlur", type: "negative", fn: lensBlurPowerUp, cleanUpFn: lensBlurCleanup, duration: 15000, char: "wenda" },
   ],
   whitebeard: [
-    { name: "overlayHint", type: "positive", fn: overlayHintPowerUp, char: "whitebeard" },
+    { name: "overlayHint", type: "positive", fn: overlayHintPowerUp, cleanUpFn: overlayHintCleanup, duration: 15000, char: "whitebeard"},
   ],
 };
 
-export function blurLensPowerUp(target) {
-  console.log(`${target} blurs lens!`);
+function lensBlurPowerUp() {
+  console.log("Wenda lens blur activated!");
+
+  const lens = magnifier.querySelector(".lens-content");
+  if (!lens) {
+    console.error("Lens content not found!");
+    return;
+  }
+
+  lens.classList.add("blurred-lens");
+
 }
-export function lensGrowPowerUp(target) {
-  console.log(`${target} increased lens size!`);
+
+function lensBlurCleanup() {
+    console.log("lensBlur clean-up called")
+
+  const lens = magnifier.querySelector(".lens-content");
+  if (!lens) {
+    console.error("Lens content not found!");
+    return;
+  }
+
+    lens.classList.remove("blurred-lens");
 }
-export function overlayHintPowerUp(target) {
+
+function lensGrowPowerUp(target) {
+}
+
+
+
+function overlayHintPowerUp(target) {}
+
+
+
+function overlayHintCleanup(target) {
   console.log(`${target} shows hint overlay!`);
+
 }
+
 
 const cleanupState = (() => {
     let cleanUpArr = [];
@@ -37,7 +66,8 @@ const cleanupState = (() => {
     }
 })()
 
-export function confettiPowerUp() {
+function confettiPowerUp() {
+
   const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
   const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
   const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
@@ -45,11 +75,11 @@ export function confettiPowerUp() {
   cleanupState.set([confettiBottomLeft, confettiMiddleBottom, confettiBottomRight]);
 }
 
-export function confettiCleanup() {
+function confettiCleanup() {
     cleanupState.clear();
 }
 
-export function screenFlipPowerUp() {
+function screenFlipPowerUp() {
   DOM.mainPuzzle.classList.remove("spin-to-normal");
   DOM.mainPuzzleContainer.classList.add("flipped");
   DOM.mainPuzzle.dataset.flipped = "true"; 
@@ -57,7 +87,7 @@ export function screenFlipPowerUp() {
   DOM.mainPuzzle.classList.add("spin-to-upside-down");
 }
 
-export function screenFlipCleanup() {
+function screenFlipCleanup() {
   DOM.mainPuzzle.classList.remove("spin-to-upside-down");
   DOM.mainPuzzleContainer.classList.remove("flipped");
   DOM.mainPuzzle.dataset.flipped = "false";

@@ -306,13 +306,6 @@ h1 {
    Animations
    ========================================================================== */
 
-.lens-content {
-  transition: opacity 0.3s ease; 
-}
-
-.lens-content.fade-out {
-  opacity: 0;
-}
 
 .wally-found-bg,
 .wally-white-circle,
@@ -619,4 +612,12 @@ h1 {
     height: auto;
     transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
   }
+}
+
+.blurred-lens {
+  filter: blur(4px) !important; 
+}
+
+.lens-content.fade-out {
+  opacity: 0;
 }

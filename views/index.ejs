@@ -13,9 +13,7 @@
   <main id="game-view" style="display: none;">
       <div id="status-bar">
           <div id="playerStatus" >Player: <span id="playerScore">0</span></div>
-          <div id="timer-wrapper">
-    <div id="timer">5:00</div>
-          </div>
+          <div id="timer-wrapper"><div id="timer">5:00</div></div>
           <div id="opponentStatus">Opponent: <span id="opponentScore">0</span></div>
       </div>
     <div id="puzzle-container">
@@ -44,7 +42,7 @@
     window.PLAYER_ID = "<%= playerId %>";
     window.GAME_DURATON = <%= gameDuration %>;
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script type="module" src="/js/main.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </body>
 </html>
