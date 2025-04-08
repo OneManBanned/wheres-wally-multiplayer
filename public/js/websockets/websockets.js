@@ -1,3 +1,4 @@
+import { setPlayerStats } from "../game/state.js";
 import { handlers } from "./handlers.js";
  
 
@@ -16,9 +17,11 @@ export function initWebSocket(playerId) {
 
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        console.log("WebSocket message:", data);
         const handler = handlers[data.type];
-        if (handler) handler(data, ws);
+        if (handler) {
+            setPlayerStats(data.playerStats)
+            handler(data, ws);
+        }
         else console.warn(`Unhandled message type: ${data.type}`);
     };
 
