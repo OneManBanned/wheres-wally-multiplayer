@@ -4,6 +4,8 @@ import { setupMagnifier } from "./magnifier.js";
 import { extractImgPath, getCharFromImgPath,
     getPathFromURL, positionInPercent, } from "../utils/utils.js";
 import { PLAYER_ID, PUZZLES } from "../constants.js";
+import { getPlayerStats } from "../game/state.js";
+import { getOpponentId } from "../websockets/handlers.js";
 
 export function showGame() {
     DOM.lobbyView.style.display = "none";
@@ -68,14 +70,13 @@ export function updateFoundCharacterUI(idx, character) {
 
 export const updateTimerDisplay = (str) => (DOM.timerDisplay.textContent = str);
 
-export function updateScores(playerStats, playerId) {
-    const {
-        [playerId]: { wallysFound: playersWallys },
-    } = playerStats;
-    DOM.playerScore.innerText = playersWallys;
-    const opponentId = Object.keys(playerStats).find((id) => id !== playerId);
+export function updateScores(playerId) {
+    const playerStats = getPlayerStats() 
+    const opponentId = getOpponentId(playerStats, playerId);
+    const { wallysFound: playersWallys } = playerStats[playerId];
     const { wallysFound: opponentsWallys } = playerStats[opponentId];
 
+    DOM.playerScore.innerText = playersWallys;
     DOM.opponentScore.innerText = opponentsWallys;
 }
 
@@ -86,9 +87,7 @@ export function switchPuzzle(puzzles, foundArr, idx) {
 
     const unsolvedIdx = foundArr.indexOf(false);
 
-    if (unsolvedIdx !== -1) {
-        fadePuzzle(puzzles[unsolvedIdx])
-    }
+    if (unsolvedIdx !== -1) fadePuzzle(puzzles[unsolvedIdx])
 }
 
 export async function targetingCoordinates(position, checkCharacter, rect) {

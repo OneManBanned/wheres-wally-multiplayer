@@ -5,15 +5,7 @@ import {
   wsOpenSend,
 } from "./utils/utils.js";
 
-export function setupWebSocket(
-  wss,
-  clients,
-  lobby,
-  games,
-  GAME_DURATION,
-  DEFAULT_FOUND_ARR,
-  DEFAULT_POWERUPS_ARR,
-) {
+export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR) {
   wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
       const data = JSON.parse(msg.toString());
@@ -22,7 +14,6 @@ export function setupWebSocket(
       if (type === "join") {
         clients.set(playerId, ws);
         lobby.push(playerId);
-        console.log(lobby);
 
         if (lobby.length > 1) {
           const player1 = lobby.shift();
@@ -42,10 +33,7 @@ export function setupWebSocket(
           const ws1 = clients.get(player1);
           const ws2 = clients.get(player2);
 
-          const { foundArr, powerUpsArr, startTime, playerStats } = games.get(
-            gameId,
-            data,
-          );
+          const { foundArr, powerUpsArr, startTime, playerStats } = games.get(gameId, data);
 
           wsOpenSend([ws1, ws2], {
             type: "paired",
@@ -66,20 +54,20 @@ export function setupWebSocket(
         }
       }
 
-      if (type === "activeEffectUpdate") {
+      if (type === "effectUpdate") {
 
         const result = getGameByPlayerId(playerId, games);
 
         if (!result || !result.gameData) {
-          console.warn(`No game found for playerId ${playerId} in activeEffectUpdate`,); 
+          console.warn(`No game found for playerId ${playerId} in effectUpdate`,); 
           return;
         }
 
         const { gameData } = result;
         gameData.playerStats = playerStats;
         const { playersWs, opponentsWs } = getGameWsByPlayerId(playerId, gameData, clients);
-        if (!wsOpenSend([playersWs, opponentsWs], { type: "activeEffectUpdate", playerStats, })) 
-            console.warn(`Failed to send activeEffectUpdate to opponent for playerId ${playerId}`);
+        if (!wsOpenSend([playersWs, opponentsWs], { type: "effectUpdate", playerStats, })) 
+            console.warn(`Failed to send effectUpdate to opponent for playerId ${playerId}`);
         
       }
     });
@@ -111,10 +99,7 @@ export function setupWebSocket(
       }
 
       const opponentWs = clients.get(opponentId);
-      if (
-        opponentWs &&
-        wsOpenSend([opponentWs], { type: "opponentQuit", gameId })
-      ) {
+      if (opponentWs && wsOpenSend([opponentWs], { type: "opponentQuit", gameId })) {
         console.log(`Notified opponent ${opponentId} of quit game ${gameId}`);
         lobby.push(opponentId);
       } else {

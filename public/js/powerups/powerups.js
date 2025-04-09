@@ -12,33 +12,33 @@ export function getRandomPowerUp(character) {
 
 export function setEffectTimeout(name, duration, cleanUpFn, ws) {
     return setTimeout(() => {
-        const activeEffect = getPlayerEffectsFromStats(getPlayerStats(), PLAYER_ID)
+        const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), PLAYER_ID)
         cleanUpFn();
-        const effectIdx = activeEffect.findIndex((item) => item.name === name);
-        if (effectIdx !== -1) activeEffect.splice(effectIdx, 1);
-        wsSend(ws, { type: "activeEffectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
+        const effectIdx = activeEffects.findIndex((item) => item.name === name);
+        if (effectIdx !== -1) activeEffects.splice(effectIdx, 1);
+        wsSend(ws, { type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
     }, duration);
 }
 
 export function applyPowerUp(powerUp, target, ws, idx = null) {
     if (PLAYER_ID === target) {
 
-        const activeEffect = getPlayerEffectsFromStats(getPlayerStats(), target)
-        const activeEffectIdx = activeEffect.findIndex(e => e.name === powerUp.name);
+        const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), target)
+        const activeEffectsIdx = activeEffects.findIndex(e => e.name === powerUp.name);
 
-        let effectAlreadyActive = activeEffectIdx !== -1;
+        let effectAlreadyActive = activeEffectsIdx !== -1;
         const { duration, cleanUpFn, name } = powerUp;
 
         if (effectAlreadyActive) {
-            // Power--up already active extend duration.
-            const existingEffect = activeEffect[activeEffectIdx];
-            const newDuration = combineEffectDurations(existingEffect, duration);
 
-            clearTimeout(existingEffect.timeoutId);
-            existingEffect.duration = newDuration;
-            existingEffect.startTime = Date.now();
+            const effect = activeEffects[activeEffectsIdx];
+            const newDuration = combineEffectDurations(effect, duration);
 
-            existingEffect.timeoutId = setEffectTimeout(name, newDuration, cleanUpFn, ws);
+            clearTimeout(effect.timeoutId);
+            effect.duration = newDuration;
+            effect.startTime = Date.now();
+
+            effect.timeoutId = setEffectTimeout(name, newDuration, cleanUpFn, ws);
         } else {
             // Power-up not active - activate
             powerUp.fn(idx);
@@ -48,18 +48,18 @@ export function applyPowerUp(powerUp, target, ws, idx = null) {
                 timeoutId: setEffectTimeout(name, duration, cleanUpFn, ws),
             };
 
-            activeEffect.push(effect);
+            activeEffects.push(effect);
         }
 
-        wsSend(ws, {type: "activeEffectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID});
+        wsSend(ws, {type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID});
     }
 }
 
 export function cancelNegativePowerUps(playerId, ws) {
 
-    const activeEffect = getPlayerEffectsFromStats(getPlayerStats(), playerId)
+    const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), playerId)
 
-    const negativeEffectsArr = activeEffect.filter(e => e.type === "negative");
+    const negativeEffectsArr = activeEffects.filter(e => e.type === "negative");
 
     if (negativeEffectsArr.length === 0) return;
 
@@ -70,12 +70,12 @@ export function cancelNegativePowerUps(playerId, ws) {
         // call clean-up function for negative effect
         clearTimeout(effect.timeoutId);
         powerUpsObj[effect.char][powerUpIdx].cleanUpFn();
-        const activeIdx = activeEffect.findIndex(e => e.name === effect.name);
+        const activeIdx = activeEffects.findIndex(e => e.name === effect.name);
         // remove negative effect from active effect array
-        activeEffect.splice(activeIdx, 1);
+        activeEffects.splice(activeIdx, 1);
     });
 
-    wsSend(ws, { type: "activeEffectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
+    wsSend(ws, { type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
 }
 
 

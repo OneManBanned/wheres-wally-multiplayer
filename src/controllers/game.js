@@ -46,7 +46,7 @@ let charFound = false;
 
           if (!foundArr.includes(false)) {
             wsOpenSend([playersWs, opponentsWs], { type: "gameOver", reason: "allFound" });
-              wsOpenSend([playersWs, opponentsWs], { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
+            wsOpenSend([playersWs, opponentsWs], { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});
             games.delete(gameId);
           } else {
             wsOpenSend([playersWs, opponentsWs], { type: "updateFound", foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId});

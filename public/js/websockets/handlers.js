@@ -5,16 +5,16 @@ import { applyPowerUp, cancelNegativePowerUps, getPlayerEffectsFromStats, getRan
 import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI } from "../ui/ui.js";
 
 export const handlers = {
-    paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
+    paired: ({ foundArr, startTime, puzzleIdx }) => {
         setStartTime(startTime);
         switchPuzzle(PUZZLES, foundArr, puzzleIdx);
-        updateScores(playerStats, PLAYER_ID);
+        updateScores(PLAYER_ID);
         showGame();
         startGameTimer();
     },
 
-    updateFound: ({ foundArr, playerStats, playerWhoFoundId, puzzleIdx }, ws) => {
-        updateScores(playerStats, PLAYER_ID);
+    updateFound: ({ foundArr, playerWhoFoundId, puzzleIdx }, ws) => {
+        updateScores( PLAYER_ID);
         updateThumbnailUI(playerWhoFoundId, puzzleIdx);
         switchPuzzle(PUZZLES, foundArr, puzzleIdx);
         if (playerWhoFoundId === PLAYER_ID && !isGameOver)
@@ -31,7 +31,7 @@ export const handlers = {
         showLobby();
     },
 
-    activeEffectUpdate: () => {
+    effectUpdate: () => {
         // TODO - display active effects UI for both players
         const opponetId = getOpponentId(getPlayerStats(), PLAYER_ID);
 
@@ -63,16 +63,16 @@ export const handlers = {
     },
 };
 
-const getOpponentId = (stats, player) =>
+export const getOpponentId = (stats, player) =>
     Object.keys(stats).filter((id) => id !== player)[0];
 
 function updateActiveEffectsUI(player) {
-    const activeEffect = getPlayerEffectsFromStats(getPlayerStats(), player);
+    const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), player);
 
     console.log(`${player === PLAYER_ID ? "player" : "opponent"}: `);
 
-    if (activeEffect.length > 0) {
-        activeEffect.forEach((effect) => {
+    if (activeEffects.length > 0) {
+        activeEffects.forEach((effect) => {
             console.log(`${effect.name} is active for ${effect.duration}`);
         });
     } else {
