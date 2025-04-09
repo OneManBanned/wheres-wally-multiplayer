@@ -10,8 +10,6 @@ function createMagnifier() {
 
   const lens = document.createElement("div");
   lens.className = "lens-content";
-  lens.style.filter = "blur(0px)"; 
-  lens.style.transition = "filter .5s ease-in, opacity 0.3s ease";
   magnifier.appendChild(lens);
 
   const glassEffect = document.createElement("div");
@@ -23,67 +21,34 @@ function createMagnifier() {
   return magnifier;
 }
 
-export function updateMagnifierPosition(magnifier, image, e) {
+export function moveMagnifierWithMouse(magnifier, image, e) {
   if (animationState.get()) return;
 
   const rect = image.getBoundingClientRect();
+  const { zoomLevel, lensSize } = magnifierConfig;
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
+  const isFlipped = image.dataset.flipped === "true"; 
 
-  const isFlipped = image.dataset.flipped === "true"; // Position magnifier
+  magnifier.style.left = `${x - lensSize / 2}px`;
+  magnifier.style.top = `${y - lensSize / 2}px`; 
 
-  magnifier.style.left = `${x - magnifierConfig.lensSize / 2}px`;
-  magnifier.style.top = `${y - magnifierConfig.lensSize / 2}px`; // Update lens background
-
-  const lens = magnifier.querySelector(".lens-content");
-
-  const bgX = isFlipped
-    ? -(
-        (rect.width - x) * magnifierConfig.zoomLevel -
-        magnifierConfig.lensSize / 2
-      )
-    : -(x * magnifierConfig.zoomLevel - magnifierConfig.lensSize / 2);
-
-  const bgY = isFlipped
-    ? -(
-        (rect.height - y) * magnifierConfig.zoomLevel -
-        magnifierConfig.lensSize / 2
-      )
-    : -(y * magnifierConfig.zoomLevel - magnifierConfig.lensSize / 2);
-
-  lens.style.backgroundImage = `url(${image.src})`;
-  lens.style.backgroundSize = `${rect.width * magnifierConfig.zoomLevel}px ${rect.height * magnifierConfig.zoomLevel}px`;
-  lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
+  const { bgX, bgY } = getLensCoordinates( isFlipped, rect, zoomLevel, lensSize, x, y)
+  setLensBgImage(rect, zoomLevel, image, { bgX, bgY });
 }
 
-export function refreshMagnifier(image = DOM.mainPuzzle) {
-  const magnifier = document.getElementById("magnifier");
+export function syncMagnifierBackground(magnifier, image = DOM.mainPuzzle) {
   if (!magnifier || !image) return;
 
-  const lens = magnifier.querySelector(".lens-content");
+  const { left, top } = magnifier.style;
   const rect = image.getBoundingClientRect();
-  const currentX =
-    parseFloat(magnifier.style.left) + magnifierConfig.lensSize / 2;
-  const currentY =
-    parseFloat(magnifier.style.top) + magnifierConfig.lensSize / 2;
-
+  const { zoomLevel, lensSize } = magnifierConfig;
+  const currentX = parseFloat(left) + lensSize / 2;
+  const currentY = parseFloat(top) + lensSize / 2;
   const isFlipped = image.dataset.flipped === "true";
-  const bgX = isFlipped
-    ? -(
-        (rect.width - currentX) * magnifierConfig.zoomLevel -
-        magnifierConfig.lensSize / 2
-      )
-    : -(currentX * magnifierConfig.zoomLevel - magnifierConfig.lensSize / 2);
-  const bgY = isFlipped
-    ? -(
-        (rect.height - currentY) * magnifierConfig.zoomLevel -
-        magnifierConfig.lensSize / 2
-      )
-    : -(currentY * magnifierConfig.zoomLevel - magnifierConfig.lensSize / 2);
 
-  lens.style.backgroundImage = `url(${image.src})`;
-  lens.style.backgroundSize = `${rect.width * magnifierConfig.zoomLevel}px ${rect.height * magnifierConfig.zoomLevel}px`;
-  lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
+  const { bgX, bgY } = getLensCoordinates( isFlipped, rect, zoomLevel, lensSize, currentX, currentY,);
+  setLensBgImage(rect, zoomLevel, image, { bgX, bgY });
 }
 
 function setupMagnifierEvents(magnifier, image) {
@@ -91,7 +56,7 @@ function setupMagnifierEvents(magnifier, image) {
     magnifier.style.display = "flex";
   });
   image.addEventListener("mousemove", (e) => {
-    updateMagnifierPosition(magnifier, image, e);
+    moveMagnifierWithMouse(magnifier, image, e);
   });
   image.addEventListener("mousedown", () => {
     magnifier.classList.add("targeting");
@@ -104,11 +69,29 @@ function setupMagnifierEvents(magnifier, image) {
     magnifier.classList.remove("targeting");
   });
   image.addEventListener("load", () => {
-    refreshMagnifier(image);
+    syncMagnifierBackground(magnifier, image);
   });
 }
 
 export function setupMagnifier(image = DOM.mainPuzzle) {
   const magnifier = createMagnifier();
   setupMagnifierEvents(magnifier, image);
+}
+
+function setLensBgImage({ width, height },  zoom, img, { bgX, bgY }) {
+  const lens = magnifier.querySelector(".lens-content").style;
+
+  lens.backgroundImage = `url(${img.src})`;
+  lens.backgroundSize = `${width * zoom}px ${height * zoom}px`;
+  lens.backgroundPosition = `${bgX}px ${bgY}px`;
+}
+
+function getLensCoordinates(isFlipped, { width, height }, zoom, size, x, y) {
+  const bgX = isFlipped
+    ? -((width - x) * zoom - size / 2)
+    : -(x * zoom - size / 2);
+  const bgY = isFlipped
+    ? -((height - y) * zoom - size / 2)
+    : -(y * zoom - size / 2);
+  return { bgX, bgY };
 }

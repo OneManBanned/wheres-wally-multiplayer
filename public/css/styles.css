@@ -238,6 +238,8 @@ h1 {
   left: 0;
   background-repeat: no-repeat;
   border-radius: 50%;
+  filter: blur(0px); 
+  transition: filter 1s ease-in, opacity 0.3s ease;
 }
 
 #magnifier .glass-effect {
