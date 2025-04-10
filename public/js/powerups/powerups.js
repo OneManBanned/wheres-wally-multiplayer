@@ -10,22 +10,18 @@ export function getRandomPowerUp(character) {
   return available[Math.floor(Math.random() * available.length)];
 }
 
-export function setEffectTimeout(name, duration, cleanUpFn, ws) {
+export function setEffectTimeout(name, duration, cleanUpFn) {
     return setTimeout(() => {
         const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), PLAYER_ID)
         cleanUpFn();
         const effectIdx = activeEffects.findIndex((item) => item.name === name);
         if (effectIdx !== -1) activeEffects.splice(effectIdx, 1);
-        wsSend(ws, { type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
+        wsSend({ type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
     }, duration);
 }
 
-export function applyPowerUp(powerUp, target, ws, idx = null) {
-    if (PLAYER_ID === target) {
-
-        const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), target)
+export function applyEffect(powerUp, activeEffects, idx = null) {
         const activeEffectsIdx = activeEffects.findIndex(e => e.name === powerUp.name);
-
         let effectAlreadyActive = activeEffectsIdx !== -1;
         const { duration, cleanUpFn, name } = powerUp;
 
@@ -38,24 +34,29 @@ export function applyPowerUp(powerUp, target, ws, idx = null) {
             effect.duration = newDuration;
             effect.startTime = Date.now();
 
-            effect.timeoutId = setEffectTimeout(name, newDuration, cleanUpFn, ws);
+            effect.timeoutId = setEffectTimeout(name, newDuration, cleanUpFn);
         } else {
             // Power-up not active - activate
             powerUp.fn(idx);
             const effect = {
                 ...powerUp,
                 startTime: Date.now(),
-                timeoutId: setEffectTimeout(name, duration, cleanUpFn, ws),
+                timeoutId: setEffectTimeout(name, duration, cleanUpFn),
             };
-
             activeEffects.push(effect);
-        }
-
-        wsSend(ws, {type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID});
     }
 }
 
-export function cancelNegativePowerUps(playerId, ws) {
+export function applyPowerUp(powerUp, target, idx = null) {
+    if (PLAYER_ID === target) {
+    const playerStats = getPlayerStats();
+    const activeEffects = getPlayerEffectsFromStats(playerStats, target)
+    applyEffect(powerUp, activeEffects, idx = null)
+    wsSend({type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID});
+    }
+}
+
+export function cancelNegativePowerUps(playerId) {
 
     const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), playerId)
 
@@ -63,9 +64,10 @@ export function cancelNegativePowerUps(playerId, ws) {
 
     if (negativeEffectsArr.length === 0) return;
 
+    console.log("negative effects", negativeEffectsArr)
     negativeEffectsArr.forEach((effect) => {
         const powerUpIdx = powerUpsObj[effect.char]
-            .findIndex(powerUp => powerUp.name === effect.name);
+            .findIndex(powerUp =>  powerUp.name === effect.name);
 
         // call clean-up function for negative effect
         clearTimeout(effect.timeoutId);
@@ -75,10 +77,8 @@ export function cancelNegativePowerUps(playerId, ws) {
         activeEffects.splice(activeIdx, 1);
     });
 
-    wsSend(ws, { type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
+    wsSend({ type: "effectUpdate", playerStats: getPlayerStats(), playerId: PLAYER_ID });
 }
-
-
 
 function combineEffectDurations(active, powerUpDuration) {
     const elapsed = Date.now() - active.startTime;
@@ -86,4 +86,4 @@ function combineEffectDurations(active, powerUpDuration) {
     return Math.max(0, remaining) + powerUpDuration;
 }
 
-export const getPlayerEffectsFromStats = (stats, id) => stats[id].activeEffect
+export const getPlayerEffectsFromStats = (stats, id) => stats[id].activeEffects

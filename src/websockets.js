@@ -25,8 +25,8 @@ export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAU
             powerUpsArr: DEFAULT_POWERUPS_ARR(),
             startTime: Date.now(),
             playerStats: {
-              [player1]: { wallysFound: 0, activeEffect: [] },
-              [player2]: { wallysFound: 0, activeEffect: [] },
+              [player1]: { wallysFound: 0, activeEffects: [] },
+              [player2]: { wallysFound: 0, activeEffects: [] },
             },
           });
 

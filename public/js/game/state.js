@@ -10,8 +10,8 @@ export function setPlayerStats(stats) {
                 playerStats[playerId] = stats[playerId];
             } else {
                 Object.assign(playerStats[playerId], stats[playerId]);
-                // Special handling for activeEffect to preserve reference
-                playerStats[playerId].activeEffect = stats[playerId].activeEffect;
+                // Special handling for activeEffects to preserve reference
+                playerStats[playerId].activeEffects = stats[playerId].activeEffects;
             }
         }
     }
