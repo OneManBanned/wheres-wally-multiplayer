@@ -1,5 +1,6 @@
 import { GAME_DURATION } from "../constants.js";
 import { updateTimerDisplay } from "../ui/ui.js";
+import { wsSend } from "../websockets/websockets.js";
 
 export let isGameOver = false;
 let startTime;
@@ -20,6 +21,7 @@ export function startGameTimer() {
             clearInterval(timerInterval);
             setGameOver();
             updateTimerDisplay("Time's Up!");
+            wsSend({ type: "gameTimeout", playerId: PLAYER_ID });
             return;
         }
 

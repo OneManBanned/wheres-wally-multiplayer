@@ -22,3 +22,6 @@ export function getCharFromImgPath(imagePath) {
     const character = filename.split(".")[0].split("-")[0];
     return character;
 }
+
+export const getOpponentId = (stats, player) =>
+  Object.keys(stats).filter((id) => id !== player)[0];

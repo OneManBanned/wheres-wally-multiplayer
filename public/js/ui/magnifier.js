@@ -1,7 +1,6 @@
 import { DOM } from "../main.js";
 import { magnifierConfig } from "../constants.js";
 import { animationState } from "./animations.js";
-import { getPlayerStats } from "../game/state.js";
 
 function createMagnifier() {
   const magnifier = document.createElement("div");

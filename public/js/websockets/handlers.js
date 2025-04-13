@@ -1,27 +1,25 @@
-import { getPlayerStats } from "../game/state.js";
 import { PUZZLES, PLAYER_ID } from "../constants.js";
-import { startGameTimer, setStartTime, isGameOver, setGameOver } from "../game/game.js";
-import { applyPowerUp, cancelNegativePowerUps, getPlayerEffectsFromStats, getRandomPowerUp } from "../powerups/powerups.js"; 
-import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI } from "../ui/ui.js";
+import { startGameTimer, setStartTime, setGameOver, } from "../game/game.js";
+import { applyPowerUp, cleanupPowerUp, getPlayerEffectsFromStats, } from "../powerups/powerups.js";
+import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, } from "../ui/ui.js";
 
 export const handlers = {
-  paired: ({ foundArr, startTime, puzzleIdx }) => {
+  paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
     setStartTime(startTime);
     switchPuzzle(PUZZLES, foundArr, puzzleIdx);
-    updateScores(PLAYER_ID);
+    updateScores(playerStats, PLAYER_ID);
     showGame();
     startGameTimer();
   },
 
-  updateFound: ({ foundArr, playerWhoFoundId, puzzleIdx }) => {
-    updateScores(PLAYER_ID);
+  updateFound: ({ foundArr, playerStats, playerWhoFoundId, puzzleIdx }) => {
+    updateScores(playerStats, PLAYER_ID);
     updateThumbnailUI(playerWhoFoundId, puzzleIdx);
     switchPuzzle(PUZZLES, foundArr, puzzleIdx);
-    if (playerWhoFoundId === PLAYER_ID && !isGameOver)
-      cancelNegativePowerUps(playerWhoFoundId);
   },
 
-  gameOver: () => {
+  gameOver: ({reason}) => {
+      console.log("Game Over due to ", reason)
     setGameOver();
     // TODO -show game over UI
   },
@@ -31,46 +29,43 @@ export const handlers = {
     showLobby();
   },
 
-  effectUpdate: () => {
-    // TODO - display active effects UI for both players
-    const opponetId = getOpponentId(getPlayerStats(), PLAYER_ID);
-
-    updateActiveEffectsUI(PLAYER_ID);
-    updateActiveEffectsUI(opponetId);
+  applyEffect: ({ target, effect, playerStats }) => {
+      console.log("applying effect ", effect.name)
+      const opponentId = Object.keys(playerStats).filter(id => id !== target)
+      const playerEffects = playerStats[target].activeEffects.map(e => e.name)
+      const opponentEffects = playerStats[opponentId].activeEffects.map(e => e.name)
+      console.log("playereffects: ", playerEffects)
+      console.log("opponenteffects: ", opponentEffects)
+      console.log("----------------------")
+      const {name, puzzleIdx} = effect;
+    if (target === PLAYER_ID) {
+      applyPowerUp(name, puzzleIdx);
+    }
+    //updateActiveEffectsUI(playerStats, playerId);
   },
 
-  powerUpFound: ({ puzzleIdx, character, playerWhoFoundId }) => {
-    updateFoundCharacterUI(puzzleIdx, character);
+  cleanUpEffect: ({ playerStats, target, effectsArr}) => {
+      console.log("cleaning up", effectsArr)
+      const opponentId = Object.keys(playerStats).filter(id => id !== target)
+      const playerEffects = playerStats[target].activeEffects.map(e => e.name)
+      const opponentEffects = playerStats[opponentId].activeEffects.map(e => e.name)
+      console.log("playereffects: ", playerEffects)
+      console.log("opponenteffects: ", opponentEffects)
+      console.log("----------------------")
 
-    const positiveEffectTarget = playerWhoFoundId;
-    const negativeEffectTarget = getOpponentId( getPlayerStats(), playerWhoFoundId );
-
-    const powerUp = getRandomPowerUp(character);
-
-    switch (character) {
-      case "odlaw":
-        applyPowerUp(powerUp, negativeEffectTarget);
-        break;
-      case "wenda":
-        powerUp.type === "positive"
-          ? applyPowerUp(powerUp, positiveEffectTarget)
-          : applyPowerUp(powerUp, negativeEffectTarget);
-        break;
-      case "whitebeard":
-        applyPowerUp(powerUp, positiveEffectTarget, puzzleIdx);
-        break;
+    if (effectsArr.length > 0 && target === PLAYER_ID) {
+      effectsArr.forEach( name => cleanupPowerUp(name))
     }
+  },
+
+  powerUpFound: ({ character, puzzleIdx }) => {
+    updateFoundCharacterUI(puzzleIdx, character);
   },
 };
 
-export const getOpponentId = (stats, player) =>
-  Object.keys(stats).filter((id) => id !== player)[0];
-
-function updateActiveEffectsUI(player) {
-  const activeEffects = getPlayerEffectsFromStats(getPlayerStats(), player);
-
+function updateActiveEffectsUI(playerStats, player) {
+  const activeEffects = getPlayerEffectsFromStats(playerStats, player);
   console.log(`${player === PLAYER_ID ? "player" : "opponent"}: `);
-
   if (activeEffects.length > 0) {
     activeEffects.forEach((effect) => {
       console.log(`${effect.name} is active for ${effect.duration}`);

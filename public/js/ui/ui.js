@@ -1,11 +1,8 @@
 import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback } from "./animations.js";
 import { DOM } from "../main.js";
 import { setupMagnifier } from "./magnifier.js";
-import { extractImgPath, getCharFromImgPath,
-    getPathFromURL, positionInPercent, } from "../utils/utils.js";
+import { extractImgPath, getCharFromImgPath, getOpponentId, getPathFromURL, positionInPercent } from "../utils/utils.js";
 import { PLAYER_ID, PUZZLES } from "../constants.js";
-import { getPlayerStats } from "../game/state.js";
-import { getOpponentId } from "../websockets/handlers.js";
 
 export function showGame() {
     DOM.lobbyView.style.display = "none";
@@ -70,8 +67,7 @@ export function updateFoundCharacterUI(idx, character) {
 
 export const updateTimerDisplay = (str) => (DOM.timerDisplay.textContent = str);
 
-export function updateScores(playerId) {
-    const playerStats = getPlayerStats() 
+export function updateScores(playerStats, playerId) {
     const opponentId = getOpponentId(playerStats, playerId);
     const { wallysFound: playersWallys } = playerStats[playerId];
     const { wallysFound: opponentsWallys } = playerStats[opponentId];
@@ -112,4 +108,3 @@ export function setupPuzzle(checkCharacter) {
 
     setupMagnifier();
 }
-

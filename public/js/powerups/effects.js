@@ -3,46 +3,32 @@ import { DOM } from "../main.js";
 import { setupConfetti } from "../ui/animations.js";
 import { syncMagnifierBackground } from "../ui/magnifier.js";
 
-export const powerUpsObj = {
-    odlaw: [
-        { name: "screenFlip", type: "negative", fn: screenFlipPowerUp, cleanUpFn: screenFlipCleanup, duration: 10000, char: "odlaw", },
-        { name: "confetti", type: "negative", fn: confettiPowerUp, cleanUpFn: confettiCleanup, duration: 15000, char: "odlaw", },
-    ],
-    wenda: [
-        { name: "lensBlur", type: "negative", fn: lensBlurPowerUp, cleanUpFn: lensBlurCleanup, duration: 15000, char: "wenda", },
-        { name: "lensGrow", type: "positive", fn: lensGrowPowerUp, cleanUpFn: lensGrowCleanup, duration: 15000, char: "wenda", },
-    ],
-    whitebeard: [
-        { name: "overlayHint", type: "positive", fn: overlayHintPowerUp, cleanUpFn: overlayHintCleanup, duration: 15000, char: "whitebeard", },
-    ],
-};
-
-function lensBlurPowerUp() {
+export function lensBlurPowerUp() {
     const lens = magnifier.querySelector(".lens-content");
     lens.classList.add("blurred-lens");
 }
 
-function lensBlurCleanup() {
+export function lensBlurCleanup() {
     const lens = magnifier.querySelector(".lens-content");
     lens.classList.remove("blurred-lens");
 }
 
-function lensGrowPowerUp() {
+export function lensGrowPowerUp() {
    const magnifier = document.getElementById("magnifier");
         magnifier.style.height = "180px";
         magnifier.style.width = "180px";
         syncMagnifierBackground(magnifier); // Adjust lens background
 }
-function lensGrowCleanup() { 
+export function lensGrowCleanup() { 
      const magnifier = document.getElementById("magnifier");
         magnifier.style.height = `${magnifierConfig.lensSize}px`; // Revert to original
         magnifier.style.width = `${magnifierConfig.lensSize}px`;
         syncMagnifierBackground(magnifier); // Adjust lens background
 }
 
-function overlayHintPowerUp() { }
+export function overlayHintPowerUp() { }
 
-function overlayHintCleanup(target) {
+export function overlayHintCleanup(target) {
     console.log(`${target} shows hint overlay!`);
 }
 
@@ -58,7 +44,7 @@ const cleanupState = (() => {
     };
 })();
 
-function confettiPowerUp() {
+export function confettiPowerUp() {
     const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
     const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
     const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
@@ -70,11 +56,11 @@ function confettiPowerUp() {
     ]);
 }
 
-function confettiCleanup() {
+export function confettiCleanup() {
     cleanupState.clear();
 }
 
-function screenFlipPowerUp() {
+export function screenFlipPowerUp() {
     DOM.mainPuzzle.classList.remove("spin-to-normal");
     DOM.mainPuzzleContainer.classList.add("flipped");
     DOM.mainPuzzle.dataset.flipped = "true";
@@ -82,7 +68,7 @@ function screenFlipPowerUp() {
     DOM.mainPuzzle.classList.add("spin-to-upside-down");
 }
 
-function screenFlipCleanup() {
+export function screenFlipCleanup() {
     DOM.mainPuzzle.classList.remove("spin-to-upside-down");
     DOM.mainPuzzleContainer.classList.remove("flipped");
     DOM.mainPuzzle.dataset.flipped = "false";

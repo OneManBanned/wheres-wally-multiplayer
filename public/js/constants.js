@@ -7,7 +7,7 @@ export const PUZZLES = window.PUZZLES || [
 ];
 
 export const PLAYER_ID = window.PLAYER_ID || "default-player-id";
-export const GAME_DURATION = window.GAME_DURATIOIN || 300000;
+export const GAME_DURATION = window.GAME_DURATION || 300000;
 
 export const magnifierConfig = {
   zoomLevel: 2,

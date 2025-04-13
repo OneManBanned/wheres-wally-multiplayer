@@ -7,7 +7,6 @@ export async function checkCharacter(puzzleIdx, x, y, playerId) {
         });
         if (!res.ok) throw new Error(`Server error: ${res.status}`)
         const { charFound } = await res.json();
-        console.log(`Server response ${charFound}`)
         return charFound
     } catch (err) {
         console.error("Fetch error: ", err);

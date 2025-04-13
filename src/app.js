@@ -32,6 +32,7 @@ const server = app.listen(PORT, () => {
 
 const wss = new WebSocketServer({ server });
 export const clients = new Map();
+export const effectTimeouts = new Map();
 const lobby = [];
 export const games = new Map();
 export const GAME_DURATION = 300000; // 5 minutes
@@ -46,4 +47,4 @@ const DEFAULT_POWERUPS_ARR = () => Array.from({length: NUMBER_OF_PUZZLES}, () =>
 
 wss.on("listening", () => console.log("WS running"))
 
-setupWebSocket(wss, clients, lobby, games, GAME_DURATION, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR);
+setupWebSocket(wss, clients, lobby, games, GAME_DURATION, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR, effectTimeouts);
