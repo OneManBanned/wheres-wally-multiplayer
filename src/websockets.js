@@ -1,115 +1,93 @@
-import { v4 as uuidv4 } from "uuid";
-import { getGameByPlayerId, getGameWsByPlayerId, wsOpenSend, } from "./utils/utils.js";
+import { GameService } from "./services/gameService.js";
+import { EffectService } from "./services/effectService.js";
+import { WebSocketService } from "./services/webSocketService.js";
+import { WS_MESSAGE_TYPES, GAME_OVER_REASONS, GAME_DURATION, } from "./constants.js";
 
-export function setupWebSocket( wss, clients, lobby, games, GAME_DURATION, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR, effectTimeouts) {
+export function setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR) {
+  const webSocketService = new WebSocketService(stateManager);
+  const effectService = new EffectService(stateManager, webSocketService);
+  const gameService = new GameService(stateManager, effectService, webSocketService);
+
   wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
-      const data = JSON.parse(msg.toString());
+      let data;
+      try {
+        data = JSON.parse(msg.toString());
+      } catch (error) {
+        console.warn(`Invalid WebSocket message: ${error.message}`);
+        return;
+      }
+
       const { type, playerId } = data;
 
-      if (type === "join") {
-        clients.set(playerId, ws);
-        lobby.push(playerId);
+      if (typeof playerId !== "string" || !playerId) {
+        console.warn("Missing or invalid playerId");
+        return;
+      }
 
-        if (lobby.length > 1) {
-          const player1 = lobby.shift();
-          const player2 = lobby.shift();
-          const gameId = `game-${uuidv4()}`;
-          games.set(gameId, {
-            players: [player1, player2],
-            foundArr: DEFAULT_FOUND_ARR(),
-            powerUpsArr: DEFAULT_POWERUPS_ARR(),
-            startTime: Date.now(),
-            playerStats: {
-              [player1]: { wallysFound: 0, activeEffects: [] },
-              [player2]: { wallysFound: 0, activeEffects: [] },
-            },
-          });
+      if (type === WS_MESSAGE_TYPES.JOIN) {
+        if (stateManager.getClient(playerId)) {
+          console.warn(`Player ${playerId} already connected`);
+          return;
+        }
 
-          const ws1 = clients.get(player1);
-          const ws2 = clients.get(player2);
+        stateManager.addClient(playerId, ws);
+        stateManager.addToLobby(playerId);
 
-          const { foundArr, powerUpsArr, startTime, playerStats } = games.get(gameId, data);
-
-          wsOpenSend([ws1, ws2], { type: "paired", gameId, foundArr, powerUpsArr, startTime, playerStats, });
+        if (stateManager.getLobby().length > 1) {
+          const [player1, player2] = stateManager.shiftLobby(2);
+          const { gameId } = gameService.createGame(
+            player1,
+            player2,
+            DEFAULT_FOUND_ARR,
+            DEFAULT_POWERUPS_ARR
+          );
 
           setTimeout(() => {
-            const game = games.get(gameId);
+            const game = stateManager.getGame(gameId);
             if (game && Date.now() - game.startTime >= GAME_DURATION) {
-              wsOpenSend([ws1, ws2], { type: "gameOver", reason: "timeUp" });
-              cleanupGame(gameId, games, effectTimeouts)
+              webSocketService.sendGameOver(gameId, GAME_OVER_REASONS.TIME_UP);
+              gameService.cleanupGame(gameId);
             }
           }, GAME_DURATION);
         }
-      } else if (type === "gameTimeout") {
-        const game = getGameWsByPlayerId(playerId, games)
-        if (game) {
-            const {gameId, gameData} = game;
-            const { playersWs, opponentsWs} = getGameWsByPlayerId(playerId, gameData, clients)
-            wsOpenSend([playersWs, opponentsWs], { type: "gameOver", reason: "timeUp" })
-            cleanupGame(gameId, games, effectTimeouts)
+      } else if (type === WS_MESSAGE_TYPES.GAME_TIMEOUT) {
+        const result = stateManager.getGameByPlayerId(playerId);
+        if (result) {
+          const { gameId } = result;
+          webSocketService.sendGameOver(gameId, GAME_OVER_REASONS.TIME_UP);
+          gameService.cleanupGame(gameId);
         }
+      } else {
+        console.warn(`Unknown message type: ${type}`);
       }
     });
 
     ws.on("close", () => {
-      const playerId = [...clients].find(([id, client]) => client === ws)?.[0];
+      const playerId = stateManager.getClientByWs(ws);
       if (!playerId) {
         console.log("No playerId found for closed WebSocket");
         return;
       }
 
-      clients.delete(playerId);
-      const index = lobby.indexOf(playerId);
-      if (index !== -1) lobby.splice(index, 1);
+      stateManager.removeClient(playerId);
+      stateManager.removeFromLobby(playerId);
 
-      const result = getGameByPlayerId(playerId, games);
-      if (!result) {
-        console.log("No game found for closing  player:", playerId);
-        return;
-      }
+      const result = stateManager.getGameByPlayerId(playerId);
+      if (!result) return;
 
       const { gameId, gameData } = result;
       const opponentId = gameData.players.find((id) => id !== playerId);
 
-      if (!opponentId) {
-        console.log(`No opponent found for game ${gameId}`);
-        games.delete(gameId);
-        return;
-      }
-
-      const opponentWs = clients.get(opponentId);
-      if (opponentWs && wsOpenSend([opponentWs], { type: "opponentQuit", gameId })) {
-        console.log(`Notified opponent ${opponentId} of quit game ${gameId}`);
-        lobby.push(opponentId);
+      if (opponentId && webSocketService.sendOpponentQuit(opponentId, gameId)) {
+        stateManager.addToLobby(opponentId);
+      } else if (!opponentId) {
+        stateManager.removeGame(gameId);
       } else {
-        console.warn(`Opponent ${opponentId} unavailable for game ${gameId}`);
-        clients.delete(opponentId);
+        stateManager.removeClient(opponentId);
       }
 
-      cleanupGame(gameId, games, effectTimeouts)
+      gameService.cleanupGame(gameId);
     });
   });
-}
-
-export function cleanupGame(gameId, games, effectTimeouts) {
-  const game = games.get(gameId);
-  if (game) {
-    // Clear all effect timeouts for this game
-    game.players.forEach((playerId) => {
-      const activeEffects = game.playerStats[playerId]?.activeEffects || [];
-      activeEffects.forEach((effect) => {
-        const timeout = effectTimeouts.get(effect.effectId);
-        if (timeout) {
-          clearTimeout(timeout);
-          effectTimeouts.delete(effect.effectId);
-        }
-      });
-    });
-
-    // Remove game and associated clients if necessary
-    games.delete(gameId);
-      console.log("games: ", games, "\n", "effects:", effectTimeouts)
-    console.log(`Cleaned up game ${gameId}`);
-  }
 }

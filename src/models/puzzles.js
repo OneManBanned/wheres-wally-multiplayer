@@ -1,7 +1,7 @@
 export const puzzles = [
     {
         characters: {
-            waldo: {
+            wally: {
                 x: 39.00,
                 y: 62.00,
                 width: 3.00,
@@ -30,7 +30,7 @@ export const puzzles = [
     },
   {
     characters: {
-      waldo: {
+      wally: {
         x: 83.50,
         y: 71.14,
         width: 4.31,
@@ -59,7 +59,7 @@ export const puzzles = [
   },
   {
     characters: {
-      waldo: {
+      wally: {
         x: 26.66,
         y: 31.60,
         width: 3.00,
@@ -88,7 +88,7 @@ export const puzzles = [
   },
   {
     characters: {
-      waldo: {
+      wally: {
         x: 60.58,
         y: 34.07,
         width: 2.75,
@@ -117,7 +117,7 @@ export const puzzles = [
   },
   {
     characters: {
-      waldo: {
+      wally: {
         x: 69.38,
         y: 41.32,
         width: 1.94,
