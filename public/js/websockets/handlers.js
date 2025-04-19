@@ -1,7 +1,7 @@
 import { PUZZLES, PLAYER_ID } from "../constants.js";
 import { startGameTimer, setStartTime, setGameOver, } from "../game/game.js";
-import { applyPowerUp, cleanupPowerUp, getPlayerEffectsFromStats, } from "../powerups/powerups.js";
-import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, } from "../ui/ui.js";
+import { applyPowerUp, cleanupPowerUp } from "../powerups/powerups.js";
+import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, updateActiveEffectsUI, } from "../ui/ui.js";
 
 export const handlers = {
   paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
@@ -30,18 +30,19 @@ export const handlers = {
   },
 
   applyEffect: ({ target, effect, playerStats }) => {
-      console.log("applying effect ", effect.name)
+      console.log("applying effect ", effect.name, " triggered by ", effect.char)
       const opponentId = Object.keys(playerStats).filter(id => id !== target)
       const playerEffects = playerStats[target].activeEffects.map(e => e.name)
       const opponentEffects = playerStats[opponentId].activeEffects.map(e => e.name)
       console.log("playereffects: ", playerEffects)
       console.log("opponenteffects: ", opponentEffects)
       console.log("----------------------")
-      const {name, puzzleIdx} = effect;
+
+      const {name, puzzleIdx, char} = effect;
     if (target === PLAYER_ID) {
       applyPowerUp(name, puzzleIdx);
     }
-    //updateActiveEffectsUI(playerStats, playerId);
+    updateActiveEffectsUI(playerStats, target, char, name);
   },
 
   cleanUpEffect: ({ playerStats, target, effectsArr}) => {
@@ -56,6 +57,8 @@ export const handlers = {
     if (effectsArr.length > 0 && target === PLAYER_ID) {
       effectsArr.forEach( name => cleanupPowerUp(name))
     }
+
+    updateActiveEffectsUI(playerStats, target);
   },
 
   powerUpFound: ({ character, puzzleIdx }) => {
@@ -63,14 +66,3 @@ export const handlers = {
   },
 };
 
-function updateActiveEffectsUI(playerStats, player) {
-  const activeEffects = getPlayerEffectsFromStats(playerStats, player);
-  console.log(`${player === PLAYER_ID ? "player" : "opponent"}: `);
-  if (activeEffects.length > 0) {
-    activeEffects.forEach((effect) => {
-      console.log(`${effect.name} is active for ${effect.duration}`);
-    });
-  } else {
-    console.log("No active effects");
-  }
-}

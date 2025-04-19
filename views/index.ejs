@@ -12,9 +12,9 @@
     </div>
   <main id="game-view" style="display: none;">
       <div id="status-bar">
-          <div id="playerStatus" >Player: <span id="playerScore">0</span></div>
+          <div id="playerStatus" ><div id="playerEffects" class="effectContainers"></div><span id="playerScore">0</span></div>
           <div id="timer-wrapper"><div id="timer">5:00</div></div>
-          <div id="opponentStatus">Opponent: <span id="opponentScore">0</span></div>
+          <div id="opponentStatus"><span id="opponentScore">0</span><div id="opponentEffects" class="effectContainers"></div></div>
       </div>
     <div id="puzzle-container">
         <img src="<%= puzzles[0] %>" draggable="false" id="currentPuzzle" alt="Tagging Photo">

@@ -170,3 +170,102 @@ export function fadePuzzle(newSrc) {
     };
   }, 300);
 }
+
+// Status-bar animations //
+
+class effectNameAnimationQueue {
+    #animationQueues = new Map();
+    #isAnimating = new Map();
+
+    getQueue(container) {
+        if (!container || !(container instanceof HTMLElement)) {
+            throw new Error("Invalid container: must be an HTMLElement");
+        }
+        if (!this.#animationQueues.has(container)) {
+            this.#animationQueues.set(container, []);
+            this.#isAnimating.set(container, false);
+        }
+
+        return this.#animationQueues.get(container);
+    }
+
+    processQueue(container) {
+        if (!container || !(container instanceof HTMLElement)) {
+            throw new Error("Invalid container: must be an HTMLElement");
+        }
+        const queue = this.getQueue(container);
+        if (queue.length === 0 || this.#isAnimating.get(container)) {
+            return;
+        }
+
+        this.#isAnimating.set(container, true);
+        const { effectName, isPlayer, char, activeEffects } = queue.shift();
+        flashEffectName( container, activeEffects, effectName, isPlayer, char, () => {
+                this.#isAnimating.set(container, false);
+                this.processQueue(container);
+            },
+        );
+    }
+}
+
+export const animationQueue = new effectNameAnimationQueue();
+
+function formatEffectName(name) {
+    return name
+        .replace(/([A-Z])/g, " $1") // Add space before uppercase letters
+        .trim() // Remove leading space if any
+        .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
+}
+
+// Helper to flash the effect name with per-letter animation
+function flashEffectName( container, activeEffects, effectName, isPlayer, character, onComplete) {
+    const flash = document.createElement("div");
+    flash.className = `effect-flash ${isPlayer ? "player" : ""} ${character || ""}`; // Add character class (e.g., odlaw)
+    container.style.position = "relative";
+    container.appendChild(flash);
+
+    // Format the effect name (e.g., lensBlur → Lens Blur)
+    const formattedName = formatEffectName(effectName);
+
+    // Split formatted name into letters
+    const letters = formattedName.split("");
+    letters.forEach((letter, index) => {
+        const span = document.createElement("span");
+        span.className = "effect-letter";
+        if (letter === " ") {
+            span.classList.add("space"); // Mark space for CSS
+        }
+        span.textContent = letter;
+        span.style.animationDelay = `${index * 0.1}s`; // 100ms delay for initial bounce
+        flash.appendChild(span);
+        return span;
+    });
+
+    // Calculate timing based on number of letters
+    const bounceTime = 1200 + (letters.length - 1) * 100; // 1200ms base + 100ms per extra letter
+
+    // Slide and fade the entire word after bounce + pause (0.5s)
+    setTimeout(() => {
+        flash.classList.add("slide-out");
+    }, bounceTime + 500); // Bounce + 500ms pause
+
+    // Clean up and show icons
+    setTimeout(() => {
+        flash.remove();
+        container.style.position = "";
+        container.innerHTML = "";
+        activeEffects.forEach((effect) => {
+            container.appendChild(createEffectIcon(effect.name, effect.type === "POSITIVE"));
+        });
+        if (onComplete) onComplete();
+    }, bounceTime + 800); // Bounce + 500ms pause + 300ms slide
+}
+
+export function createEffectIcon(effectName, isPositive) {
+  const icon = document.createElement("span");
+  icon.className = `effect-icon ${isPositive ? "positive" : "negative"}`;
+  icon.textContent = effectName[0].toUpperCase(); // First letter as placeholder
+  icon.dataset.effectName = effectName;
+  icon.title = formatEffectName(effectName); // Use formatted name for tooltip
+  return icon;
+}

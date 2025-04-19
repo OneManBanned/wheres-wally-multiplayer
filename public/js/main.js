@@ -15,6 +15,8 @@ export const DOM = {
   timerDisplay: document.querySelector("#timer"),
   playerScore: document.querySelector("#playerScore"),
   opponentScore: document.querySelector("#opponentScore"),
+  playerEffects: document.querySelector("#playerEffects"),
+  opponentEffects: document.querySelector("#opponentEffects")
 };
 
 initWebSocket(PLAYER_ID);

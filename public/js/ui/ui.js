@@ -1,8 +1,9 @@
-import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback } from "./animations.js";
+import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback, animationQueue, createEffectIcon, } from "./animations.js";
 import { DOM } from "../main.js";
 import { setupMagnifier } from "./magnifier.js";
-import { extractImgPath, getCharFromImgPath, getOpponentId, getPathFromURL, positionInPercent } from "../utils/utils.js";
+import { extractImgPath, getCharFromImgPath, getOpponentId, getPathFromURL, positionInPercent, } from "../utils/utils.js";
 import { PLAYER_ID, PUZZLES } from "../constants.js";
+import { getPlayerEffectsFromStats } from "../powerups/powerups.js";
 
 export function showGame() {
     DOM.lobbyView.style.display = "none";
@@ -14,13 +15,15 @@ export function showLobby() {
     DOM.gameView.style.display = "none";
     resetThumbnailsUI();
     resetFoundCharactersUI();
+    animationQueue.clearQueue(DOM.playerEffects)
+    animationQueue.clearQueue(DOM.opponentEffects)
 }
 
 export function setupThumbnailListeners() {
     DOM.allPuzzles.forEach((thumb) => {
         thumb.addEventListener("click", () => {
-            fadePuzzle(thumb.src)
-        })
+            fadePuzzle(thumb.src);
+        });
     });
 }
 
@@ -83,7 +86,7 @@ export function switchPuzzle(puzzles, foundArr, idx) {
 
     const unsolvedIdx = foundArr.indexOf(false);
 
-    if (unsolvedIdx !== -1) fadePuzzle(puzzles[unsolvedIdx])
+    if (unsolvedIdx !== -1) fadePuzzle(puzzles[unsolvedIdx]);
 }
 
 export async function targetingCoordinates(position, checkCharacter, rect) {
@@ -94,17 +97,56 @@ export async function targetingCoordinates(position, checkCharacter, rect) {
     return await checkCharacter(index, xPercent, yPercent);
 }
 
+const guessProcessingState = (() => {
+    let isProcessingGuess = false;
+    return {
+        set: (bool) => (isProcessingGuess = bool),
+        get: () => isProcessingGuess,
+    };
+})();
+
 export function setupPuzzle(checkCharacter) {
     DOM.mainPuzzle.addEventListener("click", async (e) => {
+        if (guessProcessingState.get()) return;
+        guessProcessingState.set(true);
+
         const rect = DOM.mainPuzzle.getBoundingClientRect();
         const isFlipped = DOM.mainPuzzle.dataset.flipped === "true";
 
         const x = isFlipped ? -(e.clientX - rect.right) : e.clientX - rect.left;
         const y = isFlipped ? -(e.clientY - rect.bottom) : e.clientY - rect.top;
 
-        const charFound = await targetingCoordinates({ x, y }, checkCharacter, rect);
-        if (charFound === false) showMissFeedback()
+        try {
+            const charFound = await targetingCoordinates(
+                { x, y },
+                checkCharacter,
+                rect,
+            );
+            if (charFound === false) showMissFeedback();
+        } catch (err) {
+            console.error("Error processing guess: ", err);
+        } finally {
+            guessProcessingState.set(false);
+        }
     });
 
     setupMagnifier();
+}
+
+export function updateActiveEffectsUI(playerStats, player, char, effectName = null) {
+    const activeEffects = getPlayerEffectsFromStats(playerStats, player)
+    const isPlayer = player === PLAYER_ID;
+    const container = isPlayer ? DOM.playerEffects : DOM.opponentEffects;
+
+    if (effectName) {
+        const queue = animationQueue.getQueue(container);
+        queue.push({ effectName, activeEffects, isPlayer, char });
+        animationQueue.processQueue(container);
+    } else {
+        container.innerHTML = "";
+        activeEffects.forEach((effect) => {
+           container.appendChild(createEffectIcon(effect.name, effect.type === "POSITIVE")) 
+        })
+    }
+
 }

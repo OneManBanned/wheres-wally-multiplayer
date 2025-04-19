@@ -78,6 +78,7 @@ body {
   margin-bottom: 1rem;
   border: var(--border);
   border-image: var(--border-image);
+  gap: 5rem;
 }
 
 #puzzle-container {
@@ -144,12 +145,26 @@ h1 {
 #playerStatus,
 #opponentStatus {
   background: var(--white);
-  padding: 0.25rem 1rem;
   flex: 1;
+  padding-block: 0.25rem;
+  display: flex;
+  flex-direction: row;
 }
 
-#opponentStatus {
-  text-align: right;
+.effectContainers {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    margin-inline: 1rem;
+}
+
+#playerScore {
+    color: #ff0000;
+}
+
+#opponentScore {
+    color: #87CEEB;
 }
 
 #currentPuzzle {
@@ -184,6 +199,7 @@ h1 {
 .puzzle {
   width: 100%;
   object-fit: cover;
+  cursor: pointer;
 }
 
 .headshot-container {
@@ -622,4 +638,114 @@ h1 {
 
 .lens-content.fade-out {
   opacity: 0;
+}
+
+/* Effect flash container */
+.effect-flash {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Ensure visibility */
+}
+
+/* Slide and fade for opponent (right) */
+.effect-flash.slide-out {
+  animation: slideOutRight 0.3s ease-in-out forwards;
+}
+
+/* Slide and fade for player (left) */
+.effect-flash.player.slide-out {
+  animation: slideOutLeft 0.3s ease-in-out forwards;
+}
+
+/* Individual letter styling */
+.effect-letter {
+  display: inline-block;
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  animation: bounceLetter 0.5s ease-in-out forwards;
+  margin-right: 0.1rem; /* Small margin for spacing */
+}
+
+/* Ensure space character has width */
+.effect-letter.space {
+  width: 0.5rem; /* Fixed width for space */
+  margin-right: 0; /* No extra margin for space */
+}
+
+/* Alternate colors: even letters red, odd letters blue */
+.effect-letter:nth-child(even):not(.space) {
+  color: #ff0000; /* Red, player score */
+}
+.effect-letter:nth-child(odd):not(.space) {
+  color: #87CEEB; /* Blue, opponent score */
+}
+
+/* Initial bounce animation */
+@keyframes bounceLetter {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Slide and fade animation for opponent (right) */
+@keyframes slideOutRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* Slide and fade animation for player (left) */
+@keyframes slideOutLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+/* Character-specific colors */
+
+/* Odlaw: Yellow (even), Black (odd) */
+.effect-flash.odlaw .effect-letter:nth-child(even):not(.space) {
+  color: #FFC107; /* Yellow */
+}
+.effect-flash.odlaw .effect-letter:nth-child(odd):not(.space) {
+  color: #000000; /* Black */
+}
+
+/* Wenda: Red (even), Blue (odd) */
+.effect-flash.wenda .effect-letter:nth-child(even):not(.space) {
+  color: #ff0000; /* Red */
+}
+.effect-flash.wenda .effect-letter:nth-child(odd):not(.space) {
+    color: #87CEEB; /* Blue */
+}
+
+/* Whitebeard: White (even), Blue (odd), with black outline */
+.effect-flash.whitebeard .effect-letter:nth-child(odd):not(.space) {
+    color: #87CEEB; /* Blue */
+}
+
+.effect-flash.whitebeard .effect-letter:nth-child(even):not(.space) {
+  color: #ff0000; /* Red */
 }
