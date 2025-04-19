@@ -2,7 +2,12 @@ import { v4 as uuidv4 } from "uuid";
 import { checkCharacterInRange } from "../utils/utils.js";
 import { getRandomPowerUp } from "../models/powerups.js";
 import { AppError } from "../utils/errors.js";
-import { CHARACTERS, EFFECT_TYPES, GAME_OVER_REASONS, WS_MESSAGE_TYPES, } from "../constants.js";
+import {
+  CHARACTERS,
+  EFFECT_TYPES,
+  GAME_OVER_REASONS,
+  WS_MESSAGE_TYPES,
+} from "../constants.js";
 import { puzzles } from "../models/puzzles.js";
 
 export class GameService {
@@ -34,7 +39,7 @@ export class GameService {
   }
 
   processGuess(puzzleIdx, x, y, playerId) {
-    const characters = puzzles[puzzleIdx]?.characters
+    const characters = puzzles[puzzleIdx]?.characters;
     if (!characters) {
       throw new AppError("Invalid puzzle index", 400);
     }
@@ -52,32 +57,26 @@ export class GameService {
     for (const character in characters) {
       if (!checkCharacterInRange(character, { x, y }, characters)) continue;
 
-      charFound = character;
 
-      if (character === CHARACTERS.WALLY) {
+      if (character === CHARACTERS.WALLY && !foundArr[puzzleIdx]) {
+        charFound = character;
         foundArr[puzzleIdx] = true;
         playerStats[playerId].wallysFound += 1;
 
-        const updateMessage = {
-          type: WS_MESSAGE_TYPES.UPDATE_FOUND,
-          foundArr,
-          playerStats,
-          puzzleIdx,
-          playerWhoFoundId: playerId,
-        };
+        const updateMessage = { type: WS_MESSAGE_TYPES.UPDATE_FOUND, foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId };
 
         if (!foundArr.includes(false)) {
-          this.webSocketService.sendGameOver(
-            gameId,
-            GAME_OVER_REASONS.ALL_FOUND,
-          );
+          this.webSocketService.sendGameOver( gameId, GAME_OVER_REASONS.ALL_FOUND);
           this.webSocketService.sendToGamePlayers(gameId, updateMessage);
           this.cleanupGame(gameId);
         } else {
           this.effectService.cancelNegativeEffects(playerId, gameData);
           this.webSocketService.sendToGamePlayers(gameId, updateMessage);
         }
-      } else if (!powerUpsArr[puzzleIdx][character]) {
+      }
+
+      if (character !== CHARACTERS.WALLY && !powerUpsArr[puzzleIdx][character]) {
+        charFound = character;
         powerUpsArr[puzzleIdx][character] = true;
         const powerUp = getRandomPowerUp(character);
         const opponentId = gameData.players.find((id) => id !== playerId);
@@ -86,17 +85,9 @@ export class GameService {
 
         this.effectService.applyEffect(powerUp, effectTargetId, gameData);
 
-        this.webSocketService.sendToGamePlayers(gameId, {
-          type: WS_MESSAGE_TYPES.POWER_UP_FOUND,
-          puzzleIdx,
-          character,
-          playerWhoFoundId: playerId,
-        });
-      } else {
-          charFound = false;
-      }  
-        break;
-
+        this.webSocketService.sendToGamePlayers(gameId, { type: WS_MESSAGE_TYPES.POWER_UP_FOUND, puzzleIdx, character, playerWhoFoundId: playerId });
+      }
+      break;
     }
 
     return charFound;
