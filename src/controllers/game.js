@@ -24,7 +24,7 @@ export const startGame = (req, res) => {
 };
 
 export const checkGuess = (req, res) => {
-    initService();
+  initService();
   const { puzzleIdx, x, y, playerId } = req.body;
 
   if (!playerId || typeof playerId !== "string") {
@@ -38,5 +38,6 @@ export const checkGuess = (req, res) => {
   }
 
   const charFound = gameService.processGuess(puzzleIdx, x, y, playerId);
+
   res.json({ charFound });
 };

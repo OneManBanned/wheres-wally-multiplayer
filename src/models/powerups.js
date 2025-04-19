@@ -1,6 +1,6 @@
 export const powerUpsObj = {
   odlaw: [
-    { name: "screenFlip", type: "negative", duration: 10000, char: "odlaw" },
+    { name: "screenFlip", type: "negative", duration: 15000, char: "odlaw" },
     { name: "confetti", type: "negative", duration: 15000, char: "odlaw" },
   ],
   wenda: [

@@ -9,6 +9,7 @@ export function setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POW
   const gameService = new GameService(stateManager, effectService, webSocketService);
 
   wss.on("connection", (ws) => {
+
     ws.on("message", (msg) => {
       let data;
       try {
@@ -36,12 +37,8 @@ export function setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POW
 
         if (stateManager.getLobby().length > 1) {
           const [player1, player2] = stateManager.shiftLobby(2);
-          const { gameId } = gameService.createGame(
-            player1,
-            player2,
-            DEFAULT_FOUND_ARR,
-            DEFAULT_POWERUPS_ARR
-          );
+          const { gameId } = gameService.createGame( player1, player2, 
+              DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR);
 
           setTimeout(() => {
             const game = stateManager.getGame(gameId);

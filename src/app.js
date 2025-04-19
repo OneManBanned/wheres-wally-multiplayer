@@ -1,6 +1,7 @@
 import express from "express";
 import session from "express-session";
 import path, { dirname } from "path";
+import gameRoutes from "./routes/game.js";
 import { StateManager } from "./state/stateManager.js";
 import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";
@@ -15,14 +16,12 @@ const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-
 const PORT = process.env.PORT || 3000;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json());
-
 
 const DEFAULT_FOUND_ARR = () => Array(PUZZLE_COUNT).fill(false)
 const DEFAULT_POWERUPS_ARR = () => Array(PUZZLE_COUNT)
@@ -35,7 +34,6 @@ const DEFAULT_POWERUPS_ARR = () => Array(PUZZLE_COUNT)
 
 setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR);
 
-
 app.use(
     session({
         secret: process.env.SECRET || "wheres-wally-secret",
@@ -43,8 +41,6 @@ app.use(
         saveUninitialized: true,
     }),
 );
-
-import gameRoutes from "./routes/game.js";
 
 app.use("/", gameRoutes);
 
