@@ -11,5 +11,4 @@ export const GAME_DURATION = window.GAME_DURATION || 300000;
 
 export const magnifierConfig = {
   zoomLevel: 2,
-  lensSize: parseInt(getComputedStyle(document.documentElement).getPropertyValue("--lens-size"), 10,) || 140,
 };

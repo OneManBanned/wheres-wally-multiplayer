@@ -5,8 +5,6 @@ import { animationState } from "./animations.js";
 function createMagnifier() {
   const magnifier = document.createElement("div");
   magnifier.id = "magnifier";
-  magnifier.style.height = `${magnifierConfig.lensSize} px`;
-  magnifier.style.width = `${magnifierConfig.lensSize} px`;
 
   const lens = document.createElement("div");
   lens.className = "lens-content";
@@ -25,13 +23,14 @@ export function moveMagnifierWithMouse(magnifier, image, e) {
   if (animationState.get()) return;
 
   const rect = image.getBoundingClientRect();
-  const { zoomLevel, lensSize } = magnifierConfig;
+  const { zoomLevel } = magnifierConfig;
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
   const isFlipped = image.dataset.flipped === "true"; 
 
-  magnifier.style.left = `${x - lensSize / 2}px`;
-  magnifier.style.top = `${y - lensSize / 2}px`; 
+  const lensSize = magnifier.offsetWidth;
+  magnifier.style.left = `${x}px`;
+  magnifier.style.top = `${y}px`; 
 
   const { bgX, bgY } = getLensCoordinates( isFlipped, rect, zoomLevel, lensSize, x, y)
   setLensBgImage(rect, zoomLevel, image, { bgX, bgY });
@@ -41,10 +40,11 @@ export function syncMagnifierBackground(magnifier, image = DOM.mainPuzzle) {
   if (!magnifier || !image) return;
 
   const { left, top } = magnifier.style;
+  const lensSize = magnifier.offsetWidth;
   const rect = image.getBoundingClientRect();
-  const { zoomLevel, lensSize } = magnifierConfig;
-  const currentX = parseFloat(left) + lensSize / 2;
-  const currentY = parseFloat(top) + lensSize / 2;
+  const { zoomLevel } = magnifierConfig;
+  const currentX = parseFloat(left);
+  const currentY = parseFloat(top);
   const isFlipped = image.dataset.flipped === "true";
 
   const { bgX, bgY } = getLensCoordinates( isFlipped, rect, zoomLevel, lensSize, currentX, currentY,);

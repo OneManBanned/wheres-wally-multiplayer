@@ -189,6 +189,10 @@ class effectNameAnimationQueue {
         return this.#animationQueues.get(container);
     }
 
+    clearQueue(container) {
+        this.#animationQueues.set(container, [])
+    }
+
     processQueue(container) {
         if (!container || !(container instanceof HTMLElement)) {
             throw new Error("Invalid container: must be an HTMLElement");

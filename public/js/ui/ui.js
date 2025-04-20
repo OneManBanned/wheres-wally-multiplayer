@@ -117,11 +117,7 @@ export function setupPuzzle(checkCharacter) {
         const y = isFlipped ? -(e.clientY - rect.bottom) : e.clientY - rect.top;
 
         try {
-            const charFound = await targetingCoordinates(
-                { x, y },
-                checkCharacter,
-                rect,
-            );
+            const charFound = await targetingCoordinates({ x, y }, checkCharacter, rect);
             if (charFound === false) showMissFeedback();
         } catch (err) {
             console.error("Error processing guess: ", err);

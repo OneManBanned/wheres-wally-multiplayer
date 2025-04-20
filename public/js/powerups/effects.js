@@ -1,4 +1,3 @@
-import { magnifierConfig } from "../constants.js";
 import { DOM } from "../main.js";
 import { setupConfetti } from "../ui/animations.js";
 import { syncMagnifierBackground } from "../ui/magnifier.js";
@@ -15,15 +14,33 @@ export function lensBlurCleanup() {
 
 export function lensGrowPowerUp() {
    const magnifier = document.getElementById("magnifier");
-        magnifier.style.height = "180px";
-        magnifier.style.width = "180px";
-        syncMagnifierBackground(magnifier); // Adjust lens background
+   document.querySelector(':root').style.setProperty('--lens-size', '180px')
+   syncMagnifierBackground(magnifier); 
+
+  const startTime = performance.now();
+    const duration = 300;
+    const updateBackground = (currentTime) => {
+        syncMagnifierBackground(magnifier);
+        if (currentTime - startTime < duration) {
+            requestAnimationFrame(updateBackground);
+        }
+    };
+    requestAnimationFrame(updateBackground);
 }
 export function lensGrowCleanup() { 
-     const magnifier = document.getElementById("magnifier");
-        magnifier.style.height = `${magnifierConfig.lensSize}px`; // Revert to original
-        magnifier.style.width = `${magnifierConfig.lensSize}px`;
-        syncMagnifierBackground(magnifier); // Adjust lens background
+   const magnifier = document.getElementById("magnifier");
+   document.querySelector(':root').style.setProperty('--lens-size', '140px')
+   syncMagnifierBackground(magnifier); 
+
+    const startTime = performance.now();
+    const duration = 300;
+    const updateBackground = (currentTime) => {
+        syncMagnifierBackground(magnifier);
+        if (currentTime - startTime < duration) {
+            requestAnimationFrame(updateBackground);
+        }
+    };
+    requestAnimationFrame(updateBackground);
 }
 
 export function overlayHintPowerUp() { }
