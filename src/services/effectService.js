@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid"
 import { EFFECT_TYPES, WS_MESSAGE_TYPES } from "../constants.js";
+import { puzzles } from "../models/puzzles.js";
 
 export class EffectService {
     constructor(stateManager, webSocketService) {
@@ -7,7 +8,7 @@ export class EffectService {
         this.webSocketService = webSocketService;
     }
 
-    applyEffect( powerUp, target, gameData) {
+    applyEffect( powerUp, target, gameData, puzzleIdx) {
         const activeEffects = gameData.playerStats[target].activeEffects;
         const activeEffectsIdx = activeEffects.findIndex(e => e.name === powerUp.name)
         const effectAlreadyActive = activeEffectsIdx !== -1;
@@ -29,7 +30,7 @@ export class EffectService {
             }
         } else {
             const effectId = uuidv4();
-            const effect = { ...powerUp, startTime: Date.now(), effectId, duration };
+            const effect = { ...powerUp, startTime: Date.now(), effectId, duration, puzzleIdx, puzzles};
             activeEffects.push(effect);
 
             this.webSocketService.sendToGamePlayers(gameData.gameId, {

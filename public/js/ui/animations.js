@@ -23,26 +23,24 @@ export function playerFoundWallyFeedback(idx) {
 
   DOM.gameView.append(bg, circle, headshot);
 
-  const gameRect = DOM.gameView.getBoundingClientRect();
-  const magnifier = document.querySelector(".lens-content");
-  const magRect = magnifier.getBoundingClientRect();
-  const startX = magRect.left + magRect.width / 2 - gameRect.left;
-  const startY = magRect.top + magRect.height / 2 - gameRect.top;
+const gameRect = DOM.gameView.getBoundingClientRect();
+const magnifier = document.querySelector("#magnifier");
+const magRect = magnifier.getBoundingClientRect();
+const animationWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--lens-size")); 
+const offset = (magRect.width - animationWidth) / 2; 
+const startX = magRect.left - gameRect.left + offset;
+const startY = magRect.top - gameRect.top + offset;
 
-  const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
-  const endX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
-  const endY = thumbRect.top + thumbRect.height / 2 - gameRect.top;
+const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
+const thumbCenterX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
+const thumbCenterY = thumbRect.top + thumbRect.height / 2 - gameRect.top;
+const endX = thumbCenterX - animationWidth / 2;
+const endY = thumbCenterY - animationWidth / 2;
 
-  const lensSize = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue("--lens-size"),
-    10,
-  );
-  const offset = lensSize / 2;
-
-  document.documentElement.style.setProperty( "--wally-start-x", `${startX - offset - 2}px`,);
-  document.documentElement.style.setProperty( "--wally-start-y", `${startY - offset - 2}px`,);
-  document.documentElement.style.setProperty( "--wally-end-x", `${endX - offset}px`,);
-  document.documentElement.style.setProperty( "--wally-end-y", `${endY - offset}px`,);
+document.documentElement.style.setProperty("--wally-start-x", `${startX - 2}px`);
+document.documentElement.style.setProperty("--wally-start-y", `${startY - 2}px`);
+document.documentElement.style.setProperty("--wally-end-x", `${endX}px`);
+document.documentElement.style.setProperty("--wally-end-y", `${endY}px`);
 
   animationState.set(true);
   bg.classList.add("fill");

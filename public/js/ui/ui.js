@@ -87,6 +87,7 @@ export function switchPuzzle(puzzles, foundArr, idx) {
     const unsolvedIdx = foundArr.indexOf(false);
 
     if (unsolvedIdx !== -1) fadePuzzle(puzzles[unsolvedIdx]);
+
 }
 
 export async function targetingCoordinates(position, checkCharacter, rect) {

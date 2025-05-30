@@ -6,9 +6,7 @@ export function checkCharacterInRange(character, { x, y }, characters) {
     console.error(`Missing dimensions for character ${character}`);
     return false;
   }
-  const radius = Math.max(width, height);
-  const distance = Math.sqrt((x - charX) ** 2 + (y - charY) ** 2);
-  return distance <= radius;
+  return x >= charX && x <= charX + width && y >= charY && y <= charY + height
 }
 
 export function getGameWsByPlayerId(playerId, gameData, clients) {

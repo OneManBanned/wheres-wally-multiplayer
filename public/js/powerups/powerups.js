@@ -9,19 +9,19 @@ export const effectFunctions = {
   overlayHint: { apply: overlayHintPowerUp, cleanup: overlayHintCleanup },
 };
 
-export function applyPowerUp(effectName, puzzleIdx) {
-  const effectFn = effectFunctions[effectName]?.apply;
+export function applyPowerUp(effect, playerEffects) {
+  const effectFn = effectFunctions[effect.name]?.apply;
   if (effectFn) {
-    effectFn(puzzleIdx); 
+    effectFn(effect, playerEffects); 
   } else {
-    console.warn(`No apply function for effect: ${effectName}`);
+    console.warn(`No apply function for effect: ${effect.name}`);
   }
 }
 
-export function cleanupPowerUp(effectName) {
+export function cleanupPowerUp(effectName, playerEffects) {
   const cleanupFn = effectFunctions[effectName]?.cleanup;
   if (cleanupFn) {
-    cleanupFn();
+    cleanupFn(playerEffects);
   } else {
     console.warn(`No cleanup function for effect: ${effectName}`);
   }

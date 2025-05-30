@@ -83,7 +83,7 @@ export class GameService {
         const effectTargetId =
           powerUp.type === EFFECT_TYPES.POSITIVE ? playerId : opponentId;
 
-        this.effectService.applyEffect(powerUp, effectTargetId, gameData);
+        this.effectService.applyEffect(powerUp, effectTargetId, gameData, puzzleIdx);
 
         this.webSocketService.sendToGamePlayers(gameId, { type: WS_MESSAGE_TYPES.POWER_UP_FOUND, puzzleIdx, character, playerWhoFoundId: playerId });
       }

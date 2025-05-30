@@ -38,9 +38,10 @@ export const handlers = {
       console.log("opponenteffects: ", opponentEffects)
       console.log("----------------------")
 
-      const {name, puzzleIdx, char} = effect;
+      const {name, char} = effect;
+
     if (target === PLAYER_ID) {
-      applyPowerUp(name, puzzleIdx);
+      applyPowerUp(effect, playerEffects);
     }
     updateActiveEffectsUI(playerStats, target, char, name);
   },
@@ -55,7 +56,7 @@ export const handlers = {
       console.log("----------------------")
 
     if (effectsArr.length > 0 && target === PLAYER_ID) {
-      effectsArr.forEach( name => cleanupPowerUp(name))
+      effectsArr.forEach( name => cleanupPowerUp(name, playerEffects))
     }
 
     updateActiveEffectsUI(playerStats, target);

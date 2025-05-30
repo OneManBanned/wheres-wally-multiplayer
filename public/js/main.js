@@ -1,5 +1,6 @@
 import { PLAYER_ID } from "./constants.js";
 import { checkCharacter } from "./game/api.js";
+import { initializeHintObserver } from "./powerups/effects.js";
 import { showLobby, setupPuzzle, setupThumbnailListeners } from "./ui/ui.js";
 import { initWebSocket } from "./websockets/websockets.js";
 
@@ -19,6 +20,7 @@ export const DOM = {
   opponentEffects: document.querySelector("#opponentEffects")
 };
 
+initializeHintObserver()
 initWebSocket(PLAYER_ID);
 setupPuzzle((index, x, y) => checkCharacter(index, x, y, PLAYER_ID));
 setupThumbnailListeners();
