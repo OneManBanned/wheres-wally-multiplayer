@@ -53,27 +53,19 @@ export function lensGrowCleanup() {
 const observer = new MutationObserver((mutations) => {
   if (!activeHint) return;
 
-  const { puzzles, startTime, playerEffects } = activeHint;
-  if (Date.now() - startTime > 5000) return;
+  const { puzzles, playerEffects } = activeHint;
 
   mutations.forEach((mutation) => {
-      console.log("inside observer")
     if (mutation.attributeName === "src") {
       const newSrc = DOM.mainPuzzle.src;
       const currentPuzzlePath = getPathFromURL(newSrc);
       const currentPuzzleIdx = PUZZLES.indexOf(currentPuzzlePath);
 
       if (currentPuzzleIdx !== -1 && puzzles[currentPuzzleIdx]) {
-        console.log(`Puzzle switched to ${currentPuzzleIdx}`);
-        // Update activeHint puzzleIdx
         activeHint.puzzleIdx = currentPuzzleIdx;
-        // Reapply hint with new coordinates
         overlayHintPowerUp(
-          {
-            puzzleIdx: currentPuzzleIdx,
-            puzzles,
-          },
-          playerEffects
+          { puzzleIdx: currentPuzzleIdx, puzzles },
+          playerEffects,
         );
       }
     }
@@ -82,76 +74,83 @@ const observer = new MutationObserver((mutations) => {
 
 // Initialize observer on game start
 export function initializeHintObserver() {
-  observer.observe(DOM.mainPuzzle, { attributes: true, attributeFilter: ["src"] });
+  observer.observe(DOM.mainPuzzle, {
+    attributes: true,
+    attributeFilter: ["src"],
+  });
 }
 
 let activeHint = null;
+
 export function overlayHintPowerUp(effect, effectsArr) {
+  let { puzzleIdx, puzzles } = effect;
+  let { x: wallyX, y: wallyY } = puzzles[puzzleIdx].characters.wally;
 
-    let { puzzleIdx, puzzles } = effect;
-    let { x: wallyX, y: wallyY } = puzzles[puzzleIdx].characters.wally
+  const currentPuzzlePath = getPathFromURL(DOM.mainPuzzle.src);
+  if (currentPuzzlePath !== PUZZLES[puzzleIdx]) return;
 
-    const currentPuzzlePath = getPathFromURL(DOM.mainPuzzle.src);
-    if (currentPuzzlePath !== PUZZLES[puzzleIdx]) return;
-
- activeHint = {
+  activeHint = {
     puzzleIdx,
     puzzles,
-    wallyX,
-    wallyY,
-    startTime: activeHint?.startTime || Date.now(), // Preserve initial startTime
     playerEffects: effectsArr,
   };
 
-    if (effectsArr.includes("screenFlip")) {
-        wallyX = 100 - wallyX;
-        wallyY = 100 - wallyY;
-    }
+  if (effectsArr.includes("screenFlip")) {
+    wallyX = 100 - wallyX;
+    wallyY = 100 - wallyY;
+  }
 
-    // Calculate radius for 40% area
-    const rect = DOM.mainPuzzle.getBoundingClientRect();
-    const area = rect.width * rect.height;
-    const circleArea = 0.4 * area; // 40% of puzzle area
-    const radiusPx = Math.sqrt(circleArea / Math.PI);
-    const radiusPercent = (radiusPx / rect.width) * 100;
+  const radiusPercent = calculateRadius()
 
-    // Create or reuse overlay
-    let overlay = DOM.mainPuzzleContainer.querySelector(".blur-overlay");
-    if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.className = "blur-overlay";
-        DOM.mainPuzzleContainer.appendChild(overlay);
-    }
+  // Off-center Wally within the circle
+  const maxOffset = radiusPercent * 0.5; // 70% of radius (~20%)
+  const offsetX = Math.random() * maxOffset * (Math.random() > 0.5 ? 1 : -1);
+  const offsetY = Math.random() * maxOffset * (Math.random() > 0.5 ? 1 : -1);
+  const newX = wallyX + offsetX;
+  const newY = wallyY + offsetY;
 
-    // Set radius and activate
-    const props = {
-        "--hint-x": `${wallyX}%`,
-        "--hint-y": `${wallyY}%`,
-        "--hint-radius": `${radiusPercent}%`,
-    }
-    Object.entries(props).forEach(([key, value]) => {
-        overlay.style.setProperty(key, value)
-    })
-    overlay.classList.add("active");
+  // Clamp to prevent overflow (10% of radius margin)
+  const minX = radiusPercent * 0.1;
+  const maxX = 100 - minX;
+  const minY = radiusPercent * 0.1;
+  const maxY = 100 - minY;
+  const clampedX = Math.max(minX, Math.min(maxX, newX));
+  const clampedY = Math.max(minY, Math.min(maxY, newY));
 
-    // Ensure magnifier shows clear image
-    syncMagnifierBackground(document.getElementById("magnifier"), DOM.mainPuzzle);
+  // Create or reuse overlay
+  let overlay = DOM.mainPuzzleContainer.querySelector(".blur-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.className = "blur-overlay";
+    DOM.mainPuzzleContainer.appendChild(overlay);
+  }
+
+  // Set radius and activate
+  const props = {
+    "--hint-x": `${clampedX}%`,
+    "--hint-y": `${clampedY}%`,
+    "--hint-radius": `${radiusPercent}%`,
+  };
+  Object.entries(props).forEach(([key, value]) => {
+    overlay.style.setProperty(key, value);
+  });
+  overlay.classList.add("active");
+
+  // Ensure magnifier shows clear image
+  syncMagnifierBackground(document.getElementById("magnifier"), DOM.mainPuzzle);
 }
-
 
 export function overlayHintCleanup() {
   const overlay = DOM.mainPuzzleContainer.querySelector(".blur-overlay");
   if (overlay) {
-    // Apply fadeOut animation
     overlay.classList.add("fadeOut");
-    // Delay removing active class and DOM removal until fadeOut completes
     setTimeout(() => {
       overlay.classList.remove("active");
       overlay.remove();
-    }, 300); // Match fadeOut duration
+    }, 300);
   }
 
-    activeHint = null;
+  activeHint = null;
   syncMagnifierBackground(document.getElementById("magnifier"), DOM.mainPuzzle);
 }
 
@@ -184,11 +183,10 @@ export function confettiCleanup() {
 }
 
 export function screenFlipPowerUp(effect, effectsArr) {
-
-    if (activeHint && effectsArr.includes("overlayHint")) {
-        let {puzzleIdx, puzzles, wallyX, wallyY} = activeHint;
-        overlayHintPowerUp({puzzleIdx, puzzles, wallyX, wallyY}, effectsArr)
-    }
+  if (activeHint && effectsArr.includes("overlayHint")) {
+    let { puzzleIdx, puzzles } = activeHint;
+    overlayHintPowerUp({ puzzleIdx, puzzles }, effectsArr);
+  }
 
   DOM.mainPuzzle.classList.remove("spin-to-normal");
   DOM.mainPuzzleContainer.classList.add("flipped");
@@ -198,11 +196,10 @@ export function screenFlipPowerUp(effect, effectsArr) {
 }
 
 export function screenFlipCleanup(effectsArr) {
-
-    if (activeHint && effectsArr.includes("overlayHint")) {
-        let {puzzleIdx, puzzles, wallyX, wallyY} = activeHint;
-        overlayHintPowerUp({puzzleIdx, puzzles, wallyX, wallyY}, effectsArr)
-    }
+  if (activeHint && effectsArr.includes("overlayHint")) {
+    let { puzzleIdx, puzzles } = activeHint;
+    overlayHintPowerUp({ puzzleIdx, puzzles }, effectsArr);
+  }
 
   DOM.mainPuzzle.classList.remove("spin-to-upside-down");
   DOM.mainPuzzleContainer.classList.remove("flipped");
@@ -211,3 +208,22 @@ export function screenFlipCleanup(effectsArr) {
   DOM.mainPuzzle.style.transform = "rotate(0deg)";
   void DOM.mainPuzzle.offsetHeight;
 }
+
+export function flashHintPowerUp() {
+  alert("flashHint activated");
+}
+
+export function flashHintCleanup() {
+  alert("flashHint cleanup");
+}
+
+  // Calculate radius for 40% area
+  function calculateRadius() {
+      const rect = DOM.mainPuzzle.getBoundingClientRect();
+      const area = rect.width * rect.height;
+      const circleArea = 0.4 * area; // 40% of puzzle area
+      const radiusPx = Math.sqrt(circleArea / Math.PI);
+      const radiusPercent = (radiusPx / rect.width) * 100;
+      return radiusPercent
+
+  }
