@@ -4,6 +4,13 @@ import { setupConfetti } from "../ui/animations.js";
 import { syncMagnifierBackground } from "../ui/magnifier.js";
 import { getPathFromURL } from "../utils/utils.js";
 
+const lensGrowState = {
+  isTransitioning: false,
+  targetSize: "140px", // Default size
+};
+
+let activeHint = null;
+
 export function lensBlurPowerUp() {
   const lens = magnifier.querySelector(".lens-content");
   lens.classList.add("blurred-lens");
@@ -31,6 +38,7 @@ export function lensGrowPowerUp() {
   };
   requestAnimationFrame(updateBackground);
 }
+
 export function lensGrowCleanup() {
   const magnifier = document.getElementById("magnifier");
   document.querySelector(":root").style.setProperty("--lens-size", "140px");
@@ -80,7 +88,6 @@ export function initializeHintObserver() {
   });
 }
 
-let activeHint = null;
 
 export function overlayHintPowerUp(effect, effectsArr) {
   let { puzzleIdx, puzzles } = effect;
@@ -209,14 +216,6 @@ export function screenFlipCleanup(effectsArr) {
   void DOM.mainPuzzle.offsetHeight;
 }
 
-export function flashHintPowerUp() {
-  alert("flashHint activated");
-}
-
-export function flashHintCleanup() {
-  alert("flashHint cleanup");
-}
-
   // Calculate radius for 40% area
   function calculateRadius() {
       const rect = DOM.mainPuzzle.getBoundingClientRect();
@@ -227,3 +226,38 @@ export function flashHintCleanup() {
       return radiusPercent
 
   }
+
+export function flashPowerUp(effect, effectsArr) {
+  const { puzzleIdx, puzzles } = effect;
+  const characters = puzzles[puzzleIdx]?.characters || {};
+
+  const currentPuzzlePath = getPathFromURL(DOM.mainPuzzle.src);
+  if (currentPuzzlePath !== PUZZLES[puzzleIdx]) return;
+
+  const isFlipped = effectsArr.includes("screenFlip");
+
+  // Create flashes for each character except Whitebeard
+  Object.entries(characters).forEach(([charName, { x, y }]) => {
+    if (charName === "whitebeard") return; // Skip Whitebeard
+
+    const flash = document.createElement("div");
+    flash.className = "flash-star";
+    
+    // Apply screenFlip if active
+    const posX = isFlipped ? 100 - x : x;
+    const posY = isFlipped ? 100 - y : y;
+
+    // Position flash (center-aligned)
+    flash.style.left = `calc(${posX}% - 12px)`; // Offset by half width (24px / 2)
+    flash.style.top = `calc(${posY}% - 12px)`; // Offset by half height
+    DOM.mainPuzzleContainer.appendChild(flash);
+    console.log(`Flash for ${charName} at (${posX}%, ${posY}%)`);
+  });
+}
+
+export function flashCleanup() {
+  const flashes = DOM.mainPuzzleContainer.querySelectorAll(".flash-star");
+  flashes.forEach((flash) => {
+    flash.classList.remove("fadeOut");
+  });
+}

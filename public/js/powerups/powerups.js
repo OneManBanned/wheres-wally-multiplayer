@@ -1,5 +1,5 @@
 import { screenFlipPowerUp, screenFlipCleanup, confettiPowerUp, confettiCleanup, lensBlurPowerUp,
-  lensBlurCleanup, lensGrowPowerUp, lensGrowCleanup, overlayHintPowerUp, overlayHintCleanup, flashHintPowerUp, flashHintCleanup } from "./effects.js";
+  lensBlurCleanup, lensGrowPowerUp, lensGrowCleanup, overlayHintPowerUp, overlayHintCleanup, flashPowerUp, flashCleanup } from "./effects.js";
 
 export const effectFunctions = {
   screenFlip: { apply: screenFlipPowerUp, cleanup: screenFlipCleanup },
@@ -7,7 +7,7 @@ export const effectFunctions = {
   lensBlur: { apply: lensBlurPowerUp, cleanup: lensBlurCleanup },
   lensGrow: { apply: lensGrowPowerUp, cleanup: lensGrowCleanup },
   overlayHint: { apply: overlayHintPowerUp, cleanup: overlayHintCleanup },
-  flashHint: { apply: flashHintPowerUp, cleanup: flashHintCleanup },
+  flashHint: { apply: flashPowerUp, cleanup: flashCleanup },
 };
 
 export function applyPowerUp(effect, playerEffects) {

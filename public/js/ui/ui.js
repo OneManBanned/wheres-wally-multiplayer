@@ -131,6 +131,8 @@ export function setupPuzzle(checkCharacter) {
 }
 
 export function updateActiveEffectsUI(playerStats, player, char, effectName = null) {
+    // TODO if opponents effect finishes locally opponents display is out of sink on clients display
+    // the below operation needs to be performed for both opponent and player.
     const activeEffects = getPlayerEffectsFromStats(playerStats, player)
     const isPlayer = player === PLAYER_ID;
     const container = isPlayer ? DOM.playerEffects : DOM.opponentEffects;

@@ -9,7 +9,7 @@ export const powerUpsObj = {
   ],
   whitebeard: [
     { name: "overlayHint", type: "positive", duration: 5000, char: "whitebeard" },
-    //{ name: "flashHint", type: "positive", duration: 5000, char: "whitebeard" },
+    { name: "flashHint", type: "positive", duration: 3000, char: "whitebeard" },
   ],
 };
 
