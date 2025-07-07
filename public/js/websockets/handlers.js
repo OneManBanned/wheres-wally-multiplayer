@@ -1,7 +1,8 @@
 import { PUZZLES, PLAYER_ID } from "../constants.js";
 import { startGameTimer, setStartTime, setGameOver, } from "../game/game.js";
 import { applyPowerUp, cleanupPowerUp } from "../powerups/powerups.js";
-import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, updateActiveEffectsUI, } from "../ui/ui.js";
+import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, updateActiveEffectsUI, showGameOverScreen, } from "../ui/ui.js";
+import { checkGameResult, getOpponentId } from "../utils/utils.js";
 
 export const handlers = {
   paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
@@ -18,42 +19,26 @@ export const handlers = {
     switchPuzzle(PUZZLES, foundArr, puzzleIdx);
   },
 
-  gameOver: ({reason}) => {
-      console.log("Game Over due to ", reason)
+
+  gameOver: ({game, reason}) => {
     setGameOver();
-    // TODO -show game over UI
+    showGameOverScreen(checkGameResult(game, reason))
   },
 
-  opponentQuit: ({ gameId }) => {
-    console.log(`Opponent quit game ${gameId} is over`);
+  opponentQuit: () => {
     showLobby();
   },
 
   applyEffect: ({ target, effect, playerStats }) => {
-      console.log("applying effect ", effect.name, " triggered by ", effect.char)
-      const opponentId = Object.keys(playerStats).filter(id => id !== target)
-      const playerEffects = playerStats[target].activeEffects.map(e => e.name)
-      const opponentEffects = playerStats[opponentId].activeEffects.map(e => e.name)
-      console.log("playereffects: ", playerEffects)
-      console.log("opponenteffects: ", opponentEffects)
-      console.log("----------------------")
+    const playerEffects = playerStats[target].activeEffects.map(e => e.name)
 
-      const {name, char} = effect;
-
-    if (target === PLAYER_ID) {
-      applyPowerUp(effect, playerEffects);
-    }
-    updateActiveEffectsUI(playerStats, target, char, name);
+    if (target === PLAYER_ID) applyPowerUp(effect, playerEffects);
+    
+    updateActiveEffectsUI(playerStats, target, effect);
   },
 
   cleanUpEffect: ({ playerStats, target, effectsArr}) => {
-      console.log("cleaning up", effectsArr)
-      const opponentId = Object.keys(playerStats).filter(id => id !== target)
       const playerEffects = playerStats[target].activeEffects.map(e => e.name)
-      const opponentEffects = playerStats[opponentId].activeEffects.map(e => e.name)
-      console.log("playereffects: ", playerEffects)
-      console.log("opponenteffects: ", opponentEffects)
-      console.log("----------------------")
 
     if (effectsArr.length > 0 && target === PLAYER_ID) {
       effectsArr.forEach( name => cleanupPowerUp(name, playerEffects))
@@ -62,8 +47,7 @@ export const handlers = {
     updateActiveEffectsUI(playerStats, target);
   },
 
-  powerUpFound: ({ character, puzzleIdx }) => {
-    updateFoundCharacterUI(puzzleIdx, character);
-  },
+  powerUpFound: ({ character, puzzleIdx }) => updateFoundCharacterUI(puzzleIdx, character),
+  
 };
 

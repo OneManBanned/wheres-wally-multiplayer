@@ -9,7 +9,6 @@ export function setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POW
   const gameService = new GameService(stateManager, effectService, webSocketService);
 
   wss.on("connection", (ws) => {
-
     ws.on("message", (msg) => {
       let data;
       try {

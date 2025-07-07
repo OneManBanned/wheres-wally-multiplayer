@@ -1,0 +1,175 @@
+:root {
+  /* Borders */
+  --border: 2px solid black;
+  --border-image: url("/images/box.png") 50 50 50 50 / 20px 20px 20px 20px / 5px
+    5px 5px 5px repeat repeat;
+
+  /* Colors */
+  --white: #fff;
+
+  /* Fonts */
+  --font-title: "Bubblegum Sans", sans-serif;
+  --font-timer: "Comic Neue", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  background-image: url("/images/background.png");
+  background-size: 125% 125%;
+  background-position: top center;
+}
+
+main {
+  margin-block: 4rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  padding-inline: 1rem;
+  border: var(--border);
+  border-image: var(--border-image);
+  max-width: 65%;
+  position: relative;
+}
+
+
+h1 {
+    margin-block: 2rem 4rem;
+  font-family: var(--font-title);
+}
+
+
+.blurb-one {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: 50% 50%;
+  margin-bottom: 3rem;
+}
+
+.blurb-one > h2 {
+  grid-row: 1/2;
+  grid-column: 1 / 2;
+  text-align: center;
+}
+
+h2 {
+  font-family: var(--font-title);
+}
+
+p {
+  font-family: var(--font-timer);
+}
+
+.blurb-one > p {
+  grid-row: 2/3;
+  grid-column: 1 / 2;
+  text-align: center;
+}
+
+.gameView-image {
+  width: 100%;
+  grid-row: 1/3;
+  grid-column: 2/3;
+}
+
+#home-h1 {
+  text-align: center;
+  justify-content: center;
+}
+
+.blurb-two {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 6rem;
+}
+
+.blurb-two > h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.blurb-two > p {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.blurb-two > div {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.blurb-two > div img {
+  width: 100%;
+  display: block;
+}
+
+.blurb-two > div > img:nth-child(1) {
+    transform: rotate(20deg) translateY(25%) scale(110%);
+    position: relative;
+    z-index: 1;
+}
+
+.blurb-two > div > img:nth-child(2) {
+    transform: translateY(20%) scale(110%);
+}
+.blurb-two > div > img:nth-child(3) {
+    transform: rotate(-20deg) translateY(25%) scale(110%);
+    position: relative;
+    z-index: 1;
+}
+
+.effect-image {
+  padding: 0.5rem;
+  background: var(--white);
+  border: var(--border);
+  border-image: var(--border-image);
+}
+
+
+.btn-container {
+  position: fixed;
+  top: -1%;
+  left: 12%;
+  width: 17%;
+  transform: rotate(-40deg);
+}
+
+#start-btn {
+  border: none;
+  padding: 2rem;
+  font-size: 1.5rem;
+  position: absolute;
+  background: transparent;
+  top: 41%;
+  left: 17%;
+  transform: rotate(-5deg);
+  font-family: var(--font-title);
+}
+
+#start-btn:hover {
+    cursor: pointer;
+}
+
+#wallySign {
+  width: 100%;
+  display: block; 
+  object-fit: cover;
+}
+
+.headshot {
+    width: 1.5rem;
+}

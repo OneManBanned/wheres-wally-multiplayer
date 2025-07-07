@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Photo Tagging App</title>
+<link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+<link rel="shortcut icon" href="/images/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+<link rel="manifest" href="/images/site.webmanifest" />
+  <link rel="stylesheet" href="/css/home.css">
+<link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Comic+Neue&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main>
+        <div class="btn-container">
+            <button id="start-btn" >Start Game</button>
+            <img id="wallySign" src="/images/wally-empty-sign.png" alt="">
+        </div>
+        <h1 id="home-h1">Where's Wally Multiplayer</h1>
+        <div class="blurb-one">
+            <h2>Race Across Maps to Find Wally!</h2>
+            <p>Compete head-to-head to spot the most Wallys in a fast-paced challenge, switching between five vibrant maps.</p> 
+            <img class="gameView-image" src="/images/gameView.png" alt=""> 
+        </div>
+        <div class="blurb-two">
+            <h2>Unleash Powerups with Hidden Characters!</h2>
+            <p>Find Odlaw (<img class="headshot" src="/images/odlaw-head.png" alt="">), Wenda (<img class="headshot" src="/images/wenda-head.png" alt="">), or Whitebeard (<img class="headshot" src="/images/whitebeard-head.png" alt="">) to trigger powerful effects that boost your search or hinder your opponent’s efforts.</p>
+            <div>
+                <img class="effect-image" src="/images/confetti.png" alt=""> 
+                <img class="effect-image" src="/images/screenFlip.png" alt="">
+                <img class="effect-image" src="/images/overlayHint.png" alt="">
+            </div>
+        </div>
+    </main>
+<script>
+    const startBtn = document.querySelector("#start-btn")
+    startBtn.addEventListener("click", () => {
+            window.location.href = "/game"
+        })
+</script>
+</body>
+</html>

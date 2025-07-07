@@ -3,12 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Photo Tagging App</title>
+<link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+<link rel="shortcut icon" href="/images/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+<link rel="manifest" href="/images/site.webmanifest" />
   <link rel="stylesheet" href="/css/styles.css">
 <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Comic+Neue&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="lobby-view">
         <h1>...Waiting for opponent</h1> 
+        <a href="/game" target="_blank" title="Open a new tab to play against yourself for demo purposes" rel="noopener noreferrer" >Play Against Yourself (New Tab)</a>
     </div>
   <main id="game-view" style="display: none;">
       <div id="status-bar">
@@ -36,6 +42,12 @@
       <% }) %>
         </div>
     </div>
+<div id="game-over" class="game-over hidden">
+    <div class="container">
+  <h2 class="endGameStatus"></h2>
+  <button class="home">Home</button>
+    </div>
+</div>
   </main>
   <script>
     window.PUZZLES = <%- JSON.stringify(puzzles) %>;

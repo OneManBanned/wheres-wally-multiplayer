@@ -15,6 +15,10 @@ function initService() {
      gameService = new GameService( stateManager, effectService, webSocketService);
 }
 
+export const homePage = (req, res) => {
+    res.render("home")
+}
+
 export const startGame = (req, res) => {
   res.render("index", {
     puzzles: Object.values(puzzles).map((char) => char.img),

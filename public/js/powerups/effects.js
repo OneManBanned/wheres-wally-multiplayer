@@ -251,7 +251,6 @@ export function flashPowerUp(effect, effectsArr) {
     flash.style.left = `calc(${posX}% - 12px)`; // Offset by half width (24px / 2)
     flash.style.top = `calc(${posY}% - 12px)`; // Offset by half height
     DOM.mainPuzzleContainer.appendChild(flash);
-    console.log(`Flash for ${charName} at (${posX}%, ${posY}%)`);
   });
 }
 

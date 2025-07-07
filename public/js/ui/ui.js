@@ -1,4 +1,4 @@
-import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback, animationQueue, createEffectIcon, } from "./animations.js";
+import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback, animationQueue, createEffectIcon, stopBadgeTimer, startBadgeTimer, } from "./animations.js";
 import { DOM } from "../main.js";
 import { setupMagnifier } from "./magnifier.js";
 import { extractImgPath, getCharFromImgPath, getOpponentId, getPathFromURL, positionInPercent, } from "../utils/utils.js";
@@ -130,22 +130,47 @@ export function setupPuzzle(checkCharacter) {
     setupMagnifier();
 }
 
-export function updateActiveEffectsUI(playerStats, player, char, effectName = null) {
-    // TODO if opponents effect finishes locally opponents display is out of sink on clients display
-    // the below operation needs to be performed for both opponent and player.
-    const activeEffects = getPlayerEffectsFromStats(playerStats, player)
-    const isPlayer = player === PLAYER_ID;
-    const container = isPlayer ? DOM.playerEffects : DOM.opponentEffects;
+export function updateActiveEffectsUI(playerStats, player, effect = null) {
+  const activeEffects = getPlayerEffectsFromStats(playerStats, player);
+  const opponentId = getOpponentId(playerStats, player)
+  const opponentsActiveEffects = getPlayerEffectsFromStats(playerStats, opponentId)
+  const isPlayer = player === PLAYER_ID;
+  const container = isPlayer ? DOM.playerEffects : DOM.opponentEffects;
 
-    if (effectName) {
-        const queue = animationQueue.getQueue(container);
-        queue.push({ effectName, activeEffects, isPlayer, char });
-        animationQueue.processQueue(container);
+  if (effect) {
+    if (effect.isExtension) {
+      container.innerHTML = "";
+      activeEffects.forEach(e => {
+        container.appendChild(createEffectIcon(e));
+      });
+      startBadgeTimer();
     } else {
-        container.innerHTML = "";
-        activeEffects.forEach((effect) => {
-           container.appendChild(createEffectIcon(effect.name, effect.type === "POSITIVE")) 
-        })
+      const queue = animationQueue.getQueue(container);
+      queue.push({ effect, activeEffects, isPlayer });
+      animationQueue.processQueue(container);
     }
+  } else {
+    container.innerHTML = "";
+    activeEffects.forEach((e) => {
+      container.appendChild(createEffectIcon(e));
+    });
+    if (activeEffects.length > 0 || opponentsActiveEffects.length > 0) {
+      startBadgeTimer();
+    } else {
+      stopBadgeTimer();
+    }
+  }
+}
 
+export function showGameOverScreen(result, reason) {
+const gameOver = document.getElementById("game-over");
+  const endGameStatus = document.querySelector(".endGameStatus");
+  gameOver.classList.remove("hidden");
+    endGameStatus.textContent = `${result}`;
+    endGameStatus.innresult.split('').map(l => `${l}`)
+
+const home = document.querySelector(".home")
+    home.addEventListener("click", () => {
+        window.location.href = "/"
+    })
 }

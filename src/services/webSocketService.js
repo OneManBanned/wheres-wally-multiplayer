@@ -33,9 +33,11 @@ export class WebSocketService {
   }
 
   sendGameOver(gameId, reason) {
+    const game = this.stateManager.getGame(gameId);
     return this.sendToGamePlayers(gameId, {
       type: WS_MESSAGE_TYPES.GAME_OVER,
       reason,
+      game
     });
   }
 

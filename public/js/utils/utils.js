@@ -24,4 +24,22 @@ export function getCharFromImgPath(imagePath) {
 }
 
 export const getOpponentId = (stats, player) =>
-  Object.keys(stats).filter((id) => id !== player)[0];
+    Object.keys(stats).filter((id) => id !== player)[0];
+
+export function checkGameResult(game) {
+    const { playerStats } = game;
+    const playerScore = playerStats[PLAYER_ID].wallysFound;
+    const opponentsScore =
+        playerStats[getOpponentId(playerStats, PLAYER_ID)].wallysFound;
+    let playerStatus = "";
+
+    if (playerScore > opponentsScore) {
+        playerStatus = "winner";
+    } else if (opponentsScore > playerScore) {
+        playerStatus = "loser";
+    } else {
+        playerStatus = "draw";
+    }
+
+    return playerStatus;
+}

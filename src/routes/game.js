@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { startGame, checkGuess } from "../controllers/game.js";
+import { startGame, checkGuess, homePage } from "../controllers/game.js";
 
 const router = Router();
 
-router.get("/", startGame);
+router.get("/", homePage)
+router.get("/game", startGame);
 
 router.post("/guess", checkGuess);
 

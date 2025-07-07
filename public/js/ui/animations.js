@@ -201,8 +201,9 @@ class effectNameAnimationQueue {
         }
 
         this.#isAnimating.set(container, true);
-        const { effectName, isPlayer, char, activeEffects } = queue.shift();
-        flashEffectName( container, activeEffects, effectName, isPlayer, char, () => {
+        const { effect, isPlayer, activeEffects } = queue.shift();
+        const { name, char } = effect;
+        flashEffectName( container, activeEffects, name, isPlayer, char, () => {
                 this.#isAnimating.set(container, false);
                 this.processQueue(container);
             },
@@ -256,18 +257,83 @@ function flashEffectName( container, activeEffects, effectName, isPlayer, charac
         flash.remove();
         container.style.position = "";
         container.innerHTML = "";
-        activeEffects.forEach((effect) => {
-            container.appendChild(createEffectIcon(effect.name, effect.type === "POSITIVE"));
+        activeEffects.forEach((e) => {
+            container.appendChild(createEffectIcon(e));
         });
+        if (activeEffects.length > 0) {
+            startBadgeTimer(); // Start animation after flash
+        }
         if (onComplete) onComplete();
     }, bounceTime + 800); // Bounce + 500ms pause + 300ms slide
 }
 
-export function createEffectIcon(effectName, isPositive) {
-  const icon = document.createElement("span");
-  icon.className = `effect-icon ${isPositive ? "positive" : "negative"}`;
-  icon.textContent = effectName[0].toUpperCase(); // First letter as placeholder
-  icon.dataset.effectName = effectName;
-  icon.title = formatEffectName(effectName); // Use formatted name for tooltip
-  return icon;
+
+// Track badge timers globally
+let timerInterval = null;
+
+export function startBadgeTimer() {
+  if (timerInterval) return; 
+  timerInterval = setInterval(() => {
+    [DOM.playerEffects, DOM.opponentEffects].forEach(container => {
+      const badges = container.querySelectorAll(".effect-badge");
+      badges.forEach(badge => {
+        const startTime = parseInt(badge.dataset.startTime, 10);
+        const duration = parseInt(badge.dataset.duration, 10);
+
+        const remainingMs = Math.max(0, duration - (Date.now() - startTime));
+        const circle = badge.querySelector(".badge-border");
+        const circumference = 2 * Math.PI * 8.5; 
+        const progress = remainingMs / duration; 
+        circle.style.strokeDashoffset = circumference * (1 - progress);
+      });
+    });
+  }, 100); 
 }
+
+export function stopBadgeTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+export function createEffectIcon(effect) {
+    console.log(effect)
+    const {name: effectName, duration, startTime, type} = effect
+  if (isNaN(startTime) || isNaN(duration)) {
+    console.error(`Invalid timer data in createEffectIcon for ${effectName}:`, { startTime, duration });
+    startTime = Date.now();
+    duration = 3000;
+  }
+
+  const badge = document.createElement("div");
+  badge.className = `effect-badge ${type.toLowerCase()}`;
+  badge.dataset.effectName = effectName;
+  badge.dataset.startTime = startTime;
+  badge.dataset.duration = duration;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "18");
+  svg.setAttribute("height", "18");
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", "9");
+  circle.setAttribute("cy", "9");
+  circle.setAttribute("r", "8.5");
+  circle.classList.add("badge-border");
+  circle.setAttribute("fill", "none");
+  const circumference = 2 * Math.PI * 8.5;
+  circle.style.strokeDasharray = `${circumference}`;
+  circle.style.strokeDashoffset = "0";
+  svg.appendChild(circle);
+  badge.appendChild(svg);
+
+  const letter = document.createElement("span");
+  letter.className = "badge-letter";
+  letter.textContent = effectName[0].toUpperCase();
+  badge.appendChild(letter);
+
+  return badge;
+}
+
+
+
