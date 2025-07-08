@@ -1,4 +1,4 @@
-export const GAME_DURATION =  5 //* 60 * 1000; // 5 minutes
+export const GAME_DURATION =  5 * 60 * 1000; // 5 minutes
 export const PUZZLE_COUNT = 5;
 
 export const CHARACTERS = {

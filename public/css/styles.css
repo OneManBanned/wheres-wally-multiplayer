@@ -48,7 +48,10 @@ body {
   --white: #fff;
   --black: #000;
   --gray-dark: #1a1a1a;
-  --red: #f00;
+  --red: #ff0000;
+  --blue: #87ceeb;
+  --yellow: #ffc107;
+  --black: #000000;
 
   /* Fonts */
   --font-title: "Bubblegum Sans", sans-serif;
@@ -152,19 +155,19 @@ h1 {
 }
 
 .effectContainers {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    margin-inline: 1rem;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  margin-inline: 1rem;
 }
 
 #playerScore {
-    color: #ff0000;
+  color: var(--red);
 }
 
 #opponentScore {
-    color: #87CEEB;
+  color: var(--blue);
 }
 
 #currentPuzzle {
@@ -179,7 +182,6 @@ h1 {
     transform 0.2s ease-in-out,
     opacity 0.3s ease-in-out;
 }
-
 
 #currentPuzzle:hover {
   cursor: none;
@@ -246,7 +248,9 @@ h1 {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
   transform: translate(-50%, -50%);
   transform-origin: center;
-  transition: height 0.3s ease-in-out, width 0.3s ease-in-out;
+  transition:
+    height 0.3s ease-in-out,
+    width 0.3s ease-in-out;
 }
 
 .lens-content {
@@ -257,8 +261,10 @@ h1 {
   left: 0;
   background-repeat: no-repeat;
   border-radius: 50%;
-  filter: blur(0px); 
-  transition: filter 1s ease-in, opacity 0.3s ease;
+  filter: blur(0px);
+  transition:
+    filter 1s ease-in,
+    opacity 0.3s ease;
 }
 
 #magnifier .glass-effect {
@@ -292,18 +298,17 @@ h1 {
    ========================================================================== */
 
 #puzzle-container.flipped #currentPuzzle {
-  transform: rotate(180deg); 
+  transform: rotate(180deg);
 }
 #puzzle-container:not(.flipped) #currentPuzzle {
-  transform: rotate(0deg); 
+  transform: rotate(0deg);
 }
 #puzzle-container.flipped .lens-content {
-  transform: rotate(180deg); 
+  transform: rotate(180deg);
 }
 #puzzle-container:not(.flipped) .lens-content {
-  transform: rotate(0deg); 
+  transform: rotate(0deg);
 }
-
 
 #magnifier.targeting .lens-content::before {
   width: 30px;
@@ -326,7 +331,6 @@ h1 {
 /* ==========================================================================
    Animations
    ========================================================================== */
-
 
 .wally-found-bg,
 .wally-white-circle,
@@ -419,25 +423,29 @@ h1 {
   }
 }
 
-
 .wally-found-bg {
   position: absolute;
   width: var(--lens-size);
   height: var(--lens-size);
   background: repeating-linear-gradient(
-    #ff0000 0px,
-    #ff0000 10px,
-    #ffffff 10px,
-    #ffffff 20px
+    var(--red) 0px,
+    var(--red) 10px,
+    var(--white) 10px,
+    var(--white) 20px
   );
   transform-origin: center;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 1; 
-  }
+  z-index: 1;
+}
 
 .wally-found-bg-opponent {
-  background: repeating-linear-gradient(#87CEEB 0px, #87CEEB 10px, #ffffff 10px, #ffffff 20px);
+  background: repeating-linear-gradient(
+    var(--blue) 0px,
+    var(--blue) 10px,
+    var(--white) 10px,
+    var(--white) 20px
+  );
   border: 5px white solid;
 }
 
@@ -456,8 +464,8 @@ h1 {
     opacity: 0;
     transform: scale(0.2);
   }
-  10%{
-      opacity: 1;
+  10% {
+    opacity: 1;
   }
   50% {
     transform: scale(0.9);
@@ -526,7 +534,7 @@ h1 {
   width: var(--lens-size);
   height: var(--lens-size);
   pointer-events: none;
-  z-index: 2; 
+  z-index: 2;
 }
 
 .wally-white-circle.fill {
@@ -571,7 +579,8 @@ h1 {
   height: var(--lens-size);
   border-radius: 50%;
   pointer-events: none;
-  z-index: 3; }
+  z-index: 3;
+}
 
 .wally-headshot.fill {
   animation: wallyFill 1s ease-in-out forwards;
@@ -636,7 +645,7 @@ h1 {
 }
 
 .blurred-lens {
-  filter: blur(4px) !important; 
+  filter: blur(4px) !important;
 }
 
 .lens-content.fade-out {
@@ -680,12 +689,11 @@ h1 {
   margin-right: 0; /* No extra margin for space */
 }
 
-/* Alternate colors: even letters red, odd letters blue */
 .effect-letter:nth-child(even):not(.space) {
-  color: #ff0000; /* Red, player score */
+  color: var(--red);
 }
 .effect-letter:nth-child(odd):not(.space) {
-  color: #87CEEB; /* Blue, opponent score */
+  color: var(--blue); /* Blue, opponent score */
 }
 
 /* Initial bounce animation */
@@ -727,31 +735,30 @@ h1 {
     transform: translateX(-30px);
   }
 }
-/* Character-specific colors */
 
 /* Odlaw: Yellow (even), Black (odd) */
 .effect-flash.odlaw .effect-letter:nth-child(even):not(.space) {
-  color: #FFC107; /* Yellow */
+  color: var(--yellow); /* Yellow */
 }
 .effect-flash.odlaw .effect-letter:nth-child(odd):not(.space) {
-  color: #000000; /* Black */
+  color: var(--black); /* Black */
 }
 
 /* Wenda: Red (even), Blue (odd) */
 .effect-flash.wenda .effect-letter:nth-child(even):not(.space) {
-  color: #ff0000; /* Red */
+  color: var(--red); /* Red */
 }
 .effect-flash.wenda .effect-letter:nth-child(odd):not(.space) {
-    color: #87CEEB; /* Blue */
+  color: var(--blue); /* Blue */
 }
 
 /* Whitebeard: White (even), Blue (odd), with black outline */
 .effect-flash.whitebeard .effect-letter:nth-child(odd):not(.space) {
-    color: #87CEEB; /* Blue */
+  color: var(--blue); /* Blue */
 }
 
 .effect-flash.whitebeard .effect-letter:nth-child(even):not(.space) {
-  color: #ff0000; /* Red */
+  color: var(--red); /* Red */
 }
 
 .blur-overlay {
@@ -775,7 +782,9 @@ h1 {
     black calc(var(--hint-radius) + 2px)
   );
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5); /* Circle outline */
-  animation: smokeFadeIn 0.6s ease-in-out forwards, wavyMirage 2s ease-in-out infinite; /* Add wavyMirage after fade-in */
+  animation:
+    smokeFadeIn 0.6s ease-in-out forwards,
+    wavyMirage 2s ease-in-out infinite; /* Add wavyMirage after fade-in */
 }
 
 .blur-overlay.active::before {
@@ -785,7 +794,7 @@ h1 {
   left: 50%;
   width: calc(2 * var(--hint-radius));
   height: calc(2 * var(--hint-radius));
-  background: rgba(255, 255, 255, 0.2); 
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: circleShimmer 1.5s ease-in-out infinite;
@@ -842,20 +851,26 @@ h1 {
   }
   50% {
     opacity: 0.3;
-    transform: rotate(10deg) scale(1.1); 
+    transform: rotate(10deg) scale(1.1);
     background-position: 40% 50%;
   }
   100% {
-    opacity: 0; 
+    opacity: 0;
     transform: rotate(20deg) scale(1);
     background-position: 50% 60%;
   }
 }
 
 @keyframes wavyMirage {
-  0% { transform: translate(0, 0); }
-  50% { transform: translate(5px, -5px); }
-  100% { transform: translate(0, 0); }
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(5px, -5px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
 }
 
 @keyframes circleShimmer {
@@ -874,30 +889,51 @@ h1 {
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .flash-star {
   position: absolute;
   width: 24px;
   height: 24px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 30%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9) 30%,
+    transparent 70%
+  );
   border-radius: 50%;
   pointer-events: none;
-  z-index: 2; 
-  animation: twinkle 1s ease-in-out forwards; 
+  z-index: 2;
+  animation: twinkle 1s ease-in-out forwards;
 }
 
 @keyframes twinkle {
-  0% { transform: scale(0.5); opacity: 0.7; }
-  50% { transform: scale(1.5); opacity: 1; }
-  100% { transform: scale(0.5); opacity: 0; }
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
 }
 
 .fadeOut {
@@ -905,7 +941,9 @@ h1 {
 }
 
 @keyframes fadeOut {
-  to { opacity: 0; }
+  to {
+    opacity: 0;
+  }
 }
 
 .effect-badge {
@@ -916,27 +954,27 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-inline: .2rem;
+  margin-inline: 0.2rem;
 }
 
 .effect-badge {
-  background-color: #FFF; 
+  background-color: var(--white);
 }
 .effect-badge .badge-letter {
-  color: #000000; 
+  color: var(--black);
 }
 
 .effect-badge.positive .badge-border {
-    stroke: #FF0000; 
+  stroke: var(--red);
 }
 
 .effect-badge.negative .badge-border {
-  stroke: #87CEEB; 
+  stroke: var(--blue);
 }
 
 .badge-border {
-  stroke-width: 2; 
-  transition: stroke-dashoffset 0.1s linear; 
+  stroke-width: 2;
+  transition: stroke-dashoffset 0.1s linear;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -946,7 +984,7 @@ h1 {
   position: absolute;
   font-family: var(--font-title);
   font-weight: bold;
-  font-size: 10px; 
+  font-size: 10px;
 }
 
 .game-over {
@@ -955,58 +993,79 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); 
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: var(--white);
   z-index: 1000;
-  transition: opacity 5s ease-in; 
+  transition: opacity 5s ease-in;
 }
 
 .game-over.hidden {
   display: none;
-  opacity: 0; 
+  opacity: 0;
 }
 
 .game-over:not(.hidden) {
-  opacity: 1; 
+  opacity: 1;
 }
 
 .game-over .container {
-  background-color: #FFFFFF; /* White background */
-  color: #000000; /* Black text for contrast */
-  padding: 20px;
-  border-radius: 10px;
+  background-color: var(--white);
+  color: var(--black);
+  padding: 1rem;
   text-align: center;
-  transform: translateY(-200%); /* Start off-screen */
-  animation: slide-down 0.7s ease-out 0.5s forwards; /* Slide down after 0.5s fade-in */
-  max-width: 400px;
-  width: 90%;
+  transform: translateY(-200%);
+  animation: slide-down 0.7s ease-out 0.5s forwards;
+
+  border: var(--border);
+  border-image: var(--border-image);
 }
 
 @keyframes slide-down {
   from {
-    transform: translateY(-200%); /* Off-screen top */
+    transform: translateY(-200%);
   }
   to {
-    transform: translateY(0); /* In place */
+    transform: translateY(0);
   }
 }
 
-.game-over h2 {
-  font-size: 36px;
+.winner,
+.loser,
+.draw {
+  font-size: 5rem;
   font-family: var(--font-title);
   margin-bottom: 15px;
-  color: #000000; /* Black for contrast on white */
 }
 
-.winner {
-  font-size: 24px;
-  margin-bottom: 10px;
+.winner:nth-child(even),
+.draw:nth-child(even) {
+    color: var(--red); 
+}
+
+.draw:nth-child(odd),
+.winner:nth-child(odd) {
+    color: var(--blue);
+}
+
+.loser:nth-child(even) {
+    color: var(--black); 
+}
+
+.loser:nth-child(odd) {
+  color: var(--yellow);
+}
+
+.home {
   font-family: var(--font-timer);
-  padding: 8px;
-  border-radius: 5px;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
 }
 
+.home:hover {
+    cursor: pointer;
+}

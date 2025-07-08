@@ -166,8 +166,9 @@ export function showGameOverScreen(result, reason) {
 const gameOver = document.getElementById("game-over");
   const endGameStatus = document.querySelector(".endGameStatus");
   gameOver.classList.remove("hidden");
-    endGameStatus.textContent = `${result}`;
-    endGameStatus.innresult.split('').map(l => `${l}`)
+    endGameStatus.innerHTML = result.toUpperCase().split('').map((l, i) => { 
+        return i % 2 === 0 ? `<span class="${result}">${l}</span>` : `<span class="${result}">${l}</span>`
+    }).join("", ",")
 
 const home = document.querySelector(".home")
     home.addEventListener("click", () => {
