@@ -1,0 +1,3448 @@
+File: ./output.txt
+
+File: ./public/js/powerups/effects.js
+import { PUZZLES } from "../constants.js";
+import { DOM } from "../main.js";
+import { setupConfetti } from "../ui/animations.js";
+import { syncMagnifierBackground } from "../ui/magnifier.js";
+import { getPathFromURL } from "../utils/utils.js";
+
+const lensGrowState = {
+  isTransitioning: false,
+  targetSize: "140px", // Default size
+};
+
+let activeHint = null;
+
+export function lensBlurPowerUp() {
+  const lens = magnifier.querySelector(".lens-content");
+  lens.classList.add("blurred-lens");
+}
+
+export function lensBlurCleanup() {
+  const lens = magnifier.querySelector(".lens-content");
+  lens.classList.remove("blurred-lens");
+}
+
+export function lensGrowPowerUp() {
+  const magnifier = document.getElementById("magnifier");
+  document.querySelector(":root").style.setProperty("--lens-size", "180px");
+  syncMagnifierBackground(magnifier);
+
+  lensGrowState.isTransitioning = true;
+  lensGrowState.targetSize = "180px";
+  const startTime = performance.now();
+  const duration = 300;
+  const updateBackground = (currentTime) => {
+    syncMagnifierBackground(magnifier);
+    if (currentTime - startTime < duration) {
+      requestAnimationFrame(updateBackground);
+    }
+  };
+  requestAnimationFrame(updateBackground);
+}
+
+export function lensGrowCleanup() {
+  const magnifier = document.getElementById("magnifier");
+  document.querySelector(":root").style.setProperty("--lens-size", "140px");
+  syncMagnifierBackground(magnifier);
+
+  lensGrowState.isTransitioning = true;
+  lensGrowState.targetSize = "140px";
+  const startTime = performance.now();
+  const duration = 300;
+  const updateBackground = (currentTime) => {
+    syncMagnifierBackground(magnifier);
+    if (currentTime - startTime < duration) {
+      requestAnimationFrame(updateBackground);
+    }
+  };
+  requestAnimationFrame(updateBackground);
+}
+
+// Setup MutationObserver for puzzle switches
+const observer = new MutationObserver((mutations) => {
+  if (!activeHint) return;
+
+  const { puzzles, playerEffects } = activeHint;
+
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === "src") {
+      const newSrc = DOM.mainPuzzle.src;
+      const currentPuzzlePath = getPathFromURL(newSrc);
+      const currentPuzzleIdx = PUZZLES.indexOf(currentPuzzlePath);
+
+      if (currentPuzzleIdx !== -1 && puzzles[currentPuzzleIdx]) {
+        activeHint.puzzleIdx = currentPuzzleIdx;
+        overlayHintPowerUp(
+          { puzzleIdx: currentPuzzleIdx, puzzles },
+          playerEffects,
+        );
+      }
+    }
+  });
+});
+
+// Initialize observer on game start
+export function initializeHintObserver() {
+  observer.observe(DOM.mainPuzzle, {
+    attributes: true,
+    attributeFilter: ["src"],
+  });
+}
+
+
+export function overlayHintPowerUp(effect, effectsArr) {
+  let { puzzleIdx, puzzles } = effect;
+  let { x: wallyX, y: wallyY } = puzzles[puzzleIdx].characters.wally;
+
+  const currentPuzzlePath = getPathFromURL(DOM.mainPuzzle.src);
+  if (currentPuzzlePath !== PUZZLES[puzzleIdx]) return;
+
+  activeHint = {
+    puzzleIdx,
+    puzzles,
+    playerEffects: effectsArr,
+  };
+
+  if (effectsArr.includes("screenFlip")) {
+    wallyX = 100 - wallyX;
+    wallyY = 100 - wallyY;
+  }
+
+  const radiusPercent = calculateRadius()
+
+  // Off-center Wally within the circle
+  const maxOffset = radiusPercent * 0.5; // 70% of radius (~20%)
+  const offsetX = Math.random() * maxOffset * (Math.random() > 0.5 ? 1 : -1);
+  const offsetY = Math.random() * maxOffset * (Math.random() > 0.5 ? 1 : -1);
+  const newX = wallyX + offsetX;
+  const newY = wallyY + offsetY;
+
+  // Clamp to prevent overflow (10% of radius margin)
+  const minX = radiusPercent * 0.1;
+  const maxX = 100 - minX;
+  const minY = radiusPercent * 0.1;
+  const maxY = 100 - minY;
+  const clampedX = Math.max(minX, Math.min(maxX, newX));
+  const clampedY = Math.max(minY, Math.min(maxY, newY));
+
+  // Create or reuse overlay
+  let overlay = DOM.mainPuzzleContainer.querySelector(".blur-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.className = "blur-overlay";
+    DOM.mainPuzzleContainer.appendChild(overlay);
+  }
+
+  // Set radius and activate
+  const props = {
+    "--hint-x": `${clampedX}%`,
+    "--hint-y": `${clampedY}%`,
+    "--hint-radius": `${radiusPercent}%`,
+  };
+  Object.entries(props).forEach(([key, value]) => {
+    overlay.style.setProperty(key, value);
+  });
+  overlay.classList.add("active");
+
+  // Ensure magnifier shows clear image
+  syncMagnifierBackground(document.getElementById("magnifier"), DOM.mainPuzzle);
+}
+
+export function overlayHintCleanup() {
+  const overlay = DOM.mainPuzzleContainer.querySelector(".blur-overlay");
+  if (overlay) {
+    overlay.classList.add("fadeOut");
+    setTimeout(() => {
+      overlay.classList.remove("active");
+      overlay.remove();
+    }, 300);
+  }
+
+  activeHint = null;
+  syncMagnifierBackground(document.getElementById("magnifier"), DOM.mainPuzzle);
+}
+
+const cleanupState = (() => {
+  let cleanUpArr = [];
+  return {
+    get: () => cleanUpArr,
+    set: (arr) => (cleanUpArr = arr),
+    clear: () => {
+      cleanUpArr.forEach((fn) => fn());
+      cleanUpArr = [];
+    },
+  };
+})();
+
+export function confettiPowerUp() {
+  const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
+  const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
+  const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
+
+  cleanupState.set([
+    confettiBottomLeft,
+    confettiMiddleBottom,
+    confettiBottomRight,
+  ]);
+}
+
+export function confettiCleanup() {
+  cleanupState.clear();
+}
+
+export function screenFlipPowerUp(effect, effectsArr) {
+  if (activeHint && effectsArr.includes("overlayHint")) {
+    let { puzzleIdx, puzzles } = activeHint;
+    overlayHintPowerUp({ puzzleIdx, puzzles }, effectsArr);
+  }
+
+  DOM.mainPuzzle.classList.remove("spin-to-normal");
+  DOM.mainPuzzleContainer.classList.add("flipped");
+  DOM.mainPuzzle.dataset.flipped = "true";
+  void DOM.mainPuzzle.offsetHeight;
+  DOM.mainPuzzle.classList.add("spin-to-upside-down");
+}
+
+export function screenFlipCleanup(effectsArr) {
+  if (activeHint && effectsArr.includes("overlayHint")) {
+    let { puzzleIdx, puzzles } = activeHint;
+    overlayHintPowerUp({ puzzleIdx, puzzles }, effectsArr);
+  }
+
+  DOM.mainPuzzle.classList.remove("spin-to-upside-down");
+  DOM.mainPuzzleContainer.classList.remove("flipped");
+  DOM.mainPuzzle.dataset.flipped = "false";
+  DOM.mainPuzzle.classList.add("spin-to-normal");
+  DOM.mainPuzzle.style.transform = "rotate(0deg)";
+  void DOM.mainPuzzle.offsetHeight;
+}
+
+  // Calculate radius for 40% area
+  function calculateRadius() {
+      const rect = DOM.mainPuzzle.getBoundingClientRect();
+      const area = rect.width * rect.height;
+      const circleArea = 0.4 * area; // 40% of puzzle area
+      const radiusPx = Math.sqrt(circleArea / Math.PI);
+      const radiusPercent = (radiusPx / rect.width) * 100;
+      return radiusPercent
+
+  }
+
+export function flashPowerUp(effect, effectsArr) {
+  const { puzzleIdx, puzzles } = effect;
+  const characters = puzzles[puzzleIdx]?.characters || {};
+
+  const currentPuzzlePath = getPathFromURL(DOM.mainPuzzle.src);
+  if (currentPuzzlePath !== PUZZLES[puzzleIdx]) return;
+
+  const isFlipped = effectsArr.includes("screenFlip");
+
+  // Create flashes for each character except Whitebeard
+  Object.entries(characters).forEach(([charName, { x, y }]) => {
+    if (charName === "whitebeard") return; // Skip Whitebeard
+
+    const flash = document.createElement("div");
+    flash.className = "flash-star";
+    
+    // Apply screenFlip if active
+    const posX = isFlipped ? 100 - x : x;
+    const posY = isFlipped ? 100 - y : y;
+
+    // Position flash (center-aligned)
+    flash.style.left = `calc(${posX}% - 12px)`; // Offset by half width (24px / 2)
+    flash.style.top = `calc(${posY}% - 12px)`; // Offset by half height
+    DOM.mainPuzzleContainer.appendChild(flash);
+  });
+}
+
+export function flashCleanup() {
+  const flashes = DOM.mainPuzzleContainer.querySelectorAll(".flash-star");
+  flashes.forEach((flash) => {
+    flash.classList.remove("fadeOut");
+  });
+}
+
+File: ./public/js/powerups/powerups.js
+import { screenFlipPowerUp, screenFlipCleanup, confettiPowerUp, confettiCleanup, lensBlurPowerUp,
+  lensBlurCleanup, lensGrowPowerUp, lensGrowCleanup, overlayHintPowerUp, overlayHintCleanup, flashPowerUp, flashCleanup } from "./effects.js";
+
+export const effectFunctions = {
+  screenFlip: { apply: screenFlipPowerUp, cleanup: screenFlipCleanup },
+  confetti: { apply: confettiPowerUp, cleanup: confettiCleanup },
+  lensBlur: { apply: lensBlurPowerUp, cleanup: lensBlurCleanup },
+  lensGrow: { apply: lensGrowPowerUp, cleanup: lensGrowCleanup },
+  overlayHint: { apply: overlayHintPowerUp, cleanup: overlayHintCleanup },
+  flashHint: { apply: flashPowerUp, cleanup: flashCleanup },
+};
+
+export function applyPowerUp(effect, playerEffects) {
+  const effectFn = effectFunctions[effect.name]?.apply;
+  if (effectFn) {
+    effectFn(effect, playerEffects); 
+  } else {
+    console.warn(`No apply function for effect: ${effect.name}`);
+  }
+}
+
+export function cleanupPowerUp(effectName, playerEffects) {
+  const cleanupFn = effectFunctions[effectName]?.cleanup;
+  if (cleanupFn) {
+    cleanupFn(playerEffects);
+  } else {
+    console.warn(`No cleanup function for effect: ${effectName}`);
+  }
+}
+
+export const getPlayerEffectsFromStats = (stats, id) => stats[id].activeEffects
+
+File: ./public/js/utils/utils.js
+export function extractImgPath(url) {
+    const pathStart = url.indexOf("/images/");
+    if (pathStart === -1) return null;
+    return url.substring(pathStart);
+}
+
+export function getPathFromURL(url) {
+    const parsedURL = new URL(url);
+    return parsedURL.pathname;
+}
+export function positionInPercent(position, rect) {
+    const { x, y } = position;
+
+    const xPercent = (x / rect.width) * 100;
+    const yPercent = (y / rect.height) * 100;
+
+    return { xPercent, yPercent };
+}
+
+export function getCharFromImgPath(imagePath) {
+    const filename = imagePath.split("/").pop();
+    const character = filename.split(".")[0].split("-")[0];
+    return character;
+}
+
+export const getOpponentId = (stats, player) =>
+    Object.keys(stats).filter((id) => id !== player)[0];
+
+export function checkGameResult(game) {
+    const { playerStats } = game;
+    const playerScore = playerStats[PLAYER_ID].wallysFound;
+    const opponentsScore =
+        playerStats[getOpponentId(playerStats, PLAYER_ID)].wallysFound;
+    let playerStatus = "";
+
+    if (playerScore > opponentsScore) {
+        playerStatus = "winner";
+    } else if (opponentsScore > playerScore) {
+        playerStatus = "loser";
+    } else {
+        playerStatus = "draw";
+    }
+
+    return playerStatus;
+}
+
+File: ./public/js/main.js
+import { PLAYER_ID } from "./constants.js";
+import { checkCharacter } from "./game/api.js";
+import { initializeHintObserver } from "./powerups/effects.js";
+import { showLobby, setupPuzzle, setupThumbnailListeners } from "./ui/ui.js";
+import { initWebSocket } from "./websockets/websockets.js";
+
+export const DOM = {
+  lobbyView: document.querySelector("#lobby-view"), // lobby
+  gameView: document.querySelector("#game-view"), // gameboard
+  mainPuzzle: document.querySelector("#currentPuzzle"), // inPlayPuzzle
+  mainPuzzleContainer: document.getElementById("puzzle-container"), // inPlayPuzzleContainer
+  allPuzzles: document.querySelectorAll(".puzzle"), // puzzleThumbnails
+  allPuzzleContainers: document.querySelectorAll(".puzzleSelect-container"), // puzzleThumbnailsContainer
+  headshots: document.querySelectorAll(".headshot"), // auxCharHeadshots
+  allHeadshotContainers: document.querySelectorAll(".headshot-container"), // auxCharHeadshotContainers
+  timerDisplay: document.querySelector("#timer"),
+  playerScore: document.querySelector("#playerScore"),
+  opponentScore: document.querySelector("#opponentScore"),
+  playerEffects: document.querySelector("#playerEffects"),
+  opponentEffects: document.querySelector("#opponentEffects")
+};
+
+initializeHintObserver()
+initWebSocket(PLAYER_ID);
+setupPuzzle((index, x, y) => checkCharacter(index, x, y, PLAYER_ID));
+setupThumbnailListeners();
+showLobby();
+
+
+File: ./public/js/websockets/handlers.js
+import { PUZZLES, PLAYER_ID } from "../constants.js";
+import { startGameTimer, setStartTime, setGameOver, } from "../game/game.js";
+import { applyPowerUp, cleanupPowerUp } from "../powerups/powerups.js";
+import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, updateActiveEffectsUI, showGameOverScreen, } from "../ui/ui.js";
+import { checkGameResult, getOpponentId } from "../utils/utils.js";
+
+export const handlers = {
+  paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
+    setStartTime(startTime);
+    switchPuzzle(PUZZLES, foundArr, puzzleIdx);
+    updateScores(playerStats, PLAYER_ID);
+    showGame();
+    startGameTimer();
+  },
+
+  updateFound: ({ foundArr, playerStats, playerWhoFoundId, puzzleIdx }) => {
+    updateScores(playerStats, PLAYER_ID);
+    updateThumbnailUI(playerWhoFoundId, puzzleIdx);
+    switchPuzzle(PUZZLES, foundArr, puzzleIdx);
+  },
+
+
+  gameOver: ({game, reason}) => {
+    setGameOver();
+    showGameOverScreen(checkGameResult(game, reason))
+  },
+
+  opponentQuit: () => {
+    showLobby();
+  },
+
+  applyEffect: ({ target, effect, playerStats }) => {
+    const playerEffects = playerStats[target].activeEffects.map(e => e.name)
+
+    if (target === PLAYER_ID) applyPowerUp(effect, playerEffects);
+    
+    updateActiveEffectsUI(playerStats, target, effect);
+  },
+
+  cleanUpEffect: ({ playerStats, target, effectsArr}) => {
+      const playerEffects = playerStats[target].activeEffects.map(e => e.name)
+
+    if (effectsArr.length > 0 && target === PLAYER_ID) {
+      effectsArr.forEach( name => cleanupPowerUp(name, playerEffects))
+    }
+
+    updateActiveEffectsUI(playerStats, target);
+  },
+
+  powerUpFound: ({ character, puzzleIdx }) => updateFoundCharacterUI(puzzleIdx, character),
+  
+};
+
+
+File: ./public/js/websockets/websockets.js
+import { handlers } from "./handlers.js";
+
+let wsInstance = null;
+
+export function initWebSocket(playerId) {
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsHost = window.location.host;
+  const wsUrl =  `${protocol}//${wsHost}/ws`;
+    console.log("Attempting websocket connection to: ", wsUrl)
+  wsInstance = new WebSocket(wsUrl);
+
+  wsInstance.onopen = () => {
+    console.log("Connected to WebSocket Server");
+    try {
+      wsSend({ type: "join", playerId });
+    } catch (err) {
+      console.error("Failed to send join message", err);
+    }
+  };
+
+  wsInstance.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    const handler = handlers[data.type];
+    if (handler) handler(data);
+    else console.warn(`Unhandled message type: ${data.type}`);
+  };
+
+  wsInstance.onerror = (e) => {
+    console.error("WebSocket error:", e);
+    alert("Connection error. Attempting to reconnect...");
+    setTimeout(() => initWebSocket(playerId), 5000); 
+  };
+  wsInstance.onclose = () => {
+    console.log("Disconnected from WebSocket server");
+    alert("Disconnected from server. Attempting to reconnect...");
+    setTimeout(() => initWebSocket(playerId), 5000);
+  };
+}
+
+export function setWebSocket(ws) {
+  wsInstance = ws;
+}
+
+export function wsSend(data) {
+  if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
+    console.error("WebSocket not available");
+    return;
+  }
+
+  wsInstance.send(JSON.stringify(data));
+}
+
+File: ./public/js/ui/animations.js
+import { DOM } from "../main.js";
+
+export const animationState = (() => {
+    let isAnimatingFill = false;
+    return {
+        set: (bool) => isAnimatingFill = bool,
+        get: () => isAnimatingFill,
+    }
+})()
+
+export function playerFoundWallyFeedback(idx) {
+
+  const bg = document.createElement("div");
+  bg.className = "wally-found-bg";
+
+  const circle = document.createElement("div");
+  circle.className = "wally-white-circle";
+
+  const headshot = document.createElement("img");
+  headshot.className = "wally-headshot";
+  headshot.src = "/images/wally-head.png";
+  headshot.alt = "Wally Found";
+
+  DOM.gameView.append(bg, circle, headshot);
+
+const gameRect = DOM.gameView.getBoundingClientRect();
+const magnifier = document.querySelector("#magnifier");
+const magRect = magnifier.getBoundingClientRect();
+const animationWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--lens-size")); 
+const offset = (magRect.width - animationWidth) / 2; 
+const startX = magRect.left - gameRect.left + offset;
+const startY = magRect.top - gameRect.top + offset;
+
+const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
+const thumbCenterX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
+const thumbCenterY = thumbRect.top + thumbRect.height / 2 - gameRect.top;
+const endX = thumbCenterX - animationWidth / 2;
+const endY = thumbCenterY - animationWidth / 2;
+
+document.documentElement.style.setProperty("--wally-start-x", `${startX - 2}px`);
+document.documentElement.style.setProperty("--wally-start-y", `${startY - 2}px`);
+document.documentElement.style.setProperty("--wally-end-x", `${endX}px`);
+document.documentElement.style.setProperty("--wally-end-y", `${endY}px`);
+
+  animationState.set(true);
+  bg.classList.add("fill");
+  circle.classList.add("fill");
+  headshot.classList.add("fill");
+
+  DOM.gameView.style.position = "relative";
+  DOM.gameView.style.zIndex = `1000`; // Above all prior thumbnails
+
+  setTimeout(() => {
+    bg.classList.remove("fill");
+    circle.classList.remove("fill");
+    headshot.classList.remove("fill");
+
+    animationState.set(false);
+
+    bg.classList.add("traverse");
+    circle.classList.add("traverse");
+    headshot.classList.add("traverse");
+  }, 1000);
+
+  setTimeout(() => {
+    DOM.allPuzzleContainers[idx].style.position = "relative";
+
+    DOM.allPuzzleContainers[idx].appendChild(bg);
+    DOM.allPuzzleContainers[idx].appendChild(headshot);
+    DOM.allPuzzleContainers[idx].appendChild(circle);
+
+    DOM.gameView.style.zIndex = "";
+
+    applySpreadAnimation(DOM.gameView, bg, circle, headshot, thumbRect);
+  }, 2000);
+}
+
+export function opponentFoundWallyFeedback(idx) {
+    
+  // Create elements
+  const bg = document.createElement("div");
+  bg.classList.add("wally-found-bg");
+  bg.classList.add("wally-found-bg-opponent");
+
+  const circle = document.createElement("div");
+  circle.classList.add("wally-white-circle");
+
+  const headshot = document.createElement("img");
+  headshot.classList.add("wally-headshot");
+  headshot.src = "/images/wally-head.png";
+
+  // Position them (start centered)
+
+  const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
+  const startX = thumbRect.width / 2;
+  const startY = thumbRect.height / 2;
+
+  document.documentElement.style.setProperty("--wally-start-x", `${startX}px`);
+  document.documentElement.style.setProperty("--wally-start-y", `${startY}px`);
+
+  DOM.allPuzzleContainers[idx].append(bg, circle, headshot);
+
+  applySpreadAnimation(DOM.gameView, bg, circle, headshot, thumbRect);
+}
+
+function applySpreadAnimation(container, bg, circle, headshot, rect) {
+  container.style.setProperty("--thumb-width", `${rect.width}px`);
+  container.style.setProperty("--thumb-height", `${rect.height}px`);
+  bg.classList.add("spread");
+  circle.classList.add("spread");
+  headshot.classList.add("spread");
+}
+
+export function setupConfetti(origin, angle) {
+  const canvas = document.createElement("canvas");
+  canvas.width = DOM.mainPuzzleContainer.offsetWidth;
+  canvas.height = DOM.mainPuzzleContainer.offsetHeight;
+  canvas.style.position = "absolute";
+  canvas.style.top = "0";
+  canvas.style.left = "0";
+  canvas.style.zIndex = "1";
+  canvas.style.pointerEvents = "none";
+  DOM.mainPuzzleContainer.appendChild(canvas);
+
+  const confettiInstance = confetti.create(canvas, { resize: true });
+
+  const fireConfetti = () => {
+    confettiInstance({
+      particleCount: 250,
+      spread: 50,
+      angle: angle,
+      origin: origin,
+      colors: ["#000000", "#FFC107", "#FFFFFF"],
+      scalar: 0.9,
+    });
+  };
+
+  const confettiInterval = setInterval(fireConfetti, 1000);
+
+  return () => {
+    clearInterval(confettiInterval);
+    setTimeout(() => {
+      confettiInstance.reset();
+    }, 3000);
+  };
+}
+
+export function showMissFeedback() {
+  DOM.mainPuzzleContainer.classList.add("shake");
+  setTimeout(() => {
+    DOM.mainPuzzleContainer.classList.remove("shake");
+  }, 500);
+}
+
+export function fadePuzzle(newSrc) {
+  DOM.mainPuzzle.style.opacity = "0";
+
+  const magnifier = document.querySelector(".lens-content");
+  magnifier.classList.add("fade-out");
+
+  setTimeout(() => {
+    DOM.mainPuzzle.src = newSrc;
+
+    DOM.mainPuzzle.onload = () => {
+      DOM.mainPuzzle.style.opacity = "1";
+      magnifier.classList.remove("fade-out");
+      DOM.mainPuzzle.onload = null;
+    };
+  }, 300);
+}
+
+// Status-bar animations //
+
+class effectNameAnimationQueue {
+    #animationQueues = new Map();
+    #isAnimating = new Map();
+
+    getQueue(container) {
+        if (!container || !(container instanceof HTMLElement)) {
+            throw new Error("Invalid container: must be an HTMLElement");
+        }
+        if (!this.#animationQueues.has(container)) {
+            this.#animationQueues.set(container, []);
+            this.#isAnimating.set(container, false);
+        }
+
+        return this.#animationQueues.get(container);
+    }
+
+    clearQueue(container) {
+        this.#animationQueues.set(container, [])
+    }
+
+    processQueue(container) {
+        if (!container || !(container instanceof HTMLElement)) {
+            throw new Error("Invalid container: must be an HTMLElement");
+        }
+        const queue = this.getQueue(container);
+        if (queue.length === 0 || this.#isAnimating.get(container)) {
+            return;
+        }
+
+        this.#isAnimating.set(container, true);
+        const { effect, isPlayer, activeEffects } = queue.shift();
+        const { name, char } = effect;
+        flashEffectName( container, activeEffects, name, isPlayer, char, () => {
+                this.#isAnimating.set(container, false);
+                this.processQueue(container);
+            },
+        );
+    }
+}
+
+export const animationQueue = new effectNameAnimationQueue();
+
+function formatEffectName(name) {
+    return name
+        .replace(/([A-Z])/g, " $1") // Add space before uppercase letters
+        .trim() // Remove leading space if any
+        .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
+}
+
+// Helper to flash the effect name with per-letter animation
+function flashEffectName( container, activeEffects, effectName, isPlayer, character, onComplete) {
+    const flash = document.createElement("div");
+    flash.className = `effect-flash ${isPlayer ? "player" : ""} ${character || ""}`; // Add character class (e.g., odlaw)
+    container.style.position = "relative";
+    container.appendChild(flash);
+
+    // Format the effect name (e.g., lensBlur → Lens Blur)
+    const formattedName = formatEffectName(effectName);
+
+    // Split formatted name into letters
+    const letters = formattedName.split("");
+    letters.forEach((letter, index) => {
+        const span = document.createElement("span");
+        span.className = "effect-letter";
+        if (letter === " ") {
+            span.classList.add("space"); // Mark space for CSS
+        }
+        span.textContent = letter;
+        span.style.animationDelay = `${index * 0.1}s`; // 100ms delay for initial bounce
+        flash.appendChild(span);
+        return span;
+    });
+
+    // Calculate timing based on number of letters
+    const bounceTime = 1200 + (letters.length - 1) * 100; // 1200ms base + 100ms per extra letter
+
+    // Slide and fade the entire word after bounce + pause (0.5s)
+    setTimeout(() => {
+        flash.classList.add("slide-out");
+    }, bounceTime + 500); // Bounce + 500ms pause
+
+    // Clean up and show icons
+    setTimeout(() => {
+        flash.remove();
+        container.style.position = "";
+        container.innerHTML = "";
+        activeEffects.forEach((e) => {
+            container.appendChild(createEffectIcon(e));
+        });
+        if (activeEffects.length > 0) {
+            startBadgeTimer(); // Start animation after flash
+        }
+        if (onComplete) onComplete();
+    }, bounceTime + 800); // Bounce + 500ms pause + 300ms slide
+}
+
+
+// Track badge timers globally
+let timerInterval = null;
+
+export function startBadgeTimer() {
+  if (timerInterval) return; 
+  timerInterval = setInterval(() => {
+    [DOM.playerEffects, DOM.opponentEffects].forEach(container => {
+      const badges = container.querySelectorAll(".effect-badge");
+      badges.forEach(badge => {
+        const startTime = parseInt(badge.dataset.startTime, 10);
+        const duration = parseInt(badge.dataset.duration, 10);
+
+        const remainingMs = Math.max(0, duration - (Date.now() - startTime));
+        const circle = badge.querySelector(".badge-border");
+        const circumference = 2 * Math.PI * 8.5; 
+        const progress = remainingMs / duration; 
+        circle.style.strokeDashoffset = circumference * (1 - progress);
+      });
+    });
+  }, 100); 
+}
+
+export function stopBadgeTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+export function createEffectIcon(effect) {
+    console.log(effect)
+    const {name: effectName, duration, startTime, type} = effect
+  if (isNaN(startTime) || isNaN(duration)) {
+    console.error(`Invalid timer data in createEffectIcon for ${effectName}:`, { startTime, duration });
+    startTime = Date.now();
+    duration = 3000;
+  }
+
+  const badge = document.createElement("div");
+  badge.className = `effect-badge ${type.toLowerCase()}`;
+  badge.dataset.effectName = effectName;
+  badge.dataset.startTime = startTime;
+  badge.dataset.duration = duration;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "18");
+  svg.setAttribute("height", "18");
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", "9");
+  circle.setAttribute("cy", "9");
+  circle.setAttribute("r", "8.5");
+  circle.classList.add("badge-border");
+  circle.setAttribute("fill", "none");
+  const circumference = 2 * Math.PI * 8.5;
+  circle.style.strokeDasharray = `${circumference}`;
+  circle.style.strokeDashoffset = "0";
+  svg.appendChild(circle);
+  badge.appendChild(svg);
+
+  const letter = document.createElement("span");
+  letter.className = "badge-letter";
+  letter.textContent = effectName[0].toUpperCase();
+  badge.appendChild(letter);
+
+  return badge;
+}
+
+
+
+
+File: ./public/js/ui/ui.js
+import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback, animationQueue, createEffectIcon, stopBadgeTimer, startBadgeTimer, } from "./animations.js";
+import { DOM } from "../main.js";
+import { setupMagnifier } from "./magnifier.js";
+import { extractImgPath, getCharFromImgPath, getOpponentId, getPathFromURL, positionInPercent, } from "../utils/utils.js";
+import { PLAYER_ID, PUZZLES } from "../constants.js";
+import { getPlayerEffectsFromStats } from "../powerups/powerups.js";
+
+export function showGame() {
+    DOM.lobbyView.style.display = "none";
+    DOM.gameView.style.display = "grid";
+}
+
+export function showLobby() {
+    DOM.lobbyView.style.display = "block";
+    DOM.gameView.style.display = "none";
+    resetThumbnailsUI();
+    resetFoundCharactersUI();
+    animationQueue.clearQueue(DOM.playerEffects)
+    animationQueue.clearQueue(DOM.opponentEffects)
+}
+
+export function setupThumbnailListeners() {
+    DOM.allPuzzles.forEach((thumb) => {
+        thumb.addEventListener("click", () => {
+            fadePuzzle(thumb.src);
+        });
+    });
+}
+
+function resetThumbnailsUI() {
+    DOM.allPuzzleContainers.forEach((c) => {
+        c.style.opacity = 1;
+        c.style.pointerEvents = "auto";
+        const extras = c.querySelectorAll(
+            ".wally-found-bg, .wally-headshot, .wally-white-circle",
+        );
+        extras.forEach((el) => el.remove());
+    });
+}
+
+export function updateThumbnailUI(id, idx) {
+    DOM.allPuzzleContainers[idx].style.pointerEvents = "none";
+    id === PLAYER_ID
+        ? playerFoundWallyFeedback(idx)
+        : opponentFoundWallyFeedback(idx);
+}
+
+export function resetFoundCharactersUI() {
+    DOM.headshots.forEach((img) => {
+        const overlay = img.nextElementSibling;
+        img.style.opacity = "1";
+        overlay.style.display = "none";
+    });
+}
+
+export function updateFoundCharacterUI(idx, character) {
+    const container = DOM.allHeadshotContainers[idx];
+    if (!container) return;
+
+    const headshots = container.querySelectorAll(".headshot");
+    headshots.forEach((img) => {
+        const char = getCharFromImgPath(img.src);
+        if (char === character) {
+            const overlay = img.nextElementSibling;
+            img.style.opacity = 0.5;
+            if (overlay) overlay.style.display = "block";
+        }
+    });
+}
+
+export const updateTimerDisplay = (str) => (DOM.timerDisplay.textContent = str);
+
+export function updateScores(playerStats, playerId) {
+    const opponentId = getOpponentId(playerStats, playerId);
+    const { wallysFound: playersWallys } = playerStats[playerId];
+    const { wallysFound: opponentsWallys } = playerStats[opponentId];
+
+    DOM.playerScore.innerText = playersWallys;
+    DOM.opponentScore.innerText = opponentsWallys;
+}
+
+export function switchPuzzle(puzzles, foundArr, idx) {
+    const mainPuzzleSrc = extractImgPath(DOM.mainPuzzle.src);
+    const currentPuzzleIdx = puzzles.indexOf(mainPuzzleSrc);
+    if (currentPuzzleIdx !== idx) return;
+
+    const unsolvedIdx = foundArr.indexOf(false);
+
+    if (unsolvedIdx !== -1) fadePuzzle(puzzles[unsolvedIdx]);
+
+}
+
+export async function targetingCoordinates(position, checkCharacter, rect) {
+    const { xPercent, yPercent } = positionInPercent(position, rect);
+    const pathname = getPathFromURL(DOM.mainPuzzle.src);
+
+    const index = PUZZLES.indexOf(pathname);
+    return await checkCharacter(index, xPercent, yPercent);
+}
+
+const guessProcessingState = (() => {
+    let isProcessingGuess = false;
+    return {
+        set: (bool) => (isProcessingGuess = bool),
+        get: () => isProcessingGuess,
+    };
+})();
+
+export function setupPuzzle(checkCharacter) {
+    DOM.mainPuzzle.addEventListener("click", async (e) => {
+        if (guessProcessingState.get()) return;
+        guessProcessingState.set(true);
+
+        const rect = DOM.mainPuzzle.getBoundingClientRect();
+        const isFlipped = DOM.mainPuzzle.dataset.flipped === "true";
+
+        const x = isFlipped ? -(e.clientX - rect.right) : e.clientX - rect.left;
+        const y = isFlipped ? -(e.clientY - rect.bottom) : e.clientY - rect.top;
+
+        try {
+            const charFound = await targetingCoordinates({ x, y }, checkCharacter, rect);
+            if (charFound === false) showMissFeedback();
+        } catch (err) {
+            console.error("Error processing guess: ", err);
+        } finally {
+            guessProcessingState.set(false);
+        }
+    });
+
+    setupMagnifier();
+}
+
+export function updateActiveEffectsUI(playerStats, player, effect = null) {
+  const activeEffects = getPlayerEffectsFromStats(playerStats, player);
+  const opponentId = getOpponentId(playerStats, player)
+  const opponentsActiveEffects = getPlayerEffectsFromStats(playerStats, opponentId)
+  const isPlayer = player === PLAYER_ID;
+  const container = isPlayer ? DOM.playerEffects : DOM.opponentEffects;
+
+  if (effect) {
+    if (effect.isExtension) {
+      container.innerHTML = "";
+      activeEffects.forEach(e => {
+        container.appendChild(createEffectIcon(e));
+      });
+      startBadgeTimer();
+    } else {
+      const queue = animationQueue.getQueue(container);
+      queue.push({ effect, activeEffects, isPlayer });
+      animationQueue.processQueue(container);
+    }
+  } else {
+    container.innerHTML = "";
+    activeEffects.forEach((e) => {
+      container.appendChild(createEffectIcon(e));
+    });
+    if (activeEffects.length > 0 || opponentsActiveEffects.length > 0) {
+      startBadgeTimer();
+    } else {
+      stopBadgeTimer();
+    }
+  }
+}
+
+export function showGameOverScreen(result, reason) {
+const gameOver = document.getElementById("game-over");
+  const endGameStatus = document.querySelector(".endGameStatus");
+  gameOver.classList.remove("hidden");
+    endGameStatus.innerHTML = result.toUpperCase().split('').map((l, i) => { 
+        return i % 2 === 0 ? `<span class="${result}">${l}</span>` : `<span class="${result}">${l}</span>`
+    }).join("", ",")
+
+const home = document.querySelector(".home")
+    home.addEventListener("click", () => {
+        window.location.href = "/"
+    })
+}
+
+File: ./public/js/ui/magnifier.js
+import { DOM } from "../main.js";
+import { magnifierConfig } from "../constants.js";
+import { animationState } from "./animations.js";
+
+function createMagnifier() {
+  const magnifier = document.createElement("div");
+  magnifier.id = "magnifier";
+
+  const lens = document.createElement("div");
+  lens.className = "lens-content";
+  magnifier.appendChild(lens);
+
+  const glassEffect = document.createElement("div");
+  glassEffect.className = "glass-effect";
+  magnifier.appendChild(glassEffect);
+
+  DOM.mainPuzzleContainer.appendChild(magnifier);
+
+  return magnifier;
+}
+
+export function moveMagnifierWithMouse(magnifier, image, e) {
+  if (animationState.get()) return;
+
+  const rect = image.getBoundingClientRect();
+  const { zoomLevel } = magnifierConfig;
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const isFlipped = image.dataset.flipped === "true"; 
+
+  const lensSize = magnifier.offsetWidth;
+  magnifier.style.left = `${x}px`;
+  magnifier.style.top = `${y}px`; 
+
+  const { bgX, bgY } = getLensCoordinates( isFlipped, rect, zoomLevel, lensSize, x, y)
+  setLensBgImage(rect, zoomLevel, image, { bgX, bgY });
+}
+
+export function syncMagnifierBackground(magnifier, image = DOM.mainPuzzle) {
+  if (!magnifier || !image) return;
+
+  const { left, top } = magnifier.style;
+  const lensSize = magnifier.offsetWidth;
+  const rect = image.getBoundingClientRect();
+  const { zoomLevel } = magnifierConfig;
+  const currentX = parseFloat(left);
+  const currentY = parseFloat(top);
+  const isFlipped = image.dataset.flipped === "true";
+
+  const { bgX, bgY } = getLensCoordinates( isFlipped, rect, zoomLevel, lensSize, currentX, currentY,);
+  setLensBgImage(rect, zoomLevel, image, { bgX, bgY });
+}
+
+function setupMagnifierEvents(magnifier, image) {
+  image.addEventListener("mouseover", () => {
+    magnifier.style.display = "flex";
+  });
+  image.addEventListener("mousemove", (e) => {
+    moveMagnifierWithMouse(magnifier, image, e);
+  });
+  image.addEventListener("mousedown", () => {
+    magnifier.classList.add("targeting");
+  });
+  image.addEventListener("mouseup", () => {
+    magnifier.classList.remove("targeting");
+  });
+  image.addEventListener("mouseout", () => {
+    magnifier.style.display = "none";
+    magnifier.classList.remove("targeting");
+  });
+  image.addEventListener("load", () => {
+    syncMagnifierBackground(magnifier, image);
+  });
+}
+
+export function setupMagnifier(image = DOM.mainPuzzle) {
+  const magnifier = createMagnifier();
+  setupMagnifierEvents(magnifier, image);
+}
+
+function setLensBgImage({ width, height },  zoom, img, { bgX, bgY }) {
+  const lens = magnifier.querySelector(".lens-content").style;
+
+  lens.backgroundImage = `url(${img.src})`;
+  lens.backgroundSize = `${width * zoom}px ${height * zoom}px`;
+  lens.backgroundPosition = `${bgX}px ${bgY}px`;
+}
+
+function getLensCoordinates(isFlipped, { width, height }, zoom, size, x, y) {
+  const bgX = isFlipped
+    ? -((width - x) * zoom - size / 2)
+    : -(x * zoom - size / 2);
+  const bgY = isFlipped
+    ? -((height - y) * zoom - size / 2)
+    : -(y * zoom - size / 2);
+  return { bgX, bgY };
+}
+
+File: ./public/js/game/api.js
+export async function checkCharacter(puzzleIdx, x, y, playerId) {
+  try {
+    const res = await fetch("/guess", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ puzzleIdx, x, y, playerId }),
+    });
+    if (!res.ok) {
+      const errorData = await res.json(); // Get server error
+      throw new Error(`Server error: ${res.status} - ${errorData.error}`);
+    }
+    const { charFound } = await res.json();
+    return charFound;
+  } catch (err) {
+    console.error("Fetch error: ", err);
+    alert("Network issue - please try again");
+  }
+}
+
+File: ./public/js/game/game.js
+import { GAME_DURATION } from "../constants.js";
+import { updateTimerDisplay } from "../ui/ui.js";
+import { wsSend } from "../websockets/websockets.js";
+
+export let isGameOver = false;
+let startTime;
+export const setGameOver = () => (isGameOver = true);
+export const setStartTime = (time) => (startTime = time);
+
+export function startGameTimer() {
+    const totalTime = GAME_DURATION;
+
+    const timerInterval = setInterval(() => {
+        if (isGameOver) {
+            clearInterval(timerInterval);
+            return;
+        }
+
+        let timeLeft = totalTime - (Date.now() - startTime);
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            setGameOver();
+            updateTimerDisplay("Time's Up!");
+            wsSend({ type: "gameTimeout", playerId: PLAYER_ID });
+            return;
+        }
+
+        const minutes = Math.floor(timeLeft / 60000);
+        const seconds = Math.floor((timeLeft % 60000) / 1000)
+            .toString()
+            .padStart(2, "00");
+
+        updateTimerDisplay(`${minutes}:${seconds}`);
+    }, 1000);
+}
+
+
+File: ./public/js/constants.js
+export const PUZZLES = window.PUZZLES || [
+    "/images/wallyspace.jpg",
+    "/images/wallysnow.jpg",
+    "/images/wallyrace.jpg",
+    "/images/wallybeach.jpg",
+    "/images/wallyblue.jpg",
+];
+
+export const PLAYER_ID = window.PLAYER_ID || "default-player-id";
+export const GAME_DURATION = window.GAME_DURATION || 300000;
+
+export const magnifierConfig = {
+  zoomLevel: 2,
+};
+
+File: ./public/css/home.css
+:root {
+  /* Borders */
+  --border: 2px solid black;
+  --border-image: url("/images/box.png") 50 50 50 50 / 20px 20px 20px 20px / 5px
+    5px 5px 5px repeat repeat;
+
+  /* Colors */
+  --white: #fff;
+
+  /* Fonts */
+  --font-title: "Bubblegum Sans", sans-serif;
+  --font-timer: "Comic Neue", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  background-image: url("/images/background.png");
+  background-size: 125% 125%;
+  background-position: top center;
+}
+
+main {
+  margin-block: 4rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  padding-inline: 1rem;
+  border: var(--border);
+  border-image: var(--border-image);
+  max-width: 65%;
+  position: relative;
+}
+
+
+h1 {
+    margin-block: 2rem 4rem;
+  font-family: var(--font-title);
+}
+
+
+.blurb-one {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: 50% 50%;
+  margin-bottom: 3rem;
+}
+
+.blurb-one > h2 {
+  grid-row: 1/2;
+  grid-column: 1 / 2;
+  text-align: center;
+}
+
+h2 {
+  font-family: var(--font-title);
+}
+
+p {
+  font-family: var(--font-timer);
+}
+
+.blurb-one > p {
+  grid-row: 2/3;
+  grid-column: 1 / 2;
+  text-align: center;
+}
+
+.gameView-image {
+  width: 100%;
+  grid-row: 1/3;
+  grid-column: 2/3;
+}
+
+#home-h1 {
+  text-align: center;
+  justify-content: center;
+}
+
+.blurb-two {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 6rem;
+}
+
+.blurb-two > h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.blurb-two > p {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.blurb-two > div {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.blurb-two > div img {
+  width: 100%;
+  display: block;
+}
+
+.blurb-two > div > img:nth-child(1) {
+    transform: rotate(20deg) translateY(25%) scale(110%);
+    position: relative;
+    z-index: 1;
+}
+
+.blurb-two > div > img:nth-child(2) {
+    transform: translateY(20%) scale(110%);
+}
+.blurb-two > div > img:nth-child(3) {
+    transform: rotate(-20deg) translateY(25%) scale(110%);
+    position: relative;
+    z-index: 1;
+}
+
+.effect-image {
+  padding: 0.5rem;
+  background: var(--white);
+  border: var(--border);
+  border-image: var(--border-image);
+}
+
+
+.btn-container {
+  position: fixed;
+  top: -1%;
+  left: 12%;
+  width: 17%;
+  transform: rotate(-40deg);
+}
+
+#start-btn {
+  border: none;
+  padding: 2rem;
+  font-size: 1.5rem;
+  position: absolute;
+  background: transparent;
+  top: 41%;
+  left: 17%;
+  transform: rotate(-5deg);
+  font-family: var(--font-title);
+}
+
+#start-btn:hover {
+    cursor: pointer;
+}
+
+#wallySign {
+  width: 100%;
+  display: block; 
+  object-fit: cover;
+}
+
+.headshot {
+    width: 1.5rem;
+}
+
+File: ./public/css/styles.css
+/* ==========================================================================
+   Resets
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url("/images/background.png");
+  background-size: 200% 200%;
+  background-position: top center;
+}
+
+/* ==========================================================================
+   Variables
+   ========================================================================== */
+
+:root {
+  /* Sizes */
+  --puzzle-height: 500px;
+  --number-of-puzzles: 5;
+  --number-of-headshots: 3;
+  --puzzle-select-container-gap: 1rem;
+  --lens-size: 140px;
+
+  /* Borders */
+  --border: 2px solid black;
+  --border-image: url("/images/box.png") 50 50 50 50 / 20px 20px 20px 20px / 5px
+    5px 5px 5px repeat repeat;
+
+  /* Colors */
+  --white: #fff;
+  --black: #000;
+  --gray-dark: #1a1a1a;
+  --red: #ff0000;
+  --blue: #87ceeb;
+  --yellow: #ffc107;
+  --black: #000000;
+
+  /* Fonts */
+  --font-title: "Bubblegum Sans", sans-serif;
+  --font-timer: "Comic Neue", sans-serif;
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
+#game-view {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: auto 1fr;
+  background: var(--white);
+  padding: 1rem;
+  border: var(--border);
+  border-image: var(--border-image);
+}
+
+#status-bar {
+  position: relative;
+  grid-row: 1;
+  grid-column: 1 / 3;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  border: var(--border);
+  border-image: var(--border-image);
+  gap: 5rem;
+}
+
+#puzzle-container {
+  position: relative;
+  display: flex;
+  grid-row: 2;
+  grid-column: 1 / 2;
+  margin-right: 1rem;
+}
+
+#puzzle-selection {
+  grid-row: 2;
+  grid-column: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--puzzle-select-container-gap);
+  height: calc(
+    var(--puzzle-height) -
+      (var(--puzzle-select-container-gap) * (var(--number-of-puzzles) - 1))
+  );
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+
+h1 {
+  font-family: var(--font-title);
+  font-size: 2rem;
+}
+
+#timer-wrapper {
+  width: 10%;
+  aspect-ratio: 1 / 1;
+  background: url("/images/circle.png") no-repeat center;
+  background-size: cover;
+  background-color: var(--white);
+  clip-path: circle(35% at 50% 53%);
+  overflow: hidden;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#timer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 500px);
+  aspect-ratio: 1 / 1;
+  font-family: var(--font-timer);
+  font-size: 1.15rem;
+  background: var(--white);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
+
+#playerStatus,
+#opponentStatus {
+  background: var(--white);
+  flex: 1;
+  padding-block: 0.25rem;
+  display: flex;
+  flex-direction: row;
+}
+
+.effectContainers {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  margin-inline: 1rem;
+}
+
+#playerScore {
+  color: var(--red);
+}
+
+#opponentScore {
+  color: var(--blue);
+}
+
+#currentPuzzle {
+  height: var(--puzzle-height);
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  border: var(--border);
+  border-image: var(--border-image);
+  transform: rotate(0deg);
+  overflow: hidden;
+  transition:
+    transform 0.2s ease-in-out,
+    opacity 0.3s ease-in-out;
+}
+
+#currentPuzzle:hover {
+  cursor: none;
+}
+
+.puzzleSelect-container {
+  display: flex;
+  position: relative;
+  z-index: 0;
+  padding: 0.1rem;
+  flex-direction: row;
+  border: var(--border);
+  border-image: var(--border-image);
+  height: calc(100% / var(--number-of-puzzles));
+}
+
+.puzzle {
+  width: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.headshot-container {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.25rem;
+  justify-content: space-evenly;
+  height: 100%;
+}
+
+.headshot-wrapper {
+  position: relative;
+  height: calc(100% / var(--number-of-headshots));
+  aspect-ratio: 1 / 1;
+}
+
+.headshot {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+#magnifier {
+  position: absolute;
+  width: var(--lens-size);
+  height: var(--lens-size);
+  border-radius: 50%;
+  border: 8px solid var(--black);
+  background-repeat: no-repeat;
+  pointer-events: none;
+  display: none;
+  z-index: 1;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  transition:
+    height 0.3s ease-in-out,
+    width 0.3s ease-in-out;
+}
+
+.lens-content {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-repeat: no-repeat;
+  border-radius: 50%;
+  filter: blur(0px);
+  transition:
+    filter 1s ease-in,
+    opacity 0.3s ease;
+}
+
+#magnifier .glass-effect {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.3),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+#magnifier::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 30px;
+  background: linear-gradient(to right, var(--gray-dark), var(--black));
+  border-radius: 5px;
+  bottom: -20px;
+  right: -10px;
+  transform: rotate(135deg);
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   States
+   ========================================================================== */
+
+#puzzle-container.flipped #currentPuzzle {
+  transform: rotate(180deg);
+}
+#puzzle-container:not(.flipped) #currentPuzzle {
+  transform: rotate(0deg);
+}
+#puzzle-container.flipped .lens-content {
+  transform: rotate(180deg);
+}
+#puzzle-container:not(.flipped) .lens-content {
+  transform: rotate(0deg);
+}
+
+#magnifier.targeting .lens-content::before {
+  width: 30px;
+  height: 2px;
+  border-radius: 0;
+  background: var(--black);
+}
+
+#magnifier.targeting .lens-content::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 30px;
+  background: var(--black);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+.wally-found-bg,
+.wally-white-circle,
+.wally-headshot {
+  left: var(--wally-start-x);
+  top: var(--wally-start-y);
+}
+
+.lens-content::before {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--black);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#magnifier.targeting .lens-content::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 25px;
+  background: var(--black);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes spinToUpsideDown {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+@keyframes spinToNormal {
+  0% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+#currentPuzzle.spin-to-upside-down {
+  animation: spinToUpsideDown 1s ease-in-out forwards;
+}
+
+#currentPuzzle.spin-to-normal {
+  animation: spinToNormal 0.5s ease-in-out forwards;
+}
+
+#puzzle-container canvas {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
+#puzzle-container.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-2deg);
+  }
+  40% {
+    transform: rotate(2deg);
+  }
+  60% {
+    transform: rotate(-1deg);
+  }
+  80% {
+    transform: rotate(1deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.wally-found-bg {
+  position: absolute;
+  width: var(--lens-size);
+  height: var(--lens-size);
+  background: repeating-linear-gradient(
+    var(--red) 0px,
+    var(--red) 10px,
+    var(--white) 10px,
+    var(--white) 20px
+  );
+  transform-origin: center;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wally-found-bg-opponent {
+  background: repeating-linear-gradient(
+    var(--blue) 0px,
+    var(--blue) 10px,
+    var(--white) 10px,
+    var(--white) 20px
+  );
+  border: 5px white solid;
+}
+
+.wally-found-bg.fill {
+  animation: bgFill 1s ease-in-out forwards;
+  border: 5px white solid;
+}
+
+.wally-found-bg.traverse {
+  animation: bgTraverse 1s ease-in-out forwards;
+  border: 5px white solid;
+}
+
+@keyframes bgFill {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes bgTraverse {
+  0% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    left: calc(var(--wally-end-x) + 50px);
+    top: calc(var(--wally-end-y) - 100px);
+    transform: scale(0.9) rotate(360deg);
+  }
+  100% {
+    opacity: 1;
+    left: var(--wally-end-x);
+    top: var(--wally-end-y);
+    transform: scale(0.5) rotate(720deg);
+  }
+}
+
+.wally-found-bg.spread {
+  animation: bgSpread 0.5s ease-in-out forwards !important;
+  width: var(--thumb-width);
+  height: var(--thumb-height);
+  left: 50% !important;
+  top: 50% !important;
+  transform-origin: center;
+  position: absolute;
+}
+
+@keyframes bgSpread {
+  0% {
+    opacity: 1;
+    width: var(--lens-size);
+    height: var(--lens-size);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
+  80% {
+    opacity: 1;
+    width: calc(var(--thumb-width) * 1.1);
+    height: calc(var(--thumb-height) * 1.1);
+    border-radius: 0;
+    transform: translate(-50%, -50%) scale(1) rotate(720deg);
+  }
+  100% {
+    opacity: 1;
+    width: var(--thumb-width);
+    height: var(--thumb-height);
+    border-radius: 0;
+    transform: translate(-50%, -50%) scale(1) rotate(720deg);
+  }
+}
+
+.wally-white-circle {
+  position: absolute;
+  width: var(--lens-size);
+  height: var(--lens-size);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.wally-white-circle.fill {
+  animation: bgFill 1s ease-in-out forwards; /* Reuse bgFill for simplicity */
+}
+
+.wally-white-circle.traverse {
+  animation: bgTraverse 1s ease-in-out forwards; /* Sync with bg */
+  transform-origin: center;
+}
+
+.wally-white-circle.spread {
+  animation: whiteCircle 0.5s ease-in-out forwards !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform-origin: center;
+  background: var(--white);
+  border-radius: 50%;
+}
+
+@keyframes whiteCircle {
+  0% {
+    opacity: 0;
+    width: 100px;
+    height: 100px;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    width: 120px;
+    height: 120px;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
+}
+
+.wally-headshot {
+  position: absolute;
+  width: var(--lens-size);
+  height: var(--lens-size);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.wally-headshot.fill {
+  animation: wallyFill 1s ease-in-out forwards;
+}
+
+.wally-headshot.traverse {
+  animation: wallyTraverse 1s ease-in-out forwards;
+}
+
+@keyframes wallyFill {
+  0% {
+    transform: scale(0.2);
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(0.8);
+  }
+}
+
+@keyframes wallyTraverse {
+  0% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    left: calc(var(--wally-end-x) + 50px);
+    top: calc(var(--wally-end-y) - 100px);
+    transform: scale(0.9) rotate(360deg);
+  }
+  100% {
+    opacity: 1;
+    left: var(--wally-end-x);
+    top: var(--wally-end-y);
+    transform: scale(0.5) rotate(720deg);
+  }
+}
+
+.wally-headshot.spread {
+  animation: wallySpread 0.5s ease-in-out forwards !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform-origin: center;
+}
+
+@keyframes wallySpread {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
+  100% {
+    opacity: 1;
+    width: 70%;
+    height: auto;
+    transform: translate(-50%, -50%) scale(0.5) rotate(720deg);
+  }
+}
+
+.blurred-lens {
+  filter: blur(4px) !important;
+}
+
+.lens-content.fade-out {
+  opacity: 0;
+}
+
+/* Effect flash container */
+.effect-flash {
+  position: absolute;
+  background: #fff;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Ensure visibility */
+}
+
+/* Slide and fade for opponent (right) */
+.effect-flash.slide-out {
+  animation: slideOutRight 0.3s ease-in-out forwards;
+}
+
+/* Slide and fade for player (left) */
+.effect-flash.player.slide-out {
+  animation: slideOutLeft 0.3s ease-in-out forwards;
+}
+
+/* Individual letter styling */
+.effect-letter {
+  display: inline-block;
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  animation: bounceLetter 0.5s ease-in-out forwards;
+  margin-right: 0.1rem; /* Small margin for spacing */
+}
+
+/* Ensure space character has width */
+.effect-letter.space {
+  width: 0.5rem; /* Fixed width for space */
+  margin-right: 0; /* No extra margin for space */
+}
+
+.effect-letter:nth-child(even):not(.space) {
+  color: var(--red);
+}
+.effect-letter:nth-child(odd):not(.space) {
+  color: var(--blue); /* Blue, opponent score */
+}
+
+/* Initial bounce animation */
+@keyframes bounceLetter {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Slide and fade animation for opponent (right) */
+@keyframes slideOutRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* Slide and fade animation for player (left) */
+@keyframes slideOutLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+/* Odlaw: Yellow (even), Black (odd) */
+.effect-flash.odlaw .effect-letter:nth-child(even):not(.space) {
+  color: var(--yellow); /* Yellow */
+}
+.effect-flash.odlaw .effect-letter:nth-child(odd):not(.space) {
+  color: var(--black); /* Black */
+}
+
+/* Wenda: Red (even), Blue (odd) */
+.effect-flash.wenda .effect-letter:nth-child(even):not(.space) {
+  color: var(--red); /* Red */
+}
+.effect-flash.wenda .effect-letter:nth-child(odd):not(.space) {
+  color: var(--blue); /* Blue */
+}
+
+/* Whitebeard: White (even), Blue (odd), with black outline */
+.effect-flash.whitebeard .effect-letter:nth-child(odd):not(.space) {
+  color: var(--blue); /* Blue */
+}
+
+.effect-flash.whitebeard .effect-letter:nth-child(even):not(.space) {
+  color: var(--red); /* Red */
+}
+
+.blur-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.6); /* Blue tint */
+  filter: blur(8px); /* Default blur */
+  pointer-events: none;
+  z-index: 1; /* Above puzzle, below magnifier */
+  opacity: 0;
+  animation: smokeFadeIn 0.6s ease-in-out forwards; /* New smoke-like fade-in */
+}
+
+.blur-overlay.active {
+  mask: radial-gradient(
+    circle at var(--hint-x) var(--hint-y),
+    transparent var(--hint-radius),
+    black calc(var(--hint-radius) + 2px)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5); /* Circle outline */
+  animation:
+    smokeFadeIn 0.6s ease-in-out forwards,
+    wavyMirage 2s ease-in-out infinite; /* Add wavyMirage after fade-in */
+}
+
+.blur-overlay.active::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(2 * var(--hint-radius));
+  height: calc(2 * var(--hint-radius));
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: circleShimmer 1.5s ease-in-out infinite;
+  z-index: 2; /* Above overlay, below magnifier */
+}
+
+.blur-overlay.active::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at 30% 40%,
+    rgba(255, 255, 255, 0.2) 10%,
+    transparent 50%
+  ); /* Wispy smoke gradient */
+  opacity: 0;
+  animation: smokeSwirl 0.6s ease-in-out forwards; /* Swirling tendrils during fade-in */
+  pointer-events: none;
+  z-index: 2; /* Above overlay, below magnifier */
+}
+
+.blur-overlay.fadeOut {
+  animation: fadeOut 0.3s ease-in-out forwards;
+  /* Stop wavyMirage during fade-out */
+  animation-name: fadeOut;
+}
+
+@keyframes smokeFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translate(0, 20px); /* Start small, slightly offset */
+    filter: blur(20px); /* Heavy initial blur */
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2) translate(0, -10px); /* Overshoot slightly */
+    filter: blur(12px); /* Transition blur */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0); /* Settle at full size */
+    filter: blur(8px); /* Match default blur */
+  }
+}
+
+@keyframes smokeSwirl {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(1);
+    background-position: 30% 40%;
+  }
+  50% {
+    opacity: 0.3;
+    transform: rotate(10deg) scale(1.1);
+    background-position: 40% 50%;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(20deg) scale(1);
+    background-position: 50% 60%;
+  }
+}
+
+@keyframes wavyMirage {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(5px, -5px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes circleShimmer {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.2;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.flash-star {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9) 30%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  animation: twinkle 1s ease-in-out forwards;
+}
+
+@keyframes twinkle {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+.fadeOut {
+  animation: fadeOut 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+.effect-badge {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: 0.2rem;
+}
+
+.effect-badge {
+  background-color: var(--white);
+}
+.effect-badge .badge-letter {
+  color: var(--black);
+}
+
+.effect-badge.positive .badge-border {
+  stroke: var(--red);
+}
+
+.effect-badge.negative .badge-border {
+  stroke: var(--blue);
+}
+
+.badge-border {
+  stroke-width: 2;
+  transition: stroke-dashoffset 0.1s linear;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-letter {
+  position: absolute;
+  font-family: var(--font-title);
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.game-over {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  z-index: 1000;
+  transition: opacity 5s ease-in;
+}
+
+.game-over.hidden {
+  display: none;
+  opacity: 0;
+}
+
+.game-over:not(.hidden) {
+  opacity: 1;
+}
+
+.game-over .container {
+  background-color: var(--white);
+  color: var(--black);
+  padding: 1rem;
+  text-align: center;
+  transform: translateY(-200%);
+  animation: slide-down 0.7s ease-out 0.5s forwards;
+
+  border: var(--border);
+  border-image: var(--border-image);
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-200%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.winner,
+.loser,
+.draw {
+  font-size: 5rem;
+  font-family: var(--font-title);
+  margin-bottom: 15px;
+}
+
+.winner:nth-child(even),
+.draw:nth-child(even) {
+    color: var(--red); 
+}
+
+.draw:nth-child(odd),
+.winner:nth-child(odd) {
+    color: var(--blue);
+}
+
+.loser:nth-child(even) {
+    color: var(--black); 
+}
+
+.loser:nth-child(odd) {
+  color: var(--yellow);
+}
+
+.home {
+  font-family: var(--font-timer);
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+}
+
+.home:hover {
+    cursor: pointer;
+}
+
+File: ./src/utils/utils.js
+import WebSocket from "ws";
+
+export function checkCharacterInRange(character, { x, y }, characters) {
+  const { x: charX, y: charY, width, height } = characters[character];
+  if (width === undefined || height === undefined) {
+    console.error(`Missing dimensions for character ${character}`);
+    return false;
+  }
+  return x >= charX && x <= charX + width && y >= charY && y <= charY + height
+}
+
+export function getGameWsByPlayerId(playerId, gameData, clients) {
+  const opponentsId = gameData.players.find((id) => id !== playerId);
+  return {
+    playersWs: clients.get(playerId),
+    opponentsWs: clients.get(opponentsId),
+  };
+}
+
+export const wsOpenSend = (wsArr, jsonData) => {
+  let allSent = true;
+
+  wsArr.forEach((ws) => {
+    if (!ws) {
+      console.warn("WebSocket is undefined");
+      allSent = false;
+      return false;
+    }
+    if (ws.readyState !== WebSocket.OPEN) {
+      console.warn(`WebSocket not open: readyState=${ws.readyState}`);
+      allSent = false;
+      return false;
+    }
+    try {
+      ws.send(JSON.stringify(jsonData));
+    } catch (error) {
+      console.error(`WebSocket send failed: ${error.message}`);
+      allSent = false;
+    }
+  });
+
+  return allSent;
+};
+
+File: ./src/utils/errors.js
+export class AppError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = true;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+File: ./src/routes/game.js
+import { Router } from "express";
+import { startGame, checkGuess, homePage } from "../controllers/game.js";
+
+const router = Router();
+
+router.get("/", homePage)
+router.get("/game", startGame);
+
+router.post("/guess", checkGuess);
+
+export default router;
+
+File: ./src/controllers/game.js
+import { stateManager } from "../app.js";
+import { puzzles } from "../models/puzzles.js";
+import { v4 as uuidv4 } from "uuid";
+import { GAME_DURATION, PUZZLE_COUNT } from "../constants.js";
+import { WebSocketService } from "../services/webSocketService.js";
+import { EffectService } from "../services/effectService.js";
+import { GameService } from "../services/gameService.js";
+import { AppError } from "../utils/errors.js";
+
+let webSocketService, effectService, gameService;
+
+function initService() {
+     webSocketService = new WebSocketService(stateManager);
+     effectService = new EffectService(stateManager, webSocketService);
+     gameService = new GameService( stateManager, effectService, webSocketService);
+}
+
+export const homePage = (req, res) => {
+    res.render("home")
+}
+
+export const startGame = (req, res) => {
+  res.render("index", {
+    puzzles: Object.values(puzzles).map((char) => char.img),
+    playerId: (req.session.playerId = uuidv4()),
+    gameDuration: GAME_DURATION,
+  });
+};
+
+export const checkGuess = (req, res) => {
+  initService();
+  const { puzzleIdx, x, y, playerId } = req.body;
+
+  if (!playerId || typeof playerId !== "string") {
+    throw new AppError("Invalid or missing playerId", 400);
+  }
+  if ( !Number.isInteger(puzzleIdx) || puzzleIdx < 0 || puzzleIdx >= PUZZLE_COUNT) {
+    throw new AppError("Invalid puzzle index", 400);
+  }
+  if (typeof x !== "number" || typeof y !== "number") {
+    throw new AppError("Invalid coordinates", 400);
+  }
+
+  const charFound = gameService.processGuess(puzzleIdx, x, y, playerId);
+
+  res.json({ charFound });
+};
+
+File: ./src/state/stateManager.js
+export class StateManager {
+  #games = new Map();
+  #clients = new Map();
+  #lobby = [];
+  #effectTimeouts = new Map();
+
+  getGame(gameId) {
+    return this.#games.get(gameId);
+  }
+
+  getGameByPlayerId(playerId) {
+    for (const [gameId, game] of this.#games) {
+      if (game.players.includes(playerId)) {
+        return { gameId, gameData: game };
+      }
+    }
+    return null;
+  }
+
+  addGame(gameId, gameData) {
+    this.#games.set(gameId, gameData);
+  }
+
+  removeGame(gameId) {
+    this.#games.delete(gameId);
+  }
+
+  getClient(playerId) {
+    return this.#clients.get(playerId);
+  }
+
+  addClient(playerId, ws) {
+    this.#clients.set(playerId, ws);
+  }
+
+  removeClient(playerId) {
+    this.#clients.delete(playerId);
+  }
+
+  getClientByWs(ws) {
+    for (const [playerId, client] of this.#clients) {
+      if (client === ws) {
+        return playerId;
+      }
+    }
+    return null;
+  }
+
+  addToLobby(playerId) {
+    if (!this.#lobby.includes(playerId)) {
+      this.#lobby.push(playerId);
+    }
+  }
+
+  removeFromLobby(playerId) {
+    const index = this.#lobby.indexOf(playerId);
+    if (index !== -1) {
+      this.#lobby.splice(index, 1);
+    }
+  }
+
+  getLobby() {
+    return this.#lobby;
+  }
+
+  shiftLobby(count) {
+    return this.#lobby.splice(0, count);
+  }
+
+  getEffectTimeout(effectId) {
+    return this.#effectTimeouts.get(effectId);
+  }
+
+  setEffectTimeout(effectId, timeout) {
+    this.#effectTimeouts.set(effectId, timeout);
+  }
+
+  removeEffectTimeout(effectId) {
+    const timeout = this.#effectTimeouts.get(effectId);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.#effectTimeouts.delete(effectId);
+    }
+  }
+
+  clearEffectTimeoutsForPlayer(game) {
+      game.players.forEach(playerId => {
+          const activeEffects = game.playerStats?.[playerId]?.activeEffects || [];
+          activeEffects.forEach(effect => {
+              this.removeEffectTimeout(effect.effectId)
+          })
+      })
+  }
+}
+
+File: ./src/app.js
+// ./src/app.js
+import express from "express";
+import { createClient } from "redis"; 
+import { RedisStore } from "connect-redis"; 
+import session from "express-session";
+import path, { dirname } from "path";
+import gameRoutes from "./routes/game.js";
+import { StateManager } from "./state/stateManager.js";
+import { fileURLToPath } from "url";
+import { WebSocketServer } from "ws";
+import { setupWebSocket } from "./websockets.js";
+import { PUZZLE_COUNT } from "./constants.js";
+import { createServer } from "http";
+import { AppError } from "./utils/errors.js";
+
+export const stateManager = new StateManager();
+
+const app = express();
+const server = createServer(app);
+const wss = new WebSocketServer({ server, path: "/ws" });
+
+const PORT = process.env.PORT || 3000;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+app.set("view engine", "ejs");
+app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.json());
+
+const DEFAULT_FOUND_ARR = () => Array(PUZZLE_COUNT).fill(false);
+const DEFAULT_POWERUPS_ARR = () =>
+    Array(PUZZLE_COUNT)
+        .fill()
+        .map(() => ({
+            odlaw: false,
+            wenda: false,
+            whitebeard: false,
+        }));
+
+setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR);
+
+// Redis client setup
+const redisClient = createClient({
+    url: process.env.REDIS_URL || "redis://localhost:6379",
+});
+
+redisClient.on("error", (err) => console.error("Redis client error:", err));
+redisClient.connect().catch((err) => console.error("Redis connection error:", err));
+
+if (!process.env.SECRET) {
+    throw new AppError("Session secret is missing. Please set SECRET environment variable.", 500);
+}
+
+app.use(
+    session({
+        secret: process.env.SECRET,
+        resave: false,
+        saveUninitialized: true,
+        store: new RedisStore({ client: redisClient }), // Pass redisClient instance
+        cookie: {
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        },
+    })
+);
+
+app.use("/", gameRoutes);
+
+app.use((err, req, res, next) => {
+    if (err instanceof AppError) {
+        res.status(err.statusCode).json({ success: false, error: err.message });
+    } else {
+        console.error("Unexpected error:", err);
+        res.status(500).json({ success: false, error: "Internal server error" });
+    }
+});
+
+server.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
+
+File: ./src/models/puzzles.js
+export const puzzles = [
+    {
+        characters: {
+            wally: {
+                x: 39.00,
+                y: 62.00,
+                width: 3.00,
+                height: 6.00,
+            },
+            odlaw: {
+                x: 6.46,
+                y: 68.04,
+                width: 2.00,
+                height: 4.00,
+            },
+            wenda: {
+                x: 28.76,
+                y: 50.84,
+                width: 1.45,
+                height: 5.70,
+            },
+            whitebeard: {
+                x: 77.31,
+                y: 56.57,
+                width: 2.00,
+                height: 5.00,
+            },
+        },
+        img: "/images/wallyspace.jpg",
+    },
+  {
+    characters: {
+      wally: {
+        x: 83.50,
+        y: 71.14,
+        width: 4.31,
+        height: 8.33,
+      },
+      odlaw: {
+        x: 30.71,
+        y: 62.60,
+        width: 2.28,
+        height: 5.08,
+      },
+      wenda: {
+        x: 47.97,
+        y: 40.04,
+        width: 2.03,
+        height: 5.69,
+      },
+      whitebeard: {
+        x: 5.96,
+        y: 73.98,
+        width: 3.17,
+        height: 6.10,
+      },
+    },
+    img: "/images/wallysnow.jpg",
+  },
+  {
+    characters: {
+      wally: {
+        x: 26.66,
+        y: 31.60,
+        width: 3.00,
+        height: 5.80,
+      },
+      odlaw: {
+        x: 58.95,
+        y: 63.00,
+        width: 2.00,
+        height: 7.60,
+      },
+      wenda: {
+        x: 24.53,
+        y: 71.00,
+        width: 1.38,
+        height: 4.00,
+      },
+      whitebeard: {
+        x: 60.46,
+        y: 84.00,
+        width: 2.88,
+        height: 8.60,
+      },
+    },
+    img: "/images/wallyrace.jpg",
+  },
+  {
+    characters: {
+      wally: {
+        x: 60.58,
+        y: 34.07,
+        width: 2.75,
+        height: 6.01,
+      },
+      odlaw: {
+        x: 10.14,
+        y: 32.26,
+        width: 2.00,
+        height: 5.21,
+      },
+      wenda: {
+        x: 76.60,
+        y: 38.08,
+        width: 1.63,
+        height: 3.21,
+      },
+      whitebeard: {
+        x: 25.91,
+        y: 32.06,
+        width: 2.13,
+        height: 4.81,
+      },
+    },
+    img: "/images/wallybeach.jpg",
+  },
+  {
+    characters: {
+      wally: {
+        x: 69.38,
+        y: 41.32,
+        width: 1.94,
+        height: 4.13,
+      },
+      odlaw: {
+        x: 54.91,
+        y: 78.93,
+        width: 1.63,
+        height: 2.89,
+      },
+      wenda: {
+        x: 58.53,
+        y: 66.12,
+        width: 1.55,
+        height: 3.72,
+      },
+      whitebeard: {
+        x: 68.35,
+        y: 65.91,
+        width: 1.81,
+        height: 4.55,
+      },
+    },
+    img: "/images/wallyblue.jpg",
+  },
+];
+
+
+File: ./src/models/powerups.js
+export const powerUpsObj = {
+  odlaw: [
+    { name: "screenFlip", type: "negative", duration: 15000, char: "odlaw" },
+    { name: "confetti", type: "negative", duration: 15000, char: "odlaw" },
+  ],
+  wenda: [
+    { name: "lensBlur", type: "negative", duration: 15000, char: "wenda" },
+    { name: "lensGrow", type: "positive", duration: 15000, char: "wenda" },
+  ],
+  whitebeard: [
+    { name: "overlayHint", type: "positive", duration: 5000, char: "whitebeard" },
+    { name: "flashHint", type: "positive", duration: 4000, char: "whitebeard" },
+  ],
+};
+
+export function getRandomPowerUp(character) {
+  const powerUps = powerUpsObj[character];
+  if (!powerUps || powerUps.length === 0) return null;
+  return powerUps[Math.floor(Math.random() * powerUps.length)];
+}
+
+File: ./src/websockets.js
+import { GameService } from "./services/gameService.js";
+import { EffectService } from "./services/effectService.js";
+import { WebSocketService } from "./services/webSocketService.js";
+import { WS_MESSAGE_TYPES, GAME_OVER_REASONS, GAME_DURATION, } from "./constants.js";
+
+export function setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR) {
+  const webSocketService = new WebSocketService(stateManager);
+  const effectService = new EffectService(stateManager, webSocketService);
+  const gameService = new GameService(stateManager, effectService, webSocketService);
+
+  wss.on("connection", (ws) => {
+    ws.on("message", (msg) => {
+      let data;
+      try {
+        data = JSON.parse(msg.toString());
+      } catch (error) {
+        console.warn(`Invalid WebSocket message: ${error.message}`);
+        return;
+      }
+
+      const { type, playerId } = data;
+
+      if (typeof playerId !== "string" || !playerId) {
+        console.warn("Missing or invalid playerId");
+        return;
+      }
+
+      if (type === WS_MESSAGE_TYPES.JOIN) {
+        if (stateManager.getClient(playerId)) {
+          console.warn(`Player ${playerId} already connected`);
+          return;
+        }
+
+        stateManager.addClient(playerId, ws);
+        stateManager.addToLobby(playerId);
+
+        if (stateManager.getLobby().length > 1) {
+          const [player1, player2] = stateManager.shiftLobby(2);
+          const { gameId } = gameService.createGame( player1, player2, 
+              DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR);
+
+          setTimeout(() => {
+            const game = stateManager.getGame(gameId);
+            if (game && Date.now() - game.startTime >= GAME_DURATION) {
+              webSocketService.sendGameOver(gameId, GAME_OVER_REASONS.TIME_UP);
+              gameService.cleanupGame(gameId);
+            }
+          }, GAME_DURATION);
+        }
+      } else if (type === WS_MESSAGE_TYPES.GAME_TIMEOUT) {
+        const result = stateManager.getGameByPlayerId(playerId);
+        if (result) {
+          const { gameId } = result;
+          webSocketService.sendGameOver(gameId, GAME_OVER_REASONS.TIME_UP);
+          gameService.cleanupGame(gameId);
+        }
+      } else {
+        console.warn(`Unknown message type: ${type}`);
+      }
+    });
+
+    ws.on("close", () => {
+      const playerId = stateManager.getClientByWs(ws);
+      if (!playerId) {
+        console.log("No playerId found for closed WebSocket");
+        return;
+      }
+
+      stateManager.removeClient(playerId);
+      stateManager.removeFromLobby(playerId);
+
+      const result = stateManager.getGameByPlayerId(playerId);
+      if (!result) return;
+
+      const { gameId, gameData } = result;
+      const opponentId = gameData.players.find((id) => id !== playerId);
+
+      if (opponentId && webSocketService.sendOpponentQuit(opponentId, gameId)) {
+        stateManager.addToLobby(opponentId);
+      } else if (!opponentId) {
+        stateManager.removeGame(gameId);
+      } else {
+        stateManager.removeClient(opponentId);
+      }
+
+      gameService.cleanupGame(gameId);
+    });
+  });
+}
+
+File: ./src/constants.js
+export const GAME_DURATION =  5 * 60 * 1000; // 5 minutes
+export const PUZZLE_COUNT = 5;
+
+export const CHARACTERS = {
+  WALLY: "wally",
+  ODLAW: "odlaw",
+  WENDA: "wenda",
+  WHITEBEARD: "whitebeard",
+};
+
+export const EFFECT_TYPES = {
+  POSITIVE: "positive",
+  NEGATIVE: "negative",
+};
+
+export const EFFECTS = {
+  SCREEN_FLIP: "screenFlip",
+  CONFETTI: "confetti",
+  LENS_BLUR: "lensBlur",
+  LENS_GROW: "lensGrow",
+  OVERLAY_HINT: "overlayHint",
+};
+
+export const WS_MESSAGE_TYPES = {
+  JOIN: "join",
+  GAME_TIMEOUT: "gameTimeout",
+  GAME_OVER: "gameOver",
+  OPPONENT_QUIT: "opponentQuit",
+  PAIRED: "paired",
+  UPDATE_FOUND: "updateFound",
+  APPLY_EFFECT: "applyEffect",
+  CLEANUP_EFFECT: "cleanUpEffect",
+  POWER_UP_FOUND: "powerUpFound",
+};
+
+export const GAME_OVER_REASONS = {
+  TIME_UP: "timeUp",
+  ALL_FOUND: "allFound",
+  OPPONENT_QUIT: "opponentQuit",
+};
+
+File: ./src/services/gameService.js
+import { v4 as uuidv4 } from "uuid";
+import { checkCharacterInRange } from "../utils/utils.js";
+import { getRandomPowerUp } from "../models/powerups.js";
+import { AppError } from "../utils/errors.js";
+import {
+  CHARACTERS,
+  EFFECT_TYPES,
+  GAME_OVER_REASONS,
+  WS_MESSAGE_TYPES,
+} from "../constants.js";
+import { puzzles } from "../models/puzzles.js";
+
+export class GameService {
+  constructor(stateManager, effectService, webSocketService) {
+    this.stateManager = stateManager;
+    this.effectService = effectService;
+    this.webSocketService = webSocketService;
+  }
+
+  createGame(player1, player2, defaultFoundArr, defaultPowerUpsArr) {
+    if (!player1 || !player2) {
+      throw new Error("Missing player IDs");
+    }
+    const gameId = `game-${uuidv4()}`;
+    const gameData = {
+      gameId,
+      players: [player1, player2],
+      foundArr: defaultFoundArr(),
+      powerUpsArr: defaultPowerUpsArr(),
+      startTime: Date.now(),
+      playerStats: {
+        [player1]: { wallysFound: 0, activeEffects: [] },
+        [player2]: { wallysFound: 0, activeEffects: [] },
+      },
+    };
+    this.stateManager.addGame(gameId, gameData);
+    this.webSocketService.sendPairedMessage(gameId, gameData);
+    return { gameId, gameData };
+  }
+
+  processGuess(puzzleIdx, x, y, playerId) {
+    const characters = puzzles[puzzleIdx]?.characters;
+    if (!characters) {
+      throw new AppError("Invalid puzzle index", 400);
+    }
+
+    const result = this.stateManager.getGameByPlayerId(playerId);
+
+    if (!result || !result.gameData) {
+      throw new AppError(`No game found for playerId ${playerId}`, 400);
+    }
+
+    let charFound = false;
+    const { gameId, gameData } = result;
+    const { foundArr, powerUpsArr, playerStats } = gameData;
+
+    for (const character in characters) {
+      if (!checkCharacterInRange(character, { x, y }, characters)) continue;
+
+
+      if (character === CHARACTERS.WALLY && !foundArr[puzzleIdx]) {
+        charFound = character;
+        foundArr[puzzleIdx] = true;
+        playerStats[playerId].wallysFound += 1;
+
+        const updateMessage = { type: WS_MESSAGE_TYPES.UPDATE_FOUND, foundArr, playerStats, puzzleIdx, playerWhoFoundId: playerId };
+
+        if (!foundArr.includes(false)) {
+          this.webSocketService.sendGameOver( gameId, GAME_OVER_REASONS.ALL_FOUND);
+          this.webSocketService.sendToGamePlayers(gameId, updateMessage);
+          this.cleanupGame(gameId);
+        } else {
+          this.effectService.cancelNegativeEffects(playerId, gameData);
+          this.webSocketService.sendToGamePlayers(gameId, updateMessage);
+        }
+      }
+
+      if (character !== CHARACTERS.WALLY && !powerUpsArr[puzzleIdx][character]) {
+        charFound = character;
+        powerUpsArr[puzzleIdx][character] = true;
+        const powerUp = getRandomPowerUp(character);
+        const opponentId = gameData.players.find((id) => id !== playerId);
+        const effectTargetId =
+          powerUp.type === EFFECT_TYPES.POSITIVE ? playerId : opponentId;
+
+        this.effectService.applyEffect(powerUp, effectTargetId, gameData, puzzleIdx);
+
+        this.webSocketService.sendToGamePlayers(gameId, { type: WS_MESSAGE_TYPES.POWER_UP_FOUND, puzzleIdx, character, playerWhoFoundId: playerId });
+      }
+      break;
+    }
+
+    return charFound;
+  }
+
+  cleanupGame(gameId) {
+    const game = this.stateManager.getGame(gameId);
+    if (game) {
+      this.stateManager.clearEffectTimeoutsForPlayer(game);
+      this.stateManager.removeGame(gameId);
+    }
+  }
+}
+
+File: ./src/services/effectService.js
+import { v4 as uuidv4 } from "uuid";
+import { EFFECT_TYPES, WS_MESSAGE_TYPES } from "../constants.js";
+import { puzzles } from "../models/puzzles.js";
+
+export class EffectService {
+  constructor(stateManager, webSocketService) {
+    this.stateManager = stateManager;
+    this.webSocketService = webSocketService;
+  }
+
+
+applyEffect(powerUp, target, gameData, puzzleIdx) {
+  const activeEffects = gameData.playerStats[target].activeEffects;
+  const activeEffectIdx = activeEffects.findIndex(e => e.name === powerUp.name);
+  const effectAlreadyActive = activeEffectIdx !== -1;
+  const { duration } = powerUp;
+
+  if (effectAlreadyActive) {
+const effect = activeEffects[activeEffectIdx];
+    const remainingTime = Math.max(0, (effect.startTime + effect.duration) - Date.now());
+      console.log(`Extending effect ${effect.name}:`, { remainingTime: remainingTime, duration: duration });
+    effect.duration += duration; // New duration
+    effect.isExtension = true;
+
+    this.stateManager.removeEffectTimeout(effect.effectId);
+    const timeout = this.scheduleEffectTimeout(target, remainingTime + duration, effect.effectId, effect.name);
+    this.stateManager.setEffectTimeout(effect.effectId, timeout);
+
+    this.webSocketService.sendToGamePlayers(gameData.gameId, {
+      type: WS_MESSAGE_TYPES.APPLY_EFFECT,
+      playerStats: gameData.playerStats,
+      target,
+      effect
+    });
+  } else {
+    const effectId = uuidv4();
+    const effect = { ...powerUp, startTime: Date.now(), effectId, duration, puzzleIdx, puzzles };
+    activeEffects.push(effect);
+
+    this.webSocketService.sendToGamePlayers(gameData.gameId, {
+      type: WS_MESSAGE_TYPES.APPLY_EFFECT,
+      playerStats: gameData.playerStats,
+      target,
+      effect
+    });
+
+    const timeout = this.scheduleEffectTimeout(target, duration, effectId, effect.name);
+    this.stateManager.setEffectTimeout(effectId, timeout);
+  }
+}
+
+  scheduleEffectTimeout(target, duration, effectId, effectName) {
+    return setTimeout(() => {
+      const result = this.stateManager.getGameByPlayerId(target);
+      if (result) {
+        const { gameData: currentGameData } = result;
+        const activeEffects = currentGameData.playerStats[target].activeEffects;
+
+        currentGameData.playerStats[target].activeEffects =
+          activeEffects.filter((e) => e.effectId !== effectId);
+
+        this.webSocketService.sendToGamePlayers(currentGameData.gameId, {
+          type: WS_MESSAGE_TYPES.CLEANUP_EFFECT,
+          playerStats: currentGameData.playerStats,
+          target,
+          effectsArr: [effectName],
+        });
+
+        this.stateManager.removeEffectTimeout(effectId);
+      }
+    }, duration);
+  }
+
+  cancelNegativeEffects(playerId, gameData) {
+    const playerStats = gameData.playerStats[playerId];
+    const activeEffects = playerStats.activeEffects;
+
+    const negativeEffects = activeEffects.filter(
+      (e) => e.type === EFFECT_TYPES.NEGATIVE,
+    );
+
+    if (negativeEffects.length === 0) return;
+
+    negativeEffects.forEach((effect) => {
+      this.stateManager.removeEffectTimeout(effect.effectId);
+    });
+
+    const effectsArr = negativeEffects.map((e) => e.name);
+
+    playerStats.activeEffects = activeEffects.filter(
+      (e) => e.type !== EFFECT_TYPES.NEGATIVE,
+    );
+
+    this.webSocketService.sendToGamePlayers(gameData.gameId, {
+      type: WS_MESSAGE_TYPES.CLEANUP_EFFECT,
+      playerStats: gameData.playerStats,
+      target: playerId,
+      effectsArr,
+    });
+  }
+
+  cleanupEffect(target, effectId, gameData) {
+    const activeEffects = gameData.playerStats[target].activeEffects;
+    const effectIdx = activeEffects.findIndex((e) => e.effectId === effectId);
+
+    if (effectIdx !== -1) {
+      const effect = activeEffects[effectIdx];
+      activeEffects.splice(effectIdx, 1);
+
+      this.webSocketService.sendToGamePlayers(gameData.gameId, {
+        type: WS_MESSAGE_TYPES.CLEANUP_EFFECT,
+        playerStats: gameData.playerStats,
+        target,
+        effectsArr: [effect.name],
+      });
+
+      this.stateManager.removeEffectTimeout(effectId);
+    }
+  }
+}
+
+File: ./src/services/webSocketService.js
+import { WS_MESSAGE_TYPES } from "../constants.js";
+import { wsOpenSend } from "../utils/utils.js";
+
+export class WebSocketService {
+  constructor(stateManager) {
+    this.stateManager = stateManager;
+  }
+
+  sendToGamePlayers(gameId, message) {
+    const game = this.stateManager.getGame(gameId);
+    if (!game) return false;
+
+    const clients = game.players
+      .map((id) => this.stateManager.getClient(id))
+      .filter(Boolean);
+
+    if (!clients.length) return false;
+
+    wsOpenSend(clients, message);
+    return true;
+  }
+
+  sendPairedMessage(gameId, gameData) {
+    const { foundArr, powerUpsArr, startTime, playerStats } = gameData;
+    return this.sendToGamePlayers(gameId, {
+      type: WS_MESSAGE_TYPES.PAIRED,
+      gameId,
+      foundArr,
+      powerUpsArr,
+      startTime,
+      playerStats,
+    });
+  }
+
+  sendGameOver(gameId, reason) {
+    const game = this.stateManager.getGame(gameId);
+    return this.sendToGamePlayers(gameId, {
+      type: WS_MESSAGE_TYPES.GAME_OVER,
+      reason,
+      game
+    });
+  }
+
+  sendOpponentQuit(opponentId, gameId) {
+    const opponentWs = this.stateManager.getClient(opponentId);
+    if (!opponentWs) return false;
+
+    wsOpenSend([opponentWs], {
+      type: WS_MESSAGE_TYPES.OPPONENT_QUIT,
+      gameId,
+    });
+
+    return true;
+  }
+}
+
+File: ./README.md
+# photo-tagging-app
+ A where's wally inspired photo tagging app
+
+File: ./views/index.ejs
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Photo Tagging App</title>
+<link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+<link rel="shortcut icon" href="/images/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+<link rel="manifest" href="/images/site.webmanifest" />
+  <link rel="stylesheet" href="/css/styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Comic+Neue&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="lobby-view">
+        <h1>...Waiting for opponent</h1> 
+        <a href="/game" target="_blank" title="Open a new tab to play against yourself for demo purposes" rel="noopener noreferrer" >Play Against Yourself (New Tab)</a>
+    </div>
+  <main id="game-view" style="display: none;">
+      <div id="status-bar">
+          <div id="playerStatus" ><div id="playerEffects" class="effectContainers"></div><span id="playerScore">0</span></div>
+          <div id="timer-wrapper"><div id="timer">5:00</div></div>
+          <div id="opponentStatus"><span id="opponentScore">0</span><div id="opponentEffects" class="effectContainers"></div></div>
+      </div>
+    <div id="puzzle-container">
+        <img src="<%= puzzles[0] %>" draggable="false" id="currentPuzzle" alt="Tagging Photo">
+    </div>
+    <div id="puzzle-selection">
+      <% puzzles.forEach(puzzle => { %> 
+      <div class="puzzleSelect-container">
+      <img src="<%= puzzle %>" alt="" draggable="false" class="puzzle">
+      <div class="headshot-container">
+        <% const newImages = ['/images/odlaw-head.png', '/images/whitebeard-head.png', '/images/wenda-head.png']; %>
+        <% newImages.forEach(image => { %>
+        <div class="headshot-wrapper">
+        <img src="<%= image %>" alt="" draggable="false" class="headshot">
+        <img src="/images/red-cross.png" alt="found" draggable="false" class="overlay" style="display: none; position: absolute;">
+        </div>
+        <% }) %>
+      </div>
+      </div>
+      <% }) %>
+        </div>
+    </div>
+<div id="game-over" class="game-over hidden">
+    <div class="container">
+  <h2 class="endGameStatus"></h2>
+  <button class="home">Return Home</button>
+    </div>
+</div>
+  </main>
+  <script>
+    window.PUZZLES = <%- JSON.stringify(puzzles) %>;
+    window.PLAYER_ID = "<%= playerId %>";
+    window.GAME_DURATION = <%= gameDuration %>;
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
+
+File: ./views/home.ejs
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Photo Tagging App</title>
+<link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+<link rel="shortcut icon" href="/images/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+<link rel="manifest" href="/images/site.webmanifest" />
+  <link rel="stylesheet" href="/css/home.css">
+<link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Comic+Neue&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main>
+        <div class="btn-container">
+            <button id="start-btn" >Start Game</button>
+            <img id="wallySign" src="/images/wally-empty-sign.png" alt="">
+        </div>
+        <h1 id="home-h1">Where's Wally Multiplayer</h1>
+        <div class="blurb-one">
+            <h2>Race Across Maps to Find Wally!</h2>
+            <p>Compete head-to-head to spot the most Wallys in a fast-paced challenge, switching between five vibrant maps.</p> 
+            <img class="gameView-image" src="/images/gameView.png" alt=""> 
+        </div>
+        <div class="blurb-two">
+            <h2>Unleash Powerups with Hidden Characters!</h2>
+            <p>Find Odlaw (<img class="headshot" src="/images/odlaw-head.png" alt="">), Wenda (<img class="headshot" src="/images/wenda-head.png" alt="">), or Whitebeard (<img class="headshot" src="/images/whitebeard-head.png" alt="">) to trigger powerful effects that boost your search or hinder your opponent’s efforts.</p>
+            <div>
+                <img class="effect-image" src="/images/confetti.png" alt=""> 
+                <img class="effect-image" src="/images/screenFlip.png" alt="">
+                <img class="effect-image" src="/images/overlayHint.png" alt="">
+            </div>
+        </div>
+    </main>
+<script>
+    const startBtn = document.querySelector("#start-btn")
+    startBtn.addEventListener("click", () => {
+            window.location.href = "/game"
+        })
+</script>
+</body>
+</html>
+
+File: ./package.json
+{
+  "name": "photo-tagging-app",
+  "version": "1.0.0",
+  "description": "A where's wally inspired photo tagging app",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "NODE_ENV=production node src/app.js",
+    "dev": "cross-env NODE_ENV=development nodemon --env-file=.env src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "connect-redis": "^9.0.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "redis": "^5.6.0",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.9"
+  }
+}
+

@@ -1,2 +1,5 @@
 node_modules/ 
 .env
+outlook.txt
+.git/
+.gitignore

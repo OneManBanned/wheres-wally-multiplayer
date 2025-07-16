@@ -5,16 +5,18 @@
   "type": "module",
   "main": "src/app.js",
   "scripts": {
-    "start": "cross-env NODE-ENV=production  node --env-file=.env src/app.js",
-    "dev": "cross-env NODE-ENV=development nodemon --env-file=.env src/app.js"
+    "start": "NODE_ENV=production node src/app.js",
+    "dev": "cross-env NODE_ENV=development nodemon --env-file=.env src/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "connect-redis": "^9.0.0",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
+    "redis": "^5.6.0",
     "uuid": "^11.1.0",
     "ws": "^8.18.1"
   },
