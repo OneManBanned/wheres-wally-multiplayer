@@ -18,7 +18,6 @@ applyEffect(powerUp, target, gameData, puzzleIdx) {
   if (effectAlreadyActive) {
 const effect = activeEffects[activeEffectIdx];
     const remainingTime = Math.max(0, (effect.startTime + effect.duration) - Date.now());
-      console.log(`Extending effect ${effect.name}:`, { remainingTime: remainingTime, duration: duration });
     effect.duration += duration; // New duration
     effect.isExtension = true;
 

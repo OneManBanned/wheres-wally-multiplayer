@@ -1,6 +1,4 @@
-File: ./output.txt
-
-File: ./public/js/powerups/effects.js
+File: public/js/powerups/effects.js
 import { PUZZLES } from "../constants.js";
 import { DOM } from "../main.js";
 import { setupConfetti } from "../ui/animations.js";
@@ -177,6 +175,9 @@ const cleanupState = (() => {
 })();
 
 export function confettiPowerUp() {
+
+  if (cleanupState.get().length !== 0) return;
+
   const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
   const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
   const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
@@ -264,7 +265,7 @@ export function flashCleanup() {
   });
 }
 
-File: ./public/js/powerups/powerups.js
+File: public/js/powerups/powerups.js
 import { screenFlipPowerUp, screenFlipCleanup, confettiPowerUp, confettiCleanup, lensBlurPowerUp,
   lensBlurCleanup, lensGrowPowerUp, lensGrowCleanup, overlayHintPowerUp, overlayHintCleanup, flashPowerUp, flashCleanup } from "./effects.js";
 
@@ -297,7 +298,7 @@ export function cleanupPowerUp(effectName, playerEffects) {
 
 export const getPlayerEffectsFromStats = (stats, id) => stats[id].activeEffects
 
-File: ./public/js/utils/utils.js
+File: public/js/utils/utils.js
 export function extractImgPath(url) {
     const pathStart = url.indexOf("/images/");
     if (pathStart === -1) return null;
@@ -344,7 +345,7 @@ export function checkGameResult(game) {
     return playerStatus;
 }
 
-File: ./public/js/main.js
+File: public/js/main.js
 import { PLAYER_ID } from "./constants.js";
 import { checkCharacter } from "./game/api.js";
 import { initializeHintObserver } from "./powerups/effects.js";
@@ -374,7 +375,7 @@ setupThumbnailListeners();
 showLobby();
 
 
-File: ./public/js/websockets/handlers.js
+File: public/js/websockets/handlers.js
 import { PUZZLES, PLAYER_ID } from "../constants.js";
 import { startGameTimer, setStartTime, setGameOver, } from "../game/game.js";
 import { applyPowerUp, cleanupPowerUp } from "../powerups/powerups.js";
@@ -429,72 +430,73 @@ export const handlers = {
 };
 
 
-File: ./public/js/websockets/websockets.js
+File: public/js/websockets/websockets.js
 import { handlers } from "./handlers.js";
 
 let wsInstance = null;
 
 export function initWebSocket(playerId) {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsHost = window.location.host;
-  const wsUrl =  `${protocol}//${wsHost}/ws`;
-    console.log("Attempting websocket connection to: ", wsUrl)
-  wsInstance = new WebSocket(wsUrl);
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsHost = window.location.host;
+    const wsUrl = `${protocol}//${wsHost}/ws`;
+    console.log("Attempting websocket connection to: ", wsUrl);
+    wsInstance = new WebSocket(wsUrl);
 
-  wsInstance.onopen = () => {
-    console.log("Connected to WebSocket Server");
-    try {
-      wsSend({ type: "join", playerId });
-    } catch (err) {
-      console.error("Failed to send join message", err);
-    }
-  };
+    wsInstance.onopen = () => {
+        console.log("Connected to WebSocket Server");
+        try {
+            wsSend({ type: "join", playerId });
+        } catch (err) {
+            console.error("Failed to send join message", err);
+        }
+    };
 
-  wsInstance.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    const handler = handlers[data.type];
-    if (handler) handler(data);
-    else console.warn(`Unhandled message type: ${data.type}`);
-  };
+    wsInstance.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        const handler = handlers[data.type];
+        if (handler) handler(data);
+        else console.warn(`Unhandled message type: ${data.type}`);
+    };
 
-  wsInstance.onerror = (e) => {
-    console.error("WebSocket error:", e);
-    alert("Connection error. Attempting to reconnect...");
-    setTimeout(() => initWebSocket(playerId), 5000); 
-  };
-  wsInstance.onclose = () => {
-    console.log("Disconnected from WebSocket server");
-    alert("Disconnected from server. Attempting to reconnect...");
-    setTimeout(() => initWebSocket(playerId), 5000);
-  };
+    wsInstance.onerror = (e) => {
+        console.error("WebSocket error:", e);
+        alert("Connection error. Attempting to reconnect...");
+        console.log(`Reconnection attempt in 5 seconds (playerId: ${playerId})`);
+        setTimeout(() => initWebSocket(playerId), 5000);
+    };
+    wsInstance.onclose = () => {
+        console.log("Disconnected from WebSocket server");
+        alert("Disconnected from server. Attempting to reconnect...");
+        console.log(`Reconnection attempt in 5 seconds (playerId: ${playerId})`);
+        setTimeout(() => initWebSocket(playerId), 5000);
+    };
 }
 
 export function setWebSocket(ws) {
-  wsInstance = ws;
+    wsInstance = ws;
 }
 
 export function wsSend(data) {
-  if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
-    console.error("WebSocket not available");
-    return;
-  }
+    if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
+        console.error("WebSocket not available");
+        return;
+    }
 
-  wsInstance.send(JSON.stringify(data));
+    wsInstance.send(JSON.stringify(data));
 }
 
-File: ./public/js/ui/animations.js
+File: public/js/ui/animations.js
 import { DOM } from "../main.js";
 
 export const animationState = (() => {
-    let isAnimatingFill = false;
-    return {
-        set: (bool) => isAnimatingFill = bool,
-        get: () => isAnimatingFill,
-    }
-})()
+  let isAnimatingFill = false;
+  return {
+    set: (bool) => (isAnimatingFill = bool),
+    get: () => isAnimatingFill,
+  };
+})();
 
 export function playerFoundWallyFeedback(idx) {
-
   const bg = document.createElement("div");
   bg.className = "wally-found-bg";
 
@@ -508,24 +510,32 @@ export function playerFoundWallyFeedback(idx) {
 
   DOM.gameView.append(bg, circle, headshot);
 
-const gameRect = DOM.gameView.getBoundingClientRect();
-const magnifier = document.querySelector("#magnifier");
-const magRect = magnifier.getBoundingClientRect();
-const animationWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--lens-size")); 
-const offset = (magRect.width - animationWidth) / 2; 
-const startX = magRect.left - gameRect.left + offset;
-const startY = magRect.top - gameRect.top + offset;
+  const gameRect = DOM.gameView.getBoundingClientRect();
+  const magnifier = document.querySelector("#magnifier");
+  const magRect = magnifier.getBoundingClientRect();
+  const animationWidth = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue("--lens-size"),
+  );
+  const offset = (magRect.width - animationWidth) / 2;
+  const startX = magRect.left - gameRect.left + offset;
+  const startY = magRect.top - gameRect.top + offset;
 
-const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
-const thumbCenterX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
-const thumbCenterY = thumbRect.top + thumbRect.height / 2 - gameRect.top;
-const endX = thumbCenterX - animationWidth / 2;
-const endY = thumbCenterY - animationWidth / 2;
+  const thumbRect = DOM.allPuzzleContainers[idx].getBoundingClientRect();
+  const thumbCenterX = thumbRect.left + thumbRect.width / 2 - gameRect.left;
+  const thumbCenterY = thumbRect.top + thumbRect.height / 2 - gameRect.top;
+  const endX = thumbCenterX - animationWidth / 2;
+  const endY = thumbCenterY - animationWidth / 2;
 
-document.documentElement.style.setProperty("--wally-start-x", `${startX - 2}px`);
-document.documentElement.style.setProperty("--wally-start-y", `${startY - 2}px`);
-document.documentElement.style.setProperty("--wally-end-x", `${endX}px`);
-document.documentElement.style.setProperty("--wally-end-y", `${endY}px`);
+  document.documentElement.style.setProperty(
+    "--wally-start-x",
+    `${startX - 2}px`,
+  );
+  document.documentElement.style.setProperty(
+    "--wally-start-y",
+    `${startY - 2}px`,
+  );
+  document.documentElement.style.setProperty("--wally-end-x", `${endX}px`);
+  document.documentElement.style.setProperty("--wally-end-y", `${endY}px`);
 
   animationState.set(true);
   bg.classList.add("fill");
@@ -561,7 +571,6 @@ document.documentElement.style.setProperty("--wally-end-y", `${endY}px`);
 }
 
 export function opponentFoundWallyFeedback(idx) {
-    
   // Create elements
   const bg = document.createElement("div");
   bg.classList.add("wally-found-bg");
@@ -657,122 +666,127 @@ export function fadePuzzle(newSrc) {
 // Status-bar animations //
 
 class effectNameAnimationQueue {
-    #animationQueues = new Map();
-    #isAnimating = new Map();
+  #animationQueues = new Map();
+  #isAnimating = new Map();
 
-    getQueue(container) {
-        if (!container || !(container instanceof HTMLElement)) {
-            throw new Error("Invalid container: must be an HTMLElement");
-        }
-        if (!this.#animationQueues.has(container)) {
-            this.#animationQueues.set(container, []);
-            this.#isAnimating.set(container, false);
-        }
-
-        return this.#animationQueues.get(container);
+  getQueue(container) {
+    if (!container || !(container instanceof HTMLElement)) {
+      throw new Error("Invalid container: must be an HTMLElement");
+    }
+    if (!this.#animationQueues.has(container)) {
+      this.#animationQueues.set(container, []);
+      this.#isAnimating.set(container, false);
     }
 
-    clearQueue(container) {
-        this.#animationQueues.set(container, [])
+    return this.#animationQueues.get(container);
+  }
+
+  clearQueue(container) {
+    this.#animationQueues.set(container, []);
+  }
+
+  processQueue(container) {
+    if (!container || !(container instanceof HTMLElement)) {
+      throw new Error("Invalid container: must be an HTMLElement");
+    }
+    const queue = this.getQueue(container);
+    if (queue.length === 0 || this.#isAnimating.get(container)) {
+      return;
     }
 
-    processQueue(container) {
-        if (!container || !(container instanceof HTMLElement)) {
-            throw new Error("Invalid container: must be an HTMLElement");
-        }
-        const queue = this.getQueue(container);
-        if (queue.length === 0 || this.#isAnimating.get(container)) {
-            return;
-        }
-
-        this.#isAnimating.set(container, true);
-        const { effect, isPlayer, activeEffects } = queue.shift();
-        const { name, char } = effect;
-        flashEffectName( container, activeEffects, name, isPlayer, char, () => {
-                this.#isAnimating.set(container, false);
-                this.processQueue(container);
-            },
-        );
-    }
+    this.#isAnimating.set(container, true);
+    const { effect, isPlayer, activeEffects } = queue.shift();
+    const { name, char } = effect;
+    flashEffectName(container, activeEffects, name, isPlayer, char, () => {
+      this.#isAnimating.set(container, false);
+      this.processQueue(container);
+    });
+  }
 }
 
 export const animationQueue = new effectNameAnimationQueue();
 
 function formatEffectName(name) {
-    return name
-        .replace(/([A-Z])/g, " $1") // Add space before uppercase letters
-        .trim() // Remove leading space if any
-        .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
+  return name
+    .replace(/([A-Z])/g, " $1") // Add space before uppercase letters
+    .trim() // Remove leading space if any
+    .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
 }
 
 // Helper to flash the effect name with per-letter animation
-function flashEffectName( container, activeEffects, effectName, isPlayer, character, onComplete) {
-    const flash = document.createElement("div");
-    flash.className = `effect-flash ${isPlayer ? "player" : ""} ${character || ""}`; // Add character class (e.g., odlaw)
-    container.style.position = "relative";
-    container.appendChild(flash);
+function flashEffectName(
+  container,
+  activeEffects,
+  effectName,
+  isPlayer,
+  character,
+  onComplete,
+) {
+  const flash = document.createElement("div");
+  flash.className = `effect-flash ${isPlayer ? "player" : ""} ${character || ""}`; // Add character class (e.g., odlaw)
+  container.style.position = "relative";
+  container.appendChild(flash);
 
-    // Format the effect name (e.g., lensBlur → Lens Blur)
-    const formattedName = formatEffectName(effectName);
+  // Format the effect name (e.g., lensBlur → Lens Blur)
+  const formattedName = formatEffectName(effectName);
 
-    // Split formatted name into letters
-    const letters = formattedName.split("");
-    letters.forEach((letter, index) => {
-        const span = document.createElement("span");
-        span.className = "effect-letter";
-        if (letter === " ") {
-            span.classList.add("space"); // Mark space for CSS
-        }
-        span.textContent = letter;
-        span.style.animationDelay = `${index * 0.1}s`; // 100ms delay for initial bounce
-        flash.appendChild(span);
-        return span;
+  // Split formatted name into letters
+  const letters = formattedName.split("");
+  letters.forEach((letter, index) => {
+    const span = document.createElement("span");
+    span.className = "effect-letter";
+    if (letter === " ") {
+      span.classList.add("space"); // Mark space for CSS
+    }
+    span.textContent = letter;
+    span.style.animationDelay = `${index * 0.1}s`; // 100ms delay for initial bounce
+    flash.appendChild(span);
+    return span;
+  });
+
+  // Calculate timing based on number of letters
+  const bounceTime = 1200 + (letters.length - 1) * 100; // 1200ms base + 100ms per extra letter
+
+  // Slide and fade the entire word after bounce + pause (0.5s)
+  setTimeout(() => {
+    flash.classList.add("slide-out");
+  }, bounceTime + 500); // Bounce + 500ms pause
+
+  // Clean up and show icons
+  setTimeout(() => {
+    flash.remove();
+    container.style.position = "";
+    container.innerHTML = "";
+    activeEffects.forEach((e) => {
+      container.appendChild(createEffectIcon(e));
     });
-
-    // Calculate timing based on number of letters
-    const bounceTime = 1200 + (letters.length - 1) * 100; // 1200ms base + 100ms per extra letter
-
-    // Slide and fade the entire word after bounce + pause (0.5s)
-    setTimeout(() => {
-        flash.classList.add("slide-out");
-    }, bounceTime + 500); // Bounce + 500ms pause
-
-    // Clean up and show icons
-    setTimeout(() => {
-        flash.remove();
-        container.style.position = "";
-        container.innerHTML = "";
-        activeEffects.forEach((e) => {
-            container.appendChild(createEffectIcon(e));
-        });
-        if (activeEffects.length > 0) {
-            startBadgeTimer(); // Start animation after flash
-        }
-        if (onComplete) onComplete();
-    }, bounceTime + 800); // Bounce + 500ms pause + 300ms slide
+    if (activeEffects.length > 0) {
+      startBadgeTimer(); // Start animation after flash
+    }
+    if (onComplete) onComplete();
+  }, bounceTime + 800); // Bounce + 500ms pause + 300ms slide
 }
-
 
 // Track badge timers globally
 let timerInterval = null;
 
 export function startBadgeTimer() {
-  if (timerInterval) return; 
+  if (timerInterval) return;
   timerInterval = setInterval(() => {
-    [DOM.playerEffects, DOM.opponentEffects].forEach(container => {
+    [DOM.playerEffects, DOM.opponentEffects].forEach((container) => {
       const badges = container.querySelectorAll(".effect-badge");
-      badges.forEach(badge => {
+      badges.forEach((badge) => {
         const startTime = parseInt(badge.dataset.startTime, 10);
         const duration = parseInt(badge.dataset.duration, 10);
 
         const remainingMs = Math.max(0, duration - (Date.now() - startTime));
         const circle = badge.querySelector(".badge-border");
-        const circumference = 2 * Math.PI * 8.5; 
-        const progress = remainingMs / duration; 
+        const circumference = 2 * Math.PI * 8.5;
+        const progress = remainingMs / duration;
         circle.style.strokeDashoffset = circumference * (1 - progress);
       });
     });
-  }, 100); 
+  }, 100);
 }
 
 export function stopBadgeTimer() {
@@ -783,10 +797,12 @@ export function stopBadgeTimer() {
 }
 
 export function createEffectIcon(effect) {
-    console.log(effect)
-    const {name: effectName, duration, startTime, type} = effect
+  const { name: effectName, duration, startTime, type } = effect;
   if (isNaN(startTime) || isNaN(duration)) {
-    console.error(`Invalid timer data in createEffectIcon for ${effectName}:`, { startTime, duration });
+    console.error(`Invalid timer data in createEffectIcon for ${effectName}:`, {
+      startTime,
+      duration,
+    });
     startTime = Date.now();
     duration = 3000;
   }
@@ -800,7 +816,10 @@ export function createEffectIcon(effect) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("width", "18");
   svg.setAttribute("height", "18");
-  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  const circle = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "circle",
+  );
   circle.setAttribute("cx", "9");
   circle.setAttribute("cy", "9");
   circle.setAttribute("r", "8.5");
@@ -820,10 +839,7 @@ export function createEffectIcon(effect) {
   return badge;
 }
 
-
-
-
-File: ./public/js/ui/ui.js
+File: public/js/ui/ui.js
 import { playerFoundWallyFeedback, fadePuzzle, opponentFoundWallyFeedback, showMissFeedback, animationQueue, createEffectIcon, stopBadgeTimer, startBadgeTimer, } from "./animations.js";
 import { DOM } from "../main.js";
 import { setupMagnifier } from "./magnifier.js";
@@ -1002,7 +1018,7 @@ const home = document.querySelector(".home")
     })
 }
 
-File: ./public/js/ui/magnifier.js
+File: public/js/ui/magnifier.js
 import { DOM } from "../main.js";
 import { magnifierConfig } from "../constants.js";
 import { animationState } from "./animations.js";
@@ -1101,7 +1117,7 @@ function getLensCoordinates(isFlipped, { width, height }, zoom, size, x, y) {
   return { bgX, bgY };
 }
 
-File: ./public/js/game/api.js
+File: public/js/game/api.js
 export async function checkCharacter(puzzleIdx, x, y, playerId) {
   try {
     const res = await fetch("/guess", {
@@ -1121,7 +1137,7 @@ export async function checkCharacter(puzzleIdx, x, y, playerId) {
   }
 }
 
-File: ./public/js/game/game.js
+File: public/js/game/game.js
 import { GAME_DURATION } from "../constants.js";
 import { updateTimerDisplay } from "../ui/ui.js";
 import { wsSend } from "../websockets/websockets.js";
@@ -1159,7 +1175,7 @@ export function startGameTimer() {
 }
 
 
-File: ./public/js/constants.js
+File: public/js/constants.js
 export const PUZZLES = window.PUZZLES || [
     "/images/wallyspace.jpg",
     "/images/wallysnow.jpg",
@@ -1175,7 +1191,7 @@ export const magnifierConfig = {
   zoomLevel: 2,
 };
 
-File: ./public/css/home.css
+File: public/css/home.css
 :root {
   /* Borders */
   --border: 2px solid black;
@@ -1285,7 +1301,7 @@ p {
 }
 
 .blurb-two > div {
-  width: 100%;
+  max-width: 100%;
   display: flex;
   justify-content: space-between;
 }
@@ -1352,7 +1368,7 @@ p {
     width: 1.5rem;
 }
 
-File: ./public/css/styles.css
+File: public/css/styles.css
 /* ==========================================================================
    Resets
    ========================================================================== */
@@ -2425,7 +2441,7 @@ h1 {
     cursor: pointer;
 }
 
-File: ./src/utils/utils.js
+File: src/utils/utils.js
 import WebSocket from "ws";
 
 export function checkCharacterInRange(character, { x, y }, characters) {
@@ -2470,7 +2486,7 @@ export const wsOpenSend = (wsArr, jsonData) => {
   return allSent;
 };
 
-File: ./src/utils/errors.js
+File: src/utils/errors.js
 export class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
@@ -2480,7 +2496,7 @@ export class AppError extends Error {
   }
 }
 
-File: ./src/routes/game.js
+File: src/routes/game.js
 import { Router } from "express";
 import { startGame, checkGuess, homePage } from "../controllers/game.js";
 
@@ -2493,7 +2509,7 @@ router.post("/guess", checkGuess);
 
 export default router;
 
-File: ./src/controllers/game.js
+File: src/controllers/game.js
 import { stateManager } from "../app.js";
 import { puzzles } from "../models/puzzles.js";
 import { v4 as uuidv4 } from "uuid";
@@ -2542,7 +2558,7 @@ export const checkGuess = (req, res) => {
   res.json({ charFound });
 };
 
-File: ./src/state/stateManager.js
+File: src/state/stateManager.js
 export class StateManager {
   #games = new Map();
   #clients = new Map();
@@ -2638,7 +2654,7 @@ export class StateManager {
   }
 }
 
-File: ./src/app.js
+File: src/app.js
 // ./src/app.js
 import express from "express";
 import { createClient } from "redis"; 
@@ -2679,9 +2695,14 @@ const DEFAULT_POWERUPS_ARR = () =>
 
 setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR);
 
-// Redis client setup
 const redisClient = createClient({
     url: process.env.REDIS_URL || "redis://localhost:6379",
+    socket: {
+        reconnectStrategy: (retires) => {
+            if (retires > 5) return new Error("Redis connection failed after 5 retries")
+            return Math.min(retires * 100, 3000)
+        }
+    }
 });
 
 redisClient.on("error", (err) => console.error("Redis client error:", err));
@@ -2717,7 +2738,7 @@ app.use((err, req, res, next) => {
 
 server.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
 
-File: ./src/models/puzzles.js
+File: src/models/puzzles.js
 export const puzzles = [
     {
         characters: {
@@ -2867,10 +2888,10 @@ export const puzzles = [
 ];
 
 
-File: ./src/models/powerups.js
+File: src/models/powerups.js
 export const powerUpsObj = {
   odlaw: [
-    { name: "screenFlip", type: "negative", duration: 15000, char: "odlaw" },
+//    { name: "screenFlip", type: "negative", duration: 15000, char: "odlaw" },
     { name: "confetti", type: "negative", duration: 15000, char: "odlaw" },
   ],
   wenda: [
@@ -2889,7 +2910,7 @@ export function getRandomPowerUp(character) {
   return powerUps[Math.floor(Math.random() * powerUps.length)];
 }
 
-File: ./src/websockets.js
+File: src/websockets.js
 import { GameService } from "./services/gameService.js";
 import { EffectService } from "./services/effectService.js";
 import { WebSocketService } from "./services/webSocketService.js";
@@ -2980,7 +3001,7 @@ export function setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POW
   });
 }
 
-File: ./src/constants.js
+File: src/constants.js
 export const GAME_DURATION =  5 * 60 * 1000; // 5 minutes
 export const PUZZLE_COUNT = 5;
 
@@ -3022,7 +3043,7 @@ export const GAME_OVER_REASONS = {
   OPPONENT_QUIT: "opponentQuit",
 };
 
-File: ./src/services/gameService.js
+File: src/services/gameService.js
 import { v4 as uuidv4 } from "uuid";
 import { checkCharacterInRange } from "../utils/utils.js";
 import { getRandomPowerUp } from "../models/powerups.js";
@@ -3127,7 +3148,7 @@ export class GameService {
   }
 }
 
-File: ./src/services/effectService.js
+File: src/services/effectService.js
 import { v4 as uuidv4 } from "uuid";
 import { EFFECT_TYPES, WS_MESSAGE_TYPES } from "../constants.js";
 import { puzzles } from "../models/puzzles.js";
@@ -3148,7 +3169,6 @@ applyEffect(powerUp, target, gameData, puzzleIdx) {
   if (effectAlreadyActive) {
 const effect = activeEffects[activeEffectIdx];
     const remainingTime = Math.max(0, (effect.startTime + effect.duration) - Date.now());
-      console.log(`Extending effect ${effect.name}:`, { remainingTime: remainingTime, duration: duration });
     effect.duration += duration; // New duration
     effect.isExtension = true;
 
@@ -3249,7 +3269,7 @@ const effect = activeEffects[activeEffectIdx];
   }
 }
 
-File: ./src/services/webSocketService.js
+File: src/services/webSocketService.js
 import { WS_MESSAGE_TYPES } from "../constants.js";
 import { wsOpenSend } from "../utils/utils.js";
 
@@ -3306,11 +3326,11 @@ export class WebSocketService {
   }
 }
 
-File: ./README.md
+File: README.md
 # photo-tagging-app
  A where's wally inspired photo tagging app
 
-File: ./views/index.ejs
+File: views/index.ejs
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3372,7 +3392,7 @@ File: ./views/index.ejs
 </body>
 </html>
 
-File: ./views/home.ejs
+File: views/home.ejs
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3417,7 +3437,7 @@ File: ./views/home.ejs
 </body>
 </html>
 
-File: ./package.json
+File: package.json
 {
   "name": "photo-tagging-app",
   "version": "1.0.0",

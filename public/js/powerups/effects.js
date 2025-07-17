@@ -174,6 +174,9 @@ const cleanupState = (() => {
 })();
 
 export function confettiPowerUp() {
+
+  if (cleanupState.get().length !== 0) return;
+
   const confettiBottomLeft = setupConfetti({ x: 0, y: 1.1 }, 60);
   const confettiBottomRight = setupConfetti({ x: 1, y: 1.1 }, 120);
   const confettiMiddleBottom = setupConfetti({ x: 0.5, y: 1.1 }, 90);
