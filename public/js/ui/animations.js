@@ -147,7 +147,8 @@ export function setupConfetti(origin, angle) {
     clearInterval(confettiInterval);
     setTimeout(() => {
       confettiInstance.reset();
-    }, 3000);
+        canvas.remove();
+    }, 1000);
   };
 }
 
