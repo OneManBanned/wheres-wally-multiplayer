@@ -23,23 +23,8 @@ export function initWebSocket(playerId) {
         const data = JSON.parse(e.data);
         const handler = handlers[data.type];
         if (handler) {
-            if (data.message === "applyEffect" && data.effect.name === "confetti") {
-                const effectKey = `${data.target}-${data.effect.effectId}`
-                const now = Date.now;
-                if (processedEffect.has(effectKey)) {
-                    const lastProcessed = processedEffect.get(effectKey)
-                    if (now - lastProcessed < (data.effect.duration + 1000)) {
-                        console.log(`Ignorning duplicate ${data.effect.name} effect: ${effectKey} (Browser: ${navigator.userAgent})`)
-                        return;
-                    }
-                }
-                processedEffect.set(effectKey, now)
-                setTimeout(() => processedEffect.delete(effectKey), data.effect.duration + 1000)
-
-            }
             handler(data);
-        }
-        else {
+        } else {
             console.warn(`Unhandled message type: ${data.type}`);
         }
     };

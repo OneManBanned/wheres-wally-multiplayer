@@ -132,16 +132,16 @@ export function setupConfetti(origin, angle) {
 
   const fireConfetti = () => {
     confettiInstance({
-      particleCount: 250,
+      particleCount: 100,
       spread: 50,
       angle: angle,
       origin: origin,
       colors: ["#000000", "#FFC107", "#FFFFFF"],
-      scalar: 0.9,
+      scalar: 0.8,
     });
   };
 
-  const confettiInterval = setInterval(fireConfetti, 1000);
+  const confettiInterval = setInterval(fireConfetti, 1500);
 
   return () => {
     clearInterval(confettiInterval);
