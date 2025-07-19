@@ -2,7 +2,8 @@ import { PUZZLES, PLAYER_ID } from "../constants.js";
 import { startGameTimer, setStartTime, setGameOver, } from "../game/game.js";
 import { applyPowerUp, cleanupPowerUp } from "../powerups/powerups.js";
 import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, updateActiveEffectsUI, showGameOverScreen, } from "../ui/ui.js";
-import { checkGameResult, getOpponentId } from "../utils/utils.js";
+import { checkGameResult} from "../utils/utils.js";
+
 
 export const handlers = {
   paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {

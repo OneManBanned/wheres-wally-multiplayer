@@ -635,7 +635,8 @@ export function setupConfetti(origin, angle) {
     clearInterval(confettiInterval);
     setTimeout(() => {
       confettiInstance.reset();
-    }, 3000);
+        canvas.remove();
+    }, 1000);
   };
 }
 
@@ -1214,7 +1215,6 @@ File: public/css/home.css
 
 html,
 body {
-  width: 100%;
   margin: 0;
   padding: 0;
 }
@@ -1239,12 +1239,10 @@ main {
   position: relative;
 }
 
-
 h1 {
     margin-block: 2rem 4rem;
   font-family: var(--font-title);
 }
-
 
 .blurb-one {
   display: grid;
@@ -1301,13 +1299,12 @@ p {
 }
 
 .blurb-two > div {
-  max-width: 100%;
   display: flex;
   justify-content: space-between;
 }
 
 .blurb-two > div img {
-  width: 100%;
+  width: 35%;
   display: block;
 }
 
@@ -1336,20 +1333,19 @@ p {
 
 .btn-container {
   position: fixed;
-  top: -1%;
+  top: 0;
   left: 12%;
-  width: 17%;
+  max-width: 14rem;
   transform: rotate(-40deg);
 }
 
 #start-btn {
   border: none;
-  padding: 2rem;
   font-size: 1.5rem;
   position: absolute;
   background: transparent;
-  top: 41%;
-  left: 17%;
+  top: 55%;
+  left: 28%;
   transform: rotate(-5deg);
   font-family: var(--font-title);
 }
@@ -2891,7 +2887,7 @@ export const puzzles = [
 File: src/models/powerups.js
 export const powerUpsObj = {
   odlaw: [
-//    { name: "screenFlip", type: "negative", duration: 15000, char: "odlaw" },
+    { name: "screenFlip", type: "negative", duration: 15000, char: "odlaw" },
     { name: "confetti", type: "negative", duration: 15000, char: "odlaw" },
   ],
   wenda: [

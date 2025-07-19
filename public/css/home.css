@@ -104,13 +104,12 @@ p {
 }
 
 .blurb-two > div {
-  max-width: 100rem;
   display: flex;
   justify-content: space-between;
 }
 
 .blurb-two > div img {
-  width: 100%;
+  width: 35%;
   display: block;
 }
 
@@ -139,7 +138,7 @@ p {
 
 .btn-container {
   position: fixed;
-  top: 0vw;
+  top: 0;
   left: 12%;
   max-width: 14rem;
   transform: rotate(-40deg);
