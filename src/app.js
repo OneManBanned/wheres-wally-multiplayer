@@ -1,7 +1,7 @@
 // ./src/app.js
 import express from "express";
-import { createClient } from "redis"; 
-import { RedisStore } from "connect-redis"; 
+import { createClient } from "redis";
+import { RedisStore } from "connect-redis";
 import session from "express-session";
 import path, { dirname } from "path";
 import gameRoutes from "./routes/game.js";
@@ -28,56 +28,69 @@ app.use(express.json());
 
 const DEFAULT_FOUND_ARR = () => Array(PUZZLE_COUNT).fill(false);
 const DEFAULT_POWERUPS_ARR = () =>
-    Array(PUZZLE_COUNT)
-        .fill()
-        .map(() => ({
-            odlaw: false,
-            wenda: false,
-            whitebeard: false,
-        }));
+  Array(PUZZLE_COUNT)
+    .fill()
+    .map(() => ({
+      odlaw: false,
+      wenda: false,
+      whitebeard: false,
+    }));
 
 setupWebSocket(wss, stateManager, DEFAULT_FOUND_ARR, DEFAULT_POWERUPS_ARR);
 
 const redisClient = createClient({
-    url: process.env.REDIS_URL || "redis://localhost:6379",
-    socket: {
-        reconnectStrategy: (retires) => {
-            if (retires > 5) return new Error("Redis connection failed after 5 retries")
-            return Math.min(retires * 100, 3000)
-        }
-    }
+  url: process.env.REDIS_URL || "redis://localhost:6379",
+  socket: {
+    tls: true,
+    rejectUnauthorized: false,
+    reconnectStrategy: (retires) => {
+      if (retires > 5)
+        return new Error("Redis connection failed after 5 retries");
+      return Math.min(retires * 100, 3000);
+    },
+    connectTimeout: 10000,
+  },
 });
 
 redisClient.on("error", (err) => console.error("Redis client error:", err));
-redisClient.on('connect', () => console.log('Connected to Redis'));
-redisClient.connect().catch((err) => console.error("Redis connection error:", err));
+redisClient.on("connect", () => console.log("Connected to Redis"));
+redisClient.on("ready", () => console.log("Redis Connection Ready"));
+redisClient.on("end", () => console.log("Redis Connection Closed"));
+redisClient
+  .connect()
+  .catch((err) => console.error("Redis connection error:", err));
 
 if (!process.env.SECRET) {
-    throw new AppError("Session secret is missing. Please set SECRET environment variable.", 500);
+  throw new AppError(
+    "Session secret is missing. Please set SECRET environment variable.",
+    500,
+  );
 }
 
 app.use(
-    session({
-        secret: process.env.SECRET,
-        resave: false,
-        saveUninitialized: true,
-        store: new RedisStore({ client: redisClient }), 
-        cookie: {
-            secure: process.env.NODE_ENV === "production",
-            maxAge: 24 * 60 * 60 * 1000, 
-        },
-    })
+  session({
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: true,
+    store: new RedisStore({ client: redisClient }),
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  }),
 );
 
 app.use("/", gameRoutes);
 
 app.use((err, req, res, next) => {
-    if (err instanceof AppError) {
-        res.status(err.statusCode).json({ success: false, error: err.message });
-    } else {
-        console.error("Unexpected error:", err);
-        res.status(500).json({ success: false, error: "Internal server error" });
-    }
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({ success: false, error: err.message });
+  } else {
+    console.error("Unexpected error:", err);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
 });
 
-server.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, "0.0.0.0", () =>
+  console.log(`Server running on port ${PORT}`),
+);
