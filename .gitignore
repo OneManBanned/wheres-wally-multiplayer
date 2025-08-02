@@ -3,3 +3,6 @@ node_modules/
 outlook.txt
 .git/
 .gitignore
+.grokignore
+package-lock.json
+context.txt

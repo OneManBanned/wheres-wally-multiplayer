@@ -380,7 +380,8 @@ import { PUZZLES, PLAYER_ID } from "../constants.js";
 import { startGameTimer, setStartTime, setGameOver, } from "../game/game.js";
 import { applyPowerUp, cleanupPowerUp } from "../powerups/powerups.js";
 import { showLobby, showGame, updateScores, updateFoundCharacterUI, switchPuzzle, updateThumbnailUI, updateActiveEffectsUI, showGameOverScreen, } from "../ui/ui.js";
-import { checkGameResult, getOpponentId } from "../utils/utils.js";
+import { checkGameResult} from "../utils/utils.js";
+
 
 export const handlers = {
   paired: ({ foundArr, startTime, playerStats, puzzleIdx }) => {
@@ -434,6 +435,7 @@ File: public/js/websockets/websockets.js
 import { handlers } from "./handlers.js";
 
 let wsInstance = null;
+const processedEffect = new Map();
 
 export function initWebSocket(playerId) {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -454,8 +456,11 @@ export function initWebSocket(playerId) {
     wsInstance.onmessage = (e) => {
         const data = JSON.parse(e.data);
         const handler = handlers[data.type];
-        if (handler) handler(data);
-        else console.warn(`Unhandled message type: ${data.type}`);
+        if (handler) {
+            handler(data);
+        } else {
+            console.warn(`Unhandled message type: ${data.type}`);
+        }
     };
 
     wsInstance.onerror = (e) => {
@@ -620,16 +625,16 @@ export function setupConfetti(origin, angle) {
 
   const fireConfetti = () => {
     confettiInstance({
-      particleCount: 250,
+      particleCount: 100,
       spread: 50,
       angle: angle,
       origin: origin,
       colors: ["#000000", "#FFC107", "#FFFFFF"],
-      scalar: 0.9,
+      scalar: 0.8,
     });
   };
 
-  const confettiInterval = setInterval(fireConfetti, 1000);
+  const confettiInterval = setInterval(fireConfetti, 1500);
 
   return () => {
     clearInterval(confettiInterval);
@@ -3331,7 +3336,7 @@ File: views/index.ejs
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Photo Tagging App</title>
+  <title>Where's Wally Multiplayer</title>
 <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
 <link rel="shortcut icon" href="/images/favicon.ico" />
@@ -3393,7 +3398,7 @@ File: views/home.ejs
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Photo Tagging App</title>
+  <title>Where's Wally Multiplayer</title>
 <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
 <link rel="shortcut icon" href="/images/favicon.ico" />

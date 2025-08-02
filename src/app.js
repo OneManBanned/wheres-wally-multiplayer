@@ -49,6 +49,7 @@ const redisClient = createClient({
 });
 
 redisClient.on("error", (err) => console.error("Redis client error:", err));
+redisClient.on('connect', () => console.log('Connected to Redis'));
 redisClient.connect().catch((err) => console.error("Redis connection error:", err));
 
 if (!process.env.SECRET) {
@@ -60,10 +61,10 @@ app.use(
         secret: process.env.SECRET,
         resave: false,
         saveUninitialized: true,
-        store: new RedisStore({ client: redisClient }), // Pass redisClient instance
+        store: new RedisStore({ client: redisClient }), 
         cookie: {
             secure: process.env.NODE_ENV === "production",
-            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            maxAge: 24 * 60 * 60 * 1000, 
         },
     })
 );
